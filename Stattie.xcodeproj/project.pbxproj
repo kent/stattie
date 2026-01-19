@@ -1,0 +1,559 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		E01000002B000001 /* StattieApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000001 /* StattieApp.swift */; };
+		E01000002B000002 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000002 /* AppState.swift */; };
+		E01000002B000003 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000003 /* ContentView.swift */; };
+		E01000002B000004 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000004 /* User.swift */; };
+		E01000002B000005 /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000005 /* Player.swift */; };
+		E01000002B000006 /* Sport.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000006 /* Sport.swift */; };
+		E01000002B000007 /* StatDefinition.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000007 /* StatDefinition.swift */; };
+		E01000002B000008 /* Game.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000008 /* Game.swift */; };
+		E01000002B000009 /* PlayerGameStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000009 /* PlayerGameStats.swift */; };
+		E01000002B00000A /* Stat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00000A /* Stat.swift */; };
+		E01000002B00000B /* PlayerListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00000B /* PlayerListView.swift */; };
+		E01000002B00000C /* PlayerDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00000C /* PlayerDetailView.swift */; };
+		E01000002B00000D /* AddPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00000D /* AddPlayerView.swift */; };
+		E01000002B00000E /* GameListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00000E /* GameListView.swift */; };
+		E01000002B00000F /* NewGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00000F /* NewGameView.swift */; };
+		E01000002B000010 /* GameDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000010 /* GameDetailView.swift */; };
+		E01000002B000011 /* GameTrackingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000011 /* GameTrackingView.swift */; };
+		E01000002B000012 /* StatButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000012 /* StatButtonView.swift */; };
+		E01000002B000013 /* GameSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000013 /* GameSummaryView.swift */; };
+		E01000002B000014 /* ShareableGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000014 /* ShareableGameView.swift */; };
+		E01000002B000015 /* SyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000015 /* SyncManager.swift */; };
+		E01000002B000016 /* LockManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000016 /* LockManager.swift */; };
+		E01000002B000017 /* ShareService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000017 /* ShareService.swift */; };
+		E01000002B000018 /* SeedDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000018 /* SeedDataService.swift */; };
+		E01000002B00001A /* ShareViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00001A /* ShareViewModel.swift */; };
+		E01000002B00001B /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00001B /* OnboardingView.swift */; };
+		E01000002B00001C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00001C /* SettingsView.swift */; };
+		E01000002B00001D /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00001D /* Extensions.swift */; };
+		E01000002B00001E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E00000002B00001E /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		E00000002B000000 /* Stattie.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Stattie.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E00000002B000001 /* StattieApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StattieApp.swift; sourceTree = "<group>"; };
+		E00000002B000002 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		E00000002B000003 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		E00000002B000004 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
+		E00000002B000005 /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
+		E00000002B000006 /* Sport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sport.swift; sourceTree = "<group>"; };
+		E00000002B000007 /* StatDefinition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatDefinition.swift; sourceTree = "<group>"; };
+		E00000002B000008 /* Game.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Game.swift; sourceTree = "<group>"; };
+		E00000002B000009 /* PlayerGameStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerGameStats.swift; sourceTree = "<group>"; };
+		E00000002B00000A /* Stat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stat.swift; sourceTree = "<group>"; };
+		E00000002B00000B /* PlayerListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerListView.swift; sourceTree = "<group>"; };
+		E00000002B00000C /* PlayerDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerDetailView.swift; sourceTree = "<group>"; };
+		E00000002B00000D /* AddPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddPlayerView.swift; sourceTree = "<group>"; };
+		E00000002B00000E /* GameListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameListView.swift; sourceTree = "<group>"; };
+		E00000002B00000F /* NewGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewGameView.swift; sourceTree = "<group>"; };
+		E00000002B000010 /* GameDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameDetailView.swift; sourceTree = "<group>"; };
+		E00000002B000011 /* GameTrackingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameTrackingView.swift; sourceTree = "<group>"; };
+		E00000002B000012 /* StatButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatButtonView.swift; sourceTree = "<group>"; };
+		E00000002B000013 /* GameSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSummaryView.swift; sourceTree = "<group>"; };
+		E00000002B000014 /* ShareableGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareableGameView.swift; sourceTree = "<group>"; };
+		E00000002B000015 /* SyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncManager.swift; sourceTree = "<group>"; };
+		E00000002B000016 /* LockManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockManager.swift; sourceTree = "<group>"; };
+		E00000002B000017 /* ShareService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareService.swift; sourceTree = "<group>"; };
+		E00000002B000018 /* SeedDataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeedDataService.swift; sourceTree = "<group>"; };
+		E00000002B00001A /* ShareViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewModel.swift; sourceTree = "<group>"; };
+		E00000002B00001B /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		E00000002B00001C /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		E00000002B00001D /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		E00000002B00001E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		E00000002B00001F /* Stattie.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Stattie.entitlements; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		E02000002B000000 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		E03000002B000000 = {
+			isa = PBXGroup;
+			children = (
+				E03000002B000001 /* Stattie */,
+				E03000002B000002 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		E03000002B000001 /* Stattie */ = {
+			isa = PBXGroup;
+			children = (
+				E03000002B000003 /* App */,
+				E03000002B000004 /* Models */,
+				E03000002B000005 /* ViewModels */,
+				E03000002B000006 /* Views */,
+				E03000002B000007 /* Services */,
+				E03000002B000008 /* Utilities */,
+				E00000002B00001E /* Assets.xcassets */,
+				E00000002B00001F /* Stattie.entitlements */,
+			);
+			path = Stattie;
+			sourceTree = "<group>";
+		};
+		E03000002B000002 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E00000002B000000 /* Stattie.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		E03000002B000003 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				E00000002B000001 /* StattieApp.swift */,
+				E00000002B000002 /* AppState.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		E03000002B000004 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				E00000002B000004 /* User.swift */,
+				E00000002B000005 /* Player.swift */,
+				E00000002B000006 /* Sport.swift */,
+				E00000002B000007 /* StatDefinition.swift */,
+				E00000002B000008 /* Game.swift */,
+				E00000002B000009 /* PlayerGameStats.swift */,
+				E00000002B00000A /* Stat.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		E03000002B000005 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				E00000002B00001A /* ShareViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		E03000002B000006 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				E03000002B000009 /* Main */,
+				E03000002B00000A /* Onboarding */,
+				E03000002B00000B /* Players */,
+				E03000002B00000C /* Games */,
+				E03000002B00000D /* Tracking */,
+				E03000002B00000E /* Summary */,
+				E03000002B00000F /* Settings */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		E03000002B000007 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				E00000002B000015 /* SyncManager.swift */,
+				E00000002B000016 /* LockManager.swift */,
+				E00000002B000017 /* ShareService.swift */,
+				E00000002B000018 /* SeedDataService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		E03000002B000008 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				E03000002B000010 /* Extensions */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		E03000002B000009 /* Main */ = {
+			isa = PBXGroup;
+			children = (
+				E00000002B000003 /* ContentView.swift */,
+			);
+			path = Main;
+			sourceTree = "<group>";
+		};
+		E03000002B00000A /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				E00000002B00001B /* OnboardingView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		E03000002B00000B /* Players */ = {
+			isa = PBXGroup;
+			children = (
+				E00000002B00000B /* PlayerListView.swift */,
+				E00000002B00000C /* PlayerDetailView.swift */,
+				E00000002B00000D /* AddPlayerView.swift */,
+			);
+			path = Players;
+			sourceTree = "<group>";
+		};
+		E03000002B00000C /* Games */ = {
+			isa = PBXGroup;
+			children = (
+				E00000002B00000E /* GameListView.swift */,
+				E00000002B00000F /* NewGameView.swift */,
+				E00000002B000010 /* GameDetailView.swift */,
+			);
+			path = Games;
+			sourceTree = "<group>";
+		};
+		E03000002B00000D /* Tracking */ = {
+			isa = PBXGroup;
+			children = (
+				E00000002B000011 /* GameTrackingView.swift */,
+				E00000002B000012 /* StatButtonView.swift */,
+			);
+			path = Tracking;
+			sourceTree = "<group>";
+		};
+		E03000002B00000E /* Summary */ = {
+			isa = PBXGroup;
+			children = (
+				E00000002B000013 /* GameSummaryView.swift */,
+				E00000002B000014 /* ShareableGameView.swift */,
+			);
+			path = Summary;
+			sourceTree = "<group>";
+		};
+		E03000002B00000F /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				E00000002B00001C /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		E03000002B000010 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				E00000002B00001D /* Extensions.swift */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		E04000002B000000 /* Stattie */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E06000002B000000 /* Build configuration list for PBXNativeTarget "Stattie" */;
+			buildPhases = (
+				E05000002B000000 /* Sources */,
+				E02000002B000000 /* Frameworks */,
+				E05000002B000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Stattie;
+			productName = Stattie;
+			productReference = E00000002B000000 /* Stattie.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		E07000002B000000 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					E04000002B000000 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = E06000002B000001 /* Build configuration list for PBXProject "Stattie" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = E03000002B000000;
+			productRefGroup = E03000002B000002 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				E04000002B000000 /* Stattie */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		E05000002B000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E01000002B00001E /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		E05000002B000000 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E01000002B000001 /* StattieApp.swift in Sources */,
+				E01000002B000002 /* AppState.swift in Sources */,
+				E01000002B000003 /* ContentView.swift in Sources */,
+				E01000002B000004 /* User.swift in Sources */,
+				E01000002B000005 /* Player.swift in Sources */,
+				E01000002B000006 /* Sport.swift in Sources */,
+				E01000002B000007 /* StatDefinition.swift in Sources */,
+				E01000002B000008 /* Game.swift in Sources */,
+				E01000002B000009 /* PlayerGameStats.swift in Sources */,
+				E01000002B00000A /* Stat.swift in Sources */,
+				E01000002B00000B /* PlayerListView.swift in Sources */,
+				E01000002B00000C /* PlayerDetailView.swift in Sources */,
+				E01000002B00000D /* AddPlayerView.swift in Sources */,
+				E01000002B00000E /* GameListView.swift in Sources */,
+				E01000002B00000F /* NewGameView.swift in Sources */,
+				E01000002B000010 /* GameDetailView.swift in Sources */,
+				E01000002B000011 /* GameTrackingView.swift in Sources */,
+				E01000002B000012 /* StatButtonView.swift in Sources */,
+				E01000002B000013 /* GameSummaryView.swift in Sources */,
+				E01000002B000014 /* ShareableGameView.swift in Sources */,
+				E01000002B000015 /* SyncManager.swift in Sources */,
+				E01000002B000016 /* LockManager.swift in Sources */,
+				E01000002B000017 /* ShareService.swift in Sources */,
+				E01000002B000018 /* SeedDataService.swift in Sources */,
+				E01000002B00001A /* ShareViewModel.swift in Sources */,
+				E01000002B00001B /* OnboardingView.swift in Sources */,
+				E01000002B00001C /* SettingsView.swift in Sources */,
+				E01000002B00001D /* Extensions.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		E08000002B000000 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		E08000002B000001 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		E08000002B000002 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Stattie/Stattie.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Stattie;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.sports";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stattie.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		E08000002B000003 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Stattie/Stattie.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Stattie;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.sports";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stattie.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		E06000002B000000 /* Build configuration list for PBXNativeTarget "Stattie" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E08000002B000002 /* Debug */,
+				E08000002B000003 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E06000002B000001 /* Build configuration list for PBXProject "Stattie" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E08000002B000000 /* Debug */,
+				E08000002B000001 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = E07000002B000000 /* Project object */;
+}
