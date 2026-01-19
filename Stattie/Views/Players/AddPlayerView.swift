@@ -1,0 +1,130 @@
+import SwiftUI
+import SwiftData
+import PhotosUI
+
+struct AddPlayerView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var firstName = ""
+    @State private var lastName = ""
+    @State private var jerseyNumber = ""
+    @State private var position = ""
+    @State private var selectedPhoto: PhotosPickerItem?
+    @State private var photoData: Data?
+
+    @Query private var users: [User]
+
+    private var currentUser: User? {
+        users.first
+    }
+
+    private var isValid: Bool {
+        !firstName.trimmingCharacters(in: .whitespaces).isEmpty ||
+        !lastName.trimmingCharacters(in: .whitespaces).isEmpty ||
+        Int(jerseyNumber) != nil
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    HStack {
+                        Spacer()
+                        PhotosPicker(selection: $selectedPhoto, matching: .images) {
+                            if let photoData,
+                               let uiImage = UIImage(data: photoData) {
+                                Image(uiImage: uiImage)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 100, height: 100)
+                                    .clipShape(Circle())
+                            } else {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color.accentColor.opacity(0.2))
+                                        .frame(width: 100, height: 100)
+
+                                    VStack {
+                                        Image(systemName: "camera")
+                                            .font(.title2)
+                                        Text("Photo")
+                                            .font(.caption)
+                                    }
+                                    .foregroundStyle(.accent)
+                                }
+                            }
+                        }
+                        Spacer()
+                    }
+                    .listRowBackground(Color.clear)
+                }
+
+                Section("Player Info") {
+                    TextField("First Name", text: $firstName)
+                        .textContentType(.givenName)
+                        .autocorrectionDisabled()
+
+                    TextField("Last Name", text: $lastName)
+                        .textContentType(.familyName)
+                        .autocorrectionDisabled()
+
+                    HStack {
+                        Text("Jersey Number")
+                        Spacer()
+                        TextField("", text: $jerseyNumber)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 60)
+                    }
+
+                    TextField("Position (optional)", text: $position)
+                }
+            }
+            .navigationTitle("Add Player")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Add") {
+                        addPlayer()
+                    }
+                    .disabled(!isValid)
+                }
+            }
+            .onChange(of: selectedPhoto) { _, newValue in
+                Task {
+                    if let data = try? await newValue?.loadTransferable(type: Data.self) {
+                        photoData = data
+                    }
+                }
+            }
+        }
+    }
+
+    private func addPlayer() {
+        let player = Player(
+            firstName: firstName.trimmingCharacters(in: .whitespaces),
+            lastName: lastName.trimmingCharacters(in: .whitespaces),
+            jerseyNumber: Int(jerseyNumber) ?? 0,
+            position: position.trimmingCharacters(in: .whitespaces),
+            photoData: photoData,
+            isActive: true,
+            owner: currentUser
+        )
+
+        modelContext.insert(player)
+        try? modelContext.save()
+        dismiss()
+    }
+}
+
+#Preview {
+    AddPlayerView()
+        .modelContainer(for: [Player.self, User.self], inMemory: true)
+}
