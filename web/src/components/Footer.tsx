@@ -40,14 +40,22 @@ export function Footer() {
             </div>
           </div>
         </div>
-        <div className="flex flex-col items-center border-t border-gray-200 pt-8 pb-12 md:flex-row-reverse md:justify-between md:pt-6">
-          <div className="flex gap-6 text-sm text-gray-600">
-            <Link href="/privacy" className="hover:text-gray-900">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-gray-900">Terms of Service</Link>
-            <Link href="mailto:support@stattie.app" className="hover:text-gray-900">Support</Link>
+        <div className="flex flex-col items-center border-t border-gray-200 pt-8 pb-12 md:pt-6">
+          <div className="flex flex-col items-center gap-4 md:flex-row md:justify-between md:w-full">
+            <p className="text-sm text-gray-500">
+              &copy; {new Date().getFullYear()} Stattie. All rights reserved.
+            </p>
+            <div className="flex gap-6 text-sm text-gray-600">
+              <Link href="/privacy" className="hover:text-gray-900">Privacy Policy</Link>
+              <Link href="/terms" className="hover:text-gray-900">Terms of Service</Link>
+              <Link href="mailto:support@stattie.app" className="hover:text-gray-900">Support</Link>
+            </div>
           </div>
-          <p className="mt-6 text-sm text-gray-500 md:mt-0">
-            &copy; {new Date().getFullYear()} Stattie. All rights reserved.
+          <p className="mt-6 text-sm text-gray-400">
+            Made with love in Canada by{' '}
+            <a href="https://ewakened.com/apps" className="text-orange-600 hover:text-orange-700">
+              ewakened.com
+            </a>
           </p>
         </div>
       </Container>
