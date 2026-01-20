@@ -13,6 +13,35 @@ struct GameTrackingView: View {
         game.totalPoints
     }
 
+    var totalRebounds: Int {
+        (game.stat(named: "DREB")?.count ?? 0) + (game.stat(named: "OREB")?.count ?? 0)
+    }
+
+    var totalAssists: Int {
+        game.stat(named: "AST")?.count ?? 0
+    }
+
+    var totalSteals: Int {
+        game.stat(named: "STL")?.count ?? 0
+    }
+
+    private var doubleDigitCategories: Int {
+        var count = 0
+        if totalPoints >= 10 { count += 1 }
+        if totalRebounds >= 10 { count += 1 }
+        if totalAssists >= 10 { count += 1 }
+        if totalSteals >= 10 { count += 1 }
+        return count
+    }
+
+    var hasDoubleDouble: Bool {
+        doubleDigitCategories >= 2
+    }
+
+    var hasTripleDouble: Bool {
+        doubleDigitCategories >= 3
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -97,6 +126,24 @@ struct GameTrackingView: View {
                             }
 
                             StatButton(
+                                title: "ASSIST",
+                                subtitle: countString("AST"),
+                                color: .mint
+                            ) {
+                                recordCount("AST")
+                            }
+                        }
+
+                        HStack(spacing: 12) {
+                            StatButton(
+                                title: "DRIVE",
+                                subtitle: countString("DRV"),
+                                color: .cyan
+                            ) {
+                                recordCount("DRV")
+                            }
+
+                            StatButton(
                                 title: "FOUL",
                                 subtitle: countString("PF"),
                                 color: .red
@@ -104,8 +151,46 @@ struct GameTrackingView: View {
                                 recordCount("PF")
                             }
                         }
+
+                        StatButton(
+                            title: "GREAT PLAY",
+                            subtitle: countString("GP"),
+                            color: .yellow
+                        ) {
+                            recordCount("GP")
+                        }
                     }
                     .padding(.horizontal)
+
+                    // Achievements
+                    if hasDoubleDouble || hasTripleDouble {
+                        Divider().padding(.vertical, 8)
+
+                        VStack(spacing: 12) {
+                            Text("ACHIEVEMENTS")
+                                .font(.headline)
+                                .foregroundStyle(.secondary)
+
+                            HStack(spacing: 16) {
+                                if hasDoubleDouble {
+                                    AchievementBadge(
+                                        title: "Double Double",
+                                        icon: "star.fill",
+                                        color: .orange
+                                    )
+                                }
+
+                                if hasTripleDouble {
+                                    AchievementBadge(
+                                        title: "Triple Double",
+                                        icon: "star.circle.fill",
+                                        color: .purple
+                                    )
+                                }
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
 
                     Spacer(minLength: 40)
                 }
@@ -236,6 +321,26 @@ struct MissButton: View {
                 .background(Color.gray.opacity(0.2))
                 .clipShape(RoundedRectangle(cornerRadius: 10))
         }
+    }
+}
+
+struct AchievementBadge: View {
+    let title: String
+    let icon: String
+    let color: Color
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.largeTitle)
+                .foregroundStyle(color)
+            Text(title)
+                .font(.caption.bold())
+                .foregroundStyle(.primary)
+        }
+        .padding()
+        .background(color.opacity(0.15))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }
 

@@ -31,7 +31,10 @@ final class SeedDataService {
             ("Defensive Rebound", "DREB", "rebounding", false, 0, 3, "arrow.down.circle.fill"),
             ("Offensive Rebound", "OREB", "rebounding", false, 0, 4, "arrow.up.circle.fill"),
             ("Steal", "STL", "defense", false, 0, 5, "hand.raised.fill"),
-            ("Foul", "PF", "other", false, 0, 6, "exclamationmark.triangle.fill"),
+            ("Assist", "AST", "offense", false, 0, 6, "arrow.triangle.branch"),
+            ("Foul", "PF", "other", false, 0, 7, "exclamationmark.triangle.fill"),
+            ("Drive", "DRV", "offense", false, 0, 8, "figure.run"),
+            ("Great Play", "GP", "other", false, 0, 9, "star.fill"),
         ]
 
         for (index, def) in statDefinitions.enumerated() {
