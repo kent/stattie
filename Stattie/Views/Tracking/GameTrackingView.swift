@@ -44,14 +44,14 @@ struct GameTrackingView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 8) {
+            VStack(spacing: 10) {
                 // Score display
                 HStack {
                     Text("\(totalPoints)")
-                        .font(.system(size: 48, weight: .bold))
+                        .font(.system(size: 56, weight: .bold))
                         .foregroundStyle(.blue)
                     Text("PTS")
-                        .font(.title3.bold())
+                        .font(.title2.bold())
                         .foregroundStyle(.secondary)
 
                     Spacer()
@@ -59,74 +59,70 @@ struct GameTrackingView: View {
                     // Achievements inline
                     if hasTripleDouble {
                         Label("Triple Double", systemImage: "star.circle.fill")
-                            .font(.caption.bold())
+                            .font(.subheadline.bold())
                             .foregroundStyle(.purple)
                     } else if hasDoubleDouble {
                         Label("Double Double", systemImage: "star.fill")
-                            .font(.caption.bold())
+                            .font(.subheadline.bold())
                             .foregroundStyle(.orange)
                     }
                 }
                 .padding(.horizontal)
-                .padding(.top, 8)
 
                 // Shooting buttons - 3 across
-                HStack(spacing: 8) {
-                    CompactStatButton(title: "2 PTS", subtitle: madeString("2PT"), color: .blue) {
+                HStack(spacing: 10) {
+                    FlexStatButton(title: "2 PTS", subtitle: madeString("2PT"), color: .blue) {
                         recordMade("2PT", points: 2)
                     }
-                    CompactStatButton(title: "3 PTS", subtitle: madeString("3PT"), color: .purple) {
+                    FlexStatButton(title: "3 PTS", subtitle: madeString("3PT"), color: .purple) {
                         recordMade("3PT", points: 3)
                     }
-                    CompactStatButton(title: "FT", subtitle: madeString("FT"), color: .orange) {
+                    FlexStatButton(title: "FT", subtitle: madeString("FT"), color: .orange) {
                         recordMade("FT", points: 1)
                     }
                 }
                 .padding(.horizontal)
 
                 // Miss buttons
-                HStack(spacing: 6) {
+                HStack(spacing: 8) {
                     MissButton(title: "2PT Miss") { recordMiss("2PT", points: 2) }
                     MissButton(title: "3PT Miss") { recordMiss("3PT", points: 3) }
                     MissButton(title: "FT Miss") { recordMiss("FT", points: 1) }
                 }
                 .padding(.horizontal)
 
-                Divider().padding(.vertical, 4)
-
-                // Other stats - 3 columns
-                HStack(spacing: 8) {
-                    CompactStatButton(title: "D-REB", subtitle: countString("DREB"), color: .green) {
+                // Other stats - 3 columns, 2 rows
+                HStack(spacing: 10) {
+                    FlexStatButton(title: "D-REB", subtitle: countString("DREB"), color: .green) {
                         recordCount("DREB")
                     }
-                    CompactStatButton(title: "O-REB", subtitle: countString("OREB"), color: .teal) {
+                    FlexStatButton(title: "O-REB", subtitle: countString("OREB"), color: .teal) {
                         recordCount("OREB")
                     }
-                    CompactStatButton(title: "STEAL", subtitle: countString("STL"), color: .indigo) {
+                    FlexStatButton(title: "STEAL", subtitle: countString("STL"), color: .indigo) {
                         recordCount("STL")
                     }
                 }
                 .padding(.horizontal)
 
-                HStack(spacing: 8) {
-                    CompactStatButton(title: "ASSIST", subtitle: countString("AST"), color: .mint) {
+                HStack(spacing: 10) {
+                    FlexStatButton(title: "ASSIST", subtitle: countString("AST"), color: .mint) {
                         recordCount("AST")
                     }
-                    CompactStatButton(title: "DRIVE", subtitle: countString("DRV"), color: .cyan) {
+                    FlexStatButton(title: "DRIVE", subtitle: countString("DRV"), color: .cyan) {
                         recordCount("DRV")
                     }
-                    CompactStatButton(title: "FOUL", subtitle: countString("PF"), color: .red) {
+                    FlexStatButton(title: "FOUL", subtitle: countString("PF"), color: .red) {
                         recordCount("PF")
                     }
                 }
                 .padding(.horizontal)
 
-                CompactStatButton(title: "GREAT PLAY", subtitle: countString("GP"), color: .yellow) {
+                FlexStatButton(title: "GREAT PLAY", subtitle: countString("GP"), color: .yellow) {
                     recordCount("GP")
                 }
                 .padding(.horizontal)
-
-                Spacer()
+                .padding(.bottom, 8)
             }
             .navigationTitle(game.opponent.isEmpty ? "Track Game" : "vs \(game.opponent)")
             .navigationBarTitleDisplayMode(.inline)
@@ -216,7 +212,7 @@ struct GameTrackingView: View {
 
 // MARK: - Components
 
-struct CompactStatButton: View {
+struct FlexStatButton: View {
     let title: String
     let subtitle: String
     let color: Color
@@ -226,16 +222,15 @@ struct CompactStatButton: View {
         Button(action: action) {
             VStack(spacing: 4) {
                 Text(title)
-                    .font(.subheadline.bold())
+                    .font(.title3.bold())
                 Text(subtitle)
-                    .font(.caption.bold())
-                    .opacity(0.8)
+                    .font(.headline)
+                    .opacity(0.85)
             }
             .foregroundStyle(.white)
-            .frame(maxWidth: .infinity)
-            .frame(height: 60)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(color)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
         }
     }
 }
