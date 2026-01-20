@@ -1,10 +1,14 @@
 import SwiftUI
 import SwiftData
+import StoreKit
 
 struct GameSummaryView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.requestReview) private var requestReview
     let game: Game
 
+    @AppStorage("hasRequestedReview") private var hasRequestedReview = false
+    @AppStorage("completedGamesCount") private var completedGamesCount = 0
     @State private var showingShareSheet = false
 
     // Get stats sorted by category
@@ -151,7 +155,7 @@ struct GameSummaryView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Done") {
-                        dismiss()
+                        handleDismiss()
                     }
                 }
 
@@ -180,6 +184,22 @@ struct GameSummaryView: View {
         case "PF": return 6
         default: return 99
         }
+    }
+
+    private func handleDismiss() {
+        // Increment completed games count
+        completedGamesCount += 1
+
+        // Request review after first completed game (and haven't requested before)
+        if completedGamesCount == 1 && !hasRequestedReview {
+            hasRequestedReview = true
+            // Small delay to let the view dismiss first, then show review
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                requestReview()
+            }
+        }
+
+        dismiss()
     }
 
     private func generateShareText() -> String {
