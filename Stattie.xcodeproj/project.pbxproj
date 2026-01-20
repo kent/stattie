@@ -36,6 +36,12 @@
 		E01000002B00001C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00001C /* SettingsView.swift */; };
 		E01000002B00001D /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00001D /* Extensions.swift */; };
 		E01000002B00001E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E00000002B00001E /* Assets.xcassets */; };
+		E01000002B00001F /* CloudKitContainerProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000020 /* CloudKitContainerProvider.swift */; };
+		E01000002B000020 /* CloudKitShareManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000021 /* CloudKitShareManager.swift */; };
+		E01000002B000021 /* CloudSharingControllerRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000022 /* CloudSharingControllerRepresentable.swift */; };
+		E01000002B000022 /* SharedPlayerBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000023 /* SharedPlayerBadge.swift */; };
+		E01000002B000023 /* SharePlayerButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000024 /* SharePlayerButton.swift */; };
+		E01000002B000024 /* ShareManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000025 /* ShareManagementView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -70,6 +76,12 @@
 		E00000002B00001D /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		E00000002B00001E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E00000002B00001F /* Stattie.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Stattie.entitlements; sourceTree = "<group>"; };
+		E00000002B000020 /* CloudKitContainerProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitContainerProvider.swift; sourceTree = "<group>"; };
+		E00000002B000021 /* CloudKitShareManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitShareManager.swift; sourceTree = "<group>"; };
+		E00000002B000022 /* CloudSharingControllerRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSharingControllerRepresentable.swift; sourceTree = "<group>"; };
+		E00000002B000023 /* SharedPlayerBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedPlayerBadge.swift; sourceTree = "<group>"; };
+		E00000002B000024 /* SharePlayerButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharePlayerButton.swift; sourceTree = "<group>"; };
+		E00000002B000025 /* ShareManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareManagementView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -119,6 +131,7 @@
 			children = (
 				E00000002B000001 /* StattieApp.swift */,
 				E00000002B000002 /* AppState.swift */,
+				E00000002B000020 /* CloudKitContainerProvider.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -155,6 +168,8 @@
 				E03000002B00000D /* Tracking */,
 				E03000002B00000E /* Summary */,
 				E03000002B00000F /* Settings */,
+				E03000002B000011 /* Components */,
+				E03000002B000012 /* Sharing */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -166,6 +181,7 @@
 				E00000002B000016 /* LockManager.swift */,
 				E00000002B000017 /* ShareService.swift */,
 				E00000002B000018 /* SeedDataService.swift */,
+				E00000002B000021 /* CloudKitShareManager.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -246,6 +262,24 @@
 				E00000002B00001D /* Extensions.swift */,
 			);
 			path = Extensions;
+			sourceTree = "<group>";
+		};
+		E03000002B000011 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				E00000002B000022 /* CloudSharingControllerRepresentable.swift */,
+				E00000002B000023 /* SharedPlayerBadge.swift */,
+				E00000002B000024 /* SharePlayerButton.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		E03000002B000012 /* Sharing */ = {
+			isa = PBXGroup;
+			children = (
+				E00000002B000025 /* ShareManagementView.swift */,
+			);
+			path = Sharing;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -345,6 +379,12 @@
 				E01000002B00001B /* OnboardingView.swift in Sources */,
 				E01000002B00001C /* SettingsView.swift in Sources */,
 				E01000002B00001D /* Extensions.swift in Sources */,
+				E01000002B00001F /* CloudKitContainerProvider.swift in Sources */,
+				E01000002B000020 /* CloudKitShareManager.swift in Sources */,
+				E01000002B000021 /* CloudSharingControllerRepresentable.swift in Sources */,
+				E01000002B000022 /* SharedPlayerBadge.swift in Sources */,
+				E01000002B000023 /* SharePlayerButton.swift in Sources */,
+				E01000002B000024 /* ShareManagementView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -478,7 +518,7 @@
 				CODE_SIGN_ENTITLEMENTS = Stattie/Stattie.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = PS5W7BFTQ2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Stattie;
@@ -509,7 +549,7 @@
 				CODE_SIGN_ENTITLEMENTS = Stattie/Stattie.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = PS5W7BFTQ2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Stattie;

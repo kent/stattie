@@ -22,3 +22,5 @@ Pods/
 # IDE
 .idea/
 *.hmap
+.vercel
+.env*.local

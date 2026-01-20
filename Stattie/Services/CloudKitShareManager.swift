@@ -10,7 +10,7 @@ final class CloudKitShareManager {
     static let shared = CloudKitShareManager()
 
     private let provider = CloudKitContainerProvider.shared
-    private let zoneID = CKRecordZone.ID(zoneName: "com.apple.coredata.cloudkit.zone", ownerName: CKCurrentUserRecordName)
+    private let zoneID = CKRecordZone.ID(zoneName: "com.apple.coredata.cloudkit.zone", ownerName: CKCurrentUserDefaultName)
 
     // Cache of shares by player ID
     private var shareCache: [UUID: CKShare] = [:]
@@ -68,14 +68,14 @@ final class CloudKitShareManager {
         // Create the share
         let share = CKShare(rootRecord: playerRecord)
         share[CKShare.SystemFieldKey.title] = player.fullName as CKRecordValue
-        share.publicPermission = .none // Only invited participants can access
+        share.publicPermission = CKShare.ParticipantPermission.none // Only invited participants can access
 
         // Save the share
         let operation = CKModifyRecordsOperation(recordsToSave: [playerRecord, share], recordIDsToDelete: nil)
-        operation.savePolicy = .changedKeys
+        operation.savePolicy = CKModifyRecordsOperation.RecordSavePolicy.changedKeys
 
         return try await withCheckedThrowingContinuation { continuation in
-            operation.modifyRecordsResultBlock = { result in
+            operation.modifyRecordsResultBlock = { (result: Result<Void, Error>) in
                 switch result {
                 case .success:
                     self.shareCache[player.id] = share
@@ -86,7 +86,7 @@ final class CloudKitShareManager {
                     continuation.resume(throwing: CloudKitSharingError.unknown(error))
                 }
             }
-            provider.cloudKitContainer.privateCloudDatabase.add(operation)
+            self.provider.cloudKitContainer.privateCloudDatabase.add(operation)
         }
     }
 
@@ -124,8 +124,6 @@ final class CloudKitShareManager {
         guard let share = await getShare(for: player) else {
             throw CloudKitSharingError.shareNotFound
         }
-
-        let recordID = CKRecord.ID(recordName: player.id.uuidString, zoneID: zoneID)
 
         // Delete the share record
         try await provider.cloudKitContainer.privateCloudDatabase.deleteRecord(withID: share.recordID)
@@ -216,7 +214,7 @@ final class CloudKitShareManager {
             return false
         }
 
-        return currentUser.role == .owner
+        return currentUser.role == CKShare.ParticipantRole.owner
     }
 
     /// Gets the number of participants for a shared player (excluding owner)
