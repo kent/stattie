@@ -190,8 +190,8 @@ struct GameSummaryView: View {
         // Increment completed games count
         completedGamesCount += 1
 
-        // Request review after first completed game (and haven't requested before)
-        if completedGamesCount == 1 && !hasRequestedReview {
+        // Request review after second completed game (and haven't requested before)
+        if completedGamesCount == 2 && !hasRequestedReview {
             hasRequestedReview = true
             // Small delay to let the view dismiss first, then show review
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
