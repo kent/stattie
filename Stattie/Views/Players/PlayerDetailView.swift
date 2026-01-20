@@ -103,11 +103,20 @@ struct PlayerDetailView: View {
                     Button {
                         startNewGame()
                     } label: {
-                        Label("Record New Game", systemImage: "plus.circle.fill")
-                            .font(.headline)
+                        HStack {
+                            Spacer()
+                            Label("Record New Game", systemImage: "plus.circle.fill")
+                                .font(.headline)
+                            Spacer()
+                        }
+                        .padding(.vertical, 12)
                     }
+                    .listRowBackground(Color.accentColor)
+                    .foregroundStyle(.white)
+                }
 
-                    if !playerGames.isEmpty {
+                if !playerGames.isEmpty {
+                    Section {
                         NavigationLink {
                             PlayerStatsOverTimeView(player: player)
                         } label: {
@@ -124,7 +133,7 @@ struct PlayerDetailView: View {
                                 Button {
                                     activeGame = game
                                 } label: {
-                                    PlayerGameRow(game: game, stats: pgs)
+                                    PlayerGameRow(game: game)
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -138,7 +147,7 @@ struct PlayerDetailView: View {
                         ForEach(completedGames) { pgs in
                             if let game = pgs.game {
                                 NavigationLink(value: game) {
-                                    PlayerGameRow(game: game, stats: pgs)
+                                    PlayerGameRow(game: game)
                                 }
                             }
                         }
@@ -243,7 +252,6 @@ struct PlayerDetailView: View {
 
 struct PlayerGameRow: View {
     let game: Game
-    let stats: PlayerGameStats
 
     var body: some View {
         HStack {
@@ -272,7 +280,7 @@ struct PlayerGameRow: View {
             Spacer()
 
             VStack(alignment: .trailing) {
-                Text("\(stats.totalPoints)")
+                Text("\(game.totalPoints)")
                     .font(.title2.bold())
                     .foregroundStyle(.accent)
 

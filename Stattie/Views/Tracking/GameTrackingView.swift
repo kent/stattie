@@ -44,156 +44,89 @@ struct GameTrackingView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 20) {
-                    // Score display
-                    VStack(spacing: 4) {
-                        Text("\(totalPoints)")
-                            .font(.system(size: 64, weight: .bold))
-                            .foregroundStyle(.blue)
-                        Text("POINTS")
-                            .font(.headline)
-                            .foregroundStyle(.secondary)
+            VStack(spacing: 8) {
+                // Score display
+                HStack {
+                    Text("\(totalPoints)")
+                        .font(.system(size: 48, weight: .bold))
+                        .foregroundStyle(.blue)
+                    Text("PTS")
+                        .font(.title3.bold())
+                        .foregroundStyle(.secondary)
+
+                    Spacer()
+
+                    // Achievements inline
+                    if hasTripleDouble {
+                        Label("Triple Double", systemImage: "star.circle.fill")
+                            .font(.caption.bold())
+                            .foregroundStyle(.purple)
+                    } else if hasDoubleDouble {
+                        Label("Double Double", systemImage: "star.fill")
+                            .font(.caption.bold())
+                            .foregroundStyle(.orange)
                     }
-                    .padding(.top, 20)
-
-                    // Shooting buttons
-                    VStack(spacing: 12) {
-                        HStack(spacing: 12) {
-                            StatButton(
-                                title: "2 PTS",
-                                subtitle: madeString("2PT"),
-                                color: .blue
-                            ) {
-                                recordMade("2PT", points: 2)
-                            }
-
-                            StatButton(
-                                title: "3 PTS",
-                                subtitle: madeString("3PT"),
-                                color: .purple
-                            ) {
-                                recordMade("3PT", points: 3)
-                            }
-                        }
-
-                        StatButton(
-                            title: "FREE THROW",
-                            subtitle: madeString("FT"),
-                            color: .orange
-                        ) {
-                            recordMade("FT", points: 1)
-                        }
-
-                        // Miss buttons
-                        HStack(spacing: 8) {
-                            MissButton(title: "2PT Miss") { recordMiss("2PT", points: 2) }
-                            MissButton(title: "3PT Miss") { recordMiss("3PT", points: 3) }
-                            MissButton(title: "FT Miss") { recordMiss("FT", points: 1) }
-                        }
-                    }
-                    .padding(.horizontal)
-
-                    Divider().padding(.vertical, 8)
-
-                    // Other stats
-                    VStack(spacing: 12) {
-                        HStack(spacing: 12) {
-                            StatButton(
-                                title: "DEF REB",
-                                subtitle: countString("DREB"),
-                                color: .green
-                            ) {
-                                recordCount("DREB")
-                            }
-
-                            StatButton(
-                                title: "OFF REB",
-                                subtitle: countString("OREB"),
-                                color: .teal
-                            ) {
-                                recordCount("OREB")
-                            }
-                        }
-
-                        HStack(spacing: 12) {
-                            StatButton(
-                                title: "STEAL",
-                                subtitle: countString("STL"),
-                                color: .indigo
-                            ) {
-                                recordCount("STL")
-                            }
-
-                            StatButton(
-                                title: "ASSIST",
-                                subtitle: countString("AST"),
-                                color: .mint
-                            ) {
-                                recordCount("AST")
-                            }
-                        }
-
-                        HStack(spacing: 12) {
-                            StatButton(
-                                title: "DRIVE",
-                                subtitle: countString("DRV"),
-                                color: .cyan
-                            ) {
-                                recordCount("DRV")
-                            }
-
-                            StatButton(
-                                title: "FOUL",
-                                subtitle: countString("PF"),
-                                color: .red
-                            ) {
-                                recordCount("PF")
-                            }
-                        }
-
-                        StatButton(
-                            title: "GREAT PLAY",
-                            subtitle: countString("GP"),
-                            color: .yellow
-                        ) {
-                            recordCount("GP")
-                        }
-                    }
-                    .padding(.horizontal)
-
-                    // Achievements
-                    if hasDoubleDouble || hasTripleDouble {
-                        Divider().padding(.vertical, 8)
-
-                        VStack(spacing: 12) {
-                            Text("ACHIEVEMENTS")
-                                .font(.headline)
-                                .foregroundStyle(.secondary)
-
-                            HStack(spacing: 16) {
-                                if hasDoubleDouble {
-                                    AchievementBadge(
-                                        title: "Double Double",
-                                        icon: "star.fill",
-                                        color: .orange
-                                    )
-                                }
-
-                                if hasTripleDouble {
-                                    AchievementBadge(
-                                        title: "Triple Double",
-                                        icon: "star.circle.fill",
-                                        color: .purple
-                                    )
-                                }
-                            }
-                        }
-                        .padding(.horizontal)
-                    }
-
-                    Spacer(minLength: 40)
                 }
+                .padding(.horizontal)
+                .padding(.top, 8)
+
+                // Shooting buttons - 3 across
+                HStack(spacing: 8) {
+                    CompactStatButton(title: "2 PTS", subtitle: madeString("2PT"), color: .blue) {
+                        recordMade("2PT", points: 2)
+                    }
+                    CompactStatButton(title: "3 PTS", subtitle: madeString("3PT"), color: .purple) {
+                        recordMade("3PT", points: 3)
+                    }
+                    CompactStatButton(title: "FT", subtitle: madeString("FT"), color: .orange) {
+                        recordMade("FT", points: 1)
+                    }
+                }
+                .padding(.horizontal)
+
+                // Miss buttons
+                HStack(spacing: 6) {
+                    MissButton(title: "2PT Miss") { recordMiss("2PT", points: 2) }
+                    MissButton(title: "3PT Miss") { recordMiss("3PT", points: 3) }
+                    MissButton(title: "FT Miss") { recordMiss("FT", points: 1) }
+                }
+                .padding(.horizontal)
+
+                Divider().padding(.vertical, 4)
+
+                // Other stats - 3 columns
+                HStack(spacing: 8) {
+                    CompactStatButton(title: "D-REB", subtitle: countString("DREB"), color: .green) {
+                        recordCount("DREB")
+                    }
+                    CompactStatButton(title: "O-REB", subtitle: countString("OREB"), color: .teal) {
+                        recordCount("OREB")
+                    }
+                    CompactStatButton(title: "STEAL", subtitle: countString("STL"), color: .indigo) {
+                        recordCount("STL")
+                    }
+                }
+                .padding(.horizontal)
+
+                HStack(spacing: 8) {
+                    CompactStatButton(title: "ASSIST", subtitle: countString("AST"), color: .mint) {
+                        recordCount("AST")
+                    }
+                    CompactStatButton(title: "DRIVE", subtitle: countString("DRV"), color: .cyan) {
+                        recordCount("DRV")
+                    }
+                    CompactStatButton(title: "FOUL", subtitle: countString("PF"), color: .red) {
+                        recordCount("PF")
+                    }
+                }
+                .padding(.horizontal)
+
+                CompactStatButton(title: "GREAT PLAY", subtitle: countString("GP"), color: .yellow) {
+                    recordCount("GP")
+                }
+                .padding(.horizontal)
+
+                Spacer()
             }
             .navigationTitle(game.opponent.isEmpty ? "Track Game" : "vs \(game.opponent)")
             .navigationBarTitleDisplayMode(.inline)
@@ -283,7 +216,7 @@ struct GameTrackingView: View {
 
 // MARK: - Components
 
-struct StatButton: View {
+struct CompactStatButton: View {
     let title: String
     let subtitle: String
     let color: Color
@@ -291,18 +224,18 @@ struct StatButton: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 8) {
+            VStack(spacing: 4) {
                 Text(title)
-                    .font(.title2.bold())
+                    .font(.subheadline.bold())
                 Text(subtitle)
-                    .font(.headline)
+                    .font(.caption.bold())
                     .opacity(0.8)
             }
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
-            .frame(height: 90)
+            .frame(height: 60)
             .background(color)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
         }
     }
 }
@@ -314,12 +247,12 @@ struct MissButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.subheadline.bold())
+                .font(.caption.bold())
                 .foregroundStyle(.gray)
                 .frame(maxWidth: .infinity)
-                .frame(height: 44)
+                .frame(height: 36)
                 .background(Color.gray.opacity(0.2))
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
         }
     }
 }
