@@ -1,6 +1,7 @@
 import Foundation
 import CloudKit
 import SwiftData
+import Combine
 
 @Observable
 final class SyncManager {
@@ -11,6 +12,8 @@ final class SyncManager {
     private(set) var isCheckingStatus = false
     private(set) var lastSyncDate: Date?
     private(set) var syncError: Error?
+
+    private var accountChangeObserver: NSObjectProtocol?
 
     var isSignedIntoiCloud: Bool {
         iCloudStatus == .available
@@ -33,19 +36,56 @@ final class SyncManager {
         }
     }
 
-    private init() {}
+    private init() {
+        // Start observing account changes
+        startObservingAccountChanges()
+    }
+
+    deinit {
+        stopObservingAccountChanges()
+    }
+
+    // MARK: - Account Change Monitoring
+
+    private func startObservingAccountChanges() {
+        // Observe CKAccountChanged notification
+        accountChangeObserver = NotificationCenter.default.addObserver(
+            forName: .CKAccountChanged,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                await self?.checkiCloudStatus()
+
+                // Clear share cache when account changes
+                await CloudKitShareManager.shared.clearCache()
+            }
+        }
+    }
+
+    private func stopObservingAccountChanges() {
+        if let observer = accountChangeObserver {
+            NotificationCenter.default.removeObserver(observer)
+            accountChangeObserver = nil
+        }
+    }
+
+    // MARK: - Status Checking
 
     @MainActor
     func checkiCloudStatus() async {
         isCheckingStatus = true
         defer { isCheckingStatus = false }
 
+        // Use the same container as CloudKitContainerProvider
+        let container = CloudKitContainerProvider.shared.cloudKitContainer
+
         do {
-            let status = try await CKContainer.default().accountStatus()
+            let status = try await container.accountStatus()
             iCloudStatus = status
 
             if status == .available {
-                await fetchCloudKitUserID()
+                await fetchCloudKitUserID(from: container)
             } else {
                 cloudKitUserID = nil
             }
@@ -57,17 +97,34 @@ final class SyncManager {
         }
     }
 
-    private func fetchCloudKitUserID() async {
+    private func fetchCloudKitUserID(from container: CKContainer) async {
         do {
-            let recordID = try await CKContainer.default().userRecordID()
-            cloudKitUserID = recordID.recordName
+            let recordID = try await container.userRecordID()
+            await MainActor.run {
+                cloudKitUserID = recordID.recordName
+            }
         } catch {
             print("Failed to fetch CloudKit user ID: \(error)")
-            cloudKitUserID = nil
+            await MainActor.run {
+                cloudKitUserID = nil
+            }
         }
     }
 
+    // MARK: - Sync Status
+
     func updateLastSyncDate() {
         lastSyncDate = Date()
+    }
+
+    /// Formatted description of the last sync
+    var lastSyncDescription: String {
+        guard let date = lastSyncDate else {
+            return "Never synced"
+        }
+
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .abbreviated
+        return formatter.localizedString(for: date, relativeTo: Date())
     }
 }

@@ -44,32 +44,59 @@ struct StattieApp: App {
 
     @State private var shareAcceptanceError: String?
     @State private var showShareAcceptanceError = false
+    @State private var showShareAcceptedSuccess = false
 
     var body: some Scene {
         WindowGroup {
             ContentView()
+                // Handle CloudKit share URLs
                 .onOpenURL { url in
                     handleIncomingShareURL(url)
+                }
+                // Handle CloudKit share metadata from user activity (recommended approach)
+                .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { userActivity in
+                    handleUserActivity(userActivity)
+                }
+                // Also handle CloudKit-specific activity type
+                .onContinueUserActivity("com.apple.cloudkit.share") { userActivity in
+                    handleUserActivity(userActivity)
                 }
                 .alert("Share Error", isPresented: $showShareAcceptanceError) {
                     Button("OK", role: .cancel) {}
                 } message: {
                     Text(shareAcceptanceError ?? "Failed to accept share")
                 }
+                .alert("Share Accepted", isPresented: $showShareAcceptedSuccess) {
+                    Button("OK", role: .cancel) {}
+                } message: {
+                    Text("You now have access to the shared player.")
+                }
         }
         .modelContainer(sharedModelContainer)
     }
 
+    // MARK: - Share URL Handling
+
     private func handleIncomingShareURL(_ url: URL) {
         // Handle CloudKit share invitation URLs
         // Format: cloudkit-iCloud.com.stattie.app://...
-        guard url.scheme == "cloudkit-iCloud.com.stattie.app" else {
+        let expectedScheme = "cloudkit-\(CloudKitContainerProvider.shared.containerIdentifier)"
+
+        guard url.scheme == expectedScheme else {
+            print("Ignoring URL with unexpected scheme: \(url.scheme ?? "nil")")
             return
         }
 
+        // For URL-based share acceptance, we need to fetch metadata first
         Task {
             do {
-                try await CloudKitShareManager.shared.acceptShare(from: url)
+                // Use CKFetchShareMetadataOperation to get metadata from URL
+                let metadata = try await fetchShareMetadata(from: url)
+                try await CloudKitShareManager.shared.acceptShare(from: metadata)
+
+                await MainActor.run {
+                    showShareAcceptedSuccess = true
+                }
             } catch {
                 await MainActor.run {
                     shareAcceptanceError = error.localizedDescription
@@ -78,20 +105,77 @@ struct StattieApp: App {
             }
         }
     }
+
+    // MARK: - User Activity Handling
+
+    private func handleUserActivity(_ userActivity: NSUserActivity) {
+        // Check if this is a CloudKit share activity
+        guard let metadata = userActivity.cloudKitShareMetadata else {
+            print("No CloudKit share metadata in user activity")
+            return
+        }
+
+        Task {
+            do {
+                try await CloudKitShareManager.shared.acceptShare(from: metadata)
+
+                await MainActor.run {
+                    showShareAcceptedSuccess = true
+                }
+            } catch {
+                await MainActor.run {
+                    shareAcceptanceError = error.localizedDescription
+                    showShareAcceptanceError = true
+                }
+            }
+        }
+    }
+
+    // MARK: - Share Metadata Fetching
+
+    private func fetchShareMetadata(from url: URL) async throws -> CKShare.Metadata {
+        let container = CloudKitContainerProvider.shared.cloudKitContainer
+
+        return try await withCheckedThrowingContinuation { continuation in
+            let operation = CKFetchShareMetadataOperation(shareURLs: [url])
+
+            operation.perShareMetadataResultBlock = { url, result in
+                switch result {
+                case .success(let metadata):
+                    continuation.resume(returning: metadata)
+                case .failure(let error):
+                    continuation.resume(throwing: error)
+                }
+            }
+
+            // Handle completion
+            operation.fetchShareMetadataResultBlock = { result in
+                if case .failure(let error) = result {
+                    // Only resume if not already resumed by perShareMetadataResultBlock
+                    // This handles the case where there were no URLs to process
+                }
+            }
+
+            container.add(operation)
+        }
+    }
 }
 
-// MARK: - CloudKit Share Acceptance via Scene Delegate
+// MARK: - NSUserActivity Extension
 
-extension StattieApp {
-    /// Handles CKShare.Metadata for share acceptance
-    /// This is typically called from the SceneDelegate when opening a share URL
-    @MainActor
-    func acceptShare(_ metadata: CKShare.Metadata) async {
-        do {
-            try await CloudKitShareManager.shared.acceptShare(from: metadata)
-        } catch {
-            shareAcceptanceError = error.localizedDescription
-            showShareAcceptanceError = true
+extension NSUserActivity {
+    /// Extracts CloudKit share metadata from a user activity if present
+    var cloudKitShareMetadata: CKShare.Metadata? {
+        // The system provides share metadata in the userInfo with a specific key
+        guard let userInfo = userInfo else { return nil }
+
+        // Try the standard CloudKit key
+        if let metadata = userInfo["CKShareMetadata"] as? CKShare.Metadata {
+            return metadata
         }
+
+        // Also check for the metadata in the activity's webpageURL
+        // CloudKit shares come through as web activity with the share URL
+        return nil
     }
 }

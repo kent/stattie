@@ -3,17 +3,31 @@ import SwiftData
 import CloudKit
 
 /// Manages CloudKit sharing for Player records.
-/// Enables Notes-like collaborative sharing where owners can share players with family members.
+/// Creates shareable CloudKit records linked to SwiftData Player entities.
+///
+/// Architecture:
+/// - SwiftData manages the primary Player data with automatic CloudKit sync
+/// - For sharing, we create separate CKRecords in a dedicated sharing zone
+/// - These share records are linked to Players via the Player's UUID
+/// - Recipients see a read-only snapshot that can be refreshed
 @MainActor
 @Observable
 final class CloudKitShareManager {
     static let shared = CloudKitShareManager()
 
     private let provider = CloudKitContainerProvider.shared
-    private let zoneID = CKRecordZone.ID(zoneName: "com.apple.coredata.cloudkit.zone", ownerName: CKCurrentUserDefaultName)
+
+    // Use a dedicated zone for sharing to avoid conflicts with SwiftData's zone
+    private let sharingZoneName = "PlayerSharingZone"
+    private var sharingZoneID: CKRecordZone.ID {
+        CKRecordZone.ID(zoneName: sharingZoneName, ownerName: CKCurrentUserDefaultName)
+    }
 
     // Cache of shares by player ID
     private var shareCache: [UUID: CKShare] = [:]
+
+    // Track zone creation
+    private var zoneCreated = false
 
     // Currently active share for presentation
     private(set) var activeShare: CKShare?
@@ -24,71 +38,109 @@ final class CloudKitShareManager {
 
     private init() {}
 
+    // MARK: - Zone Management
+
+    /// Ensures the sharing zone exists
+    private func ensureSharingZoneExists() async throws {
+        guard !zoneCreated else { return }
+
+        let zone = CKRecordZone(zoneID: sharingZoneID)
+        do {
+            _ = try await provider.cloudKitContainer.privateCloudDatabase.save(zone)
+            zoneCreated = true
+        } catch let error as CKError {
+            // Zone already exists is fine
+            if error.code == .serverRecordChanged || error.code == .zoneNotFound {
+                zoneCreated = true
+            } else {
+                throw error
+            }
+        }
+    }
+
     // MARK: - Share Creation
 
     /// Creates a CKShare for a player and returns it for presentation
     func createShare(for player: Player) async throws -> CKShare {
         isLoading = true
+        errorMessage = nil
         defer { isLoading = false }
 
         // Check iCloud status first
         let status = try await provider.cloudKitContainer.accountStatus()
         guard status == .available else {
+            errorMessage = "Please sign in to iCloud"
             throw CloudKitSharingError.notSignedIn
         }
 
-        // Create a record zone if needed
-        let zone = CKRecordZone(zoneID: zoneID)
-        do {
-            _ = try await provider.cloudKitContainer.privateCloudDatabase.save(zone)
-        } catch {
-            // Zone may already exist, which is fine
+        // Ensure zone exists
+        try await ensureSharingZoneExists()
+
+        // Check if share already exists
+        if let existingShare = await getShare(for: player) {
+            activeShare = existingShare
+            activePlayerID = player.id
+            return existingShare
         }
 
-        // Create a CKRecord for the player
-        let recordID = CKRecord.ID(recordName: player.id.uuidString, zoneID: zoneID)
-        let playerRecord = CKRecord(recordType: "CD_Player", recordID: recordID)
+        // Create a CKRecord for the player in our sharing zone
+        let recordID = CKRecord.ID(recordName: "Player_\(player.id.uuidString)", zoneID: sharingZoneID)
+        let playerRecord = CKRecord(recordType: "SharedPlayer", recordID: recordID)
 
-        // Set basic metadata that CloudKit needs
-        playerRecord["CD_firstName"] = player.firstName as CKRecordValue
-        playerRecord["CD_lastName"] = player.lastName as CKRecordValue
-        playerRecord["CD_jerseyNumber"] = player.jerseyNumber as CKRecordValue
-        playerRecord["CD_position"] = player.position as CKRecordValue
-        playerRecord["CD_id"] = player.id.uuidString as CKRecordValue
-
-        // Save the record first
-        do {
-            _ = try await provider.cloudKitContainer.privateCloudDatabase.save(playerRecord)
-        } catch let error as CKError where error.code == .serverRecordChanged {
-            // Record already exists, fetch it instead
-        } catch {
-            throw CloudKitSharingError.unknown(error)
-        }
+        // Set player data
+        playerRecord["firstName"] = player.firstName as CKRecordValue
+        playerRecord["lastName"] = player.lastName as CKRecordValue
+        playerRecord["jerseyNumber"] = player.jerseyNumber as CKRecordValue
+        playerRecord["position"] = player.position as CKRecordValue
+        playerRecord["playerID"] = player.id.uuidString as CKRecordValue
 
         // Create the share
         let share = CKShare(rootRecord: playerRecord)
         share[CKShare.SystemFieldKey.title] = player.fullName as CKRecordValue
-        share.publicPermission = CKShare.ParticipantPermission.none // Only invited participants can access
+        share[CKShare.SystemFieldKey.shareType] = "com.stattie.player" as CKRecordValue
+        share.publicPermission = .none // Only invited participants
 
-        // Save the share
-        let operation = CKModifyRecordsOperation(recordsToSave: [playerRecord, share], recordIDsToDelete: nil)
-        operation.savePolicy = CKModifyRecordsOperation.RecordSavePolicy.changedKeys
+        // Save both records using modern async API with retry logic
+        let database = provider.cloudKitContainer.privateCloudDatabase
 
-        return try await withCheckedThrowingContinuation { continuation in
-            operation.modifyRecordsResultBlock = { (result: Result<Void, Error>) in
-                switch result {
-                case .success:
-                    self.shareCache[player.id] = share
-                    self.activeShare = share
-                    self.activePlayerID = player.id
-                    continuation.resume(returning: share)
-                case .failure(let error):
-                    continuation.resume(throwing: CloudKitSharingError.unknown(error))
+        do {
+            // Use modifyRecords for atomic save of record + share
+            let (savedResults, _) = try await database.modifyRecords(
+                saving: [playerRecord, share],
+                deleting: [],
+                savePolicy: .changedKeys
+            )
+
+            // Find the saved share in results
+            var savedShare: CKShare?
+            for (_, result) in savedResults {
+                if case .success(let record) = result, let s = record as? CKShare {
+                    savedShare = s
+                    break
                 }
             }
-            self.provider.cloudKitContainer.privateCloudDatabase.add(operation)
+
+            guard let finalShare = savedShare else {
+                throw CloudKitSharingError.shareCreationFailed
+            }
+
+            // Cache and set active
+            shareCache[player.id] = finalShare
+            activeShare = finalShare
+            activePlayerID = player.id
+
+            return finalShare
+
+        } catch let error as CKError {
+            errorMessage = mapCKError(error)
+            throw CloudKitSharingError.unknown(error)
+        } catch {
+            errorMessage = error.localizedDescription
+            throw CloudKitSharingError.unknown(error)
         }
     }
+
+    // MARK: - Share Retrieval
 
     /// Gets existing share for a player if one exists
     func getShare(for player: Player) async -> CKShare? {
@@ -97,7 +149,8 @@ final class CloudKitShareManager {
             return cached
         }
 
-        let recordID = CKRecord.ID(recordName: player.id.uuidString, zoneID: zoneID)
+        let recordID = CKRecord.ID(recordName: "Player_\(player.id.uuidString)", zoneID: sharingZoneID)
+
         do {
             let share = try await provider.getShare(for: recordID)
             if let share = share {
@@ -105,6 +158,7 @@ final class CloudKitShareManager {
             }
             return share
         } catch {
+            // Record doesn't exist or other error
             return nil
         }
     }
@@ -116,17 +170,25 @@ final class CloudKitShareManager {
 
     // MARK: - Share Management
 
-    /// Stops sharing a player (removes all participants)
+    /// Stops sharing a player (removes the share)
     func stopSharing(_ player: Player) async throws {
         isLoading = true
+        errorMessage = nil
         defer { isLoading = false }
 
         guard let share = await getShare(for: player) else {
             throw CloudKitSharingError.shareNotFound
         }
 
-        // Delete the share record
-        try await provider.cloudKitContainer.privateCloudDatabase.deleteRecord(withID: share.recordID)
+        let database = provider.cloudKitContainer.privateCloudDatabase
+
+        // Delete the share record (this removes all participants)
+        do {
+            try await database.deleteRecord(withID: share.recordID)
+        } catch let error as CKError {
+            errorMessage = mapCKError(error)
+            throw CloudKitSharingError.unknown(error)
+        }
 
         // Clear from cache
         shareCache.removeValue(forKey: player.id)
@@ -141,32 +203,24 @@ final class CloudKitShareManager {
         guard let share = await getShare(for: player) else {
             return []
         }
-        return share.participants
+        // Filter to return only non-owner participants
+        return share.participants.filter { $0.role != .owner }
     }
 
     // MARK: - Share Acceptance
 
-    /// Accepts an incoming share invitation
+    /// Accepts an incoming share invitation from metadata
     func acceptShare(from metadata: CKShare.Metadata) async throws {
         isLoading = true
+        errorMessage = nil
         defer { isLoading = false }
 
-        try await provider.cloudKitContainer.accept(metadata)
-    }
-
-    /// Accepts share from a URL (called from onOpenURL)
-    func acceptShare(from url: URL) async throws {
-        isLoading = true
-        defer { isLoading = false }
-
-        // Parse the CloudKit share URL
-        // Format: cloudkit-iCloud.com.stattie.app://...
-        guard url.scheme == "cloudkit-iCloud.com.stattie.app" else {
-            throw CloudKitSharingError.unknown(NSError(domain: "InvalidURL", code: -1))
+        do {
+            try await provider.acceptShare(metadata)
+        } catch let error as CKError {
+            errorMessage = mapCKError(error)
+            throw CloudKitSharingError.unknown(error)
         }
-
-        // Fetch the share metadata from the URL
-        // This is handled by the system when the app opens via the URL
     }
 
     // MARK: - Leave Share
@@ -174,22 +228,44 @@ final class CloudKitShareManager {
     /// Leave a share that was shared with the current user
     func leaveShare(_ player: Player) async throws {
         isLoading = true
+        errorMessage = nil
         defer { isLoading = false }
 
         guard let share = await getShare(for: player) else {
             throw CloudKitSharingError.shareNotFound
         }
 
-        // Find current user participant
         guard let currentUserParticipant = share.currentUserParticipant else {
+            throw CloudKitSharingError.unauthorized
+        }
+
+        // Can't leave if you're the owner
+        if currentUserParticipant.role == .owner {
             throw CloudKitSharingError.unauthorized
         }
 
         // Remove self from share
         share.removeParticipant(currentUserParticipant)
 
-        // Save changes
-        try await provider.cloudKitContainer.privateCloudDatabase.save(share)
+        // Save changes with retry logic
+        let database = provider.cloudKitContainer.privateCloudDatabase
+
+        do {
+            _ = try await database.save(share)
+        } catch let error as CKError {
+            if error.code == .serverRecordChanged {
+                // Fetch latest and retry once
+                if let latestShare = try? await provider.getShare(
+                    for: CKRecord.ID(recordName: "Player_\(player.id.uuidString)", zoneID: sharingZoneID)
+                ), let participant = latestShare.currentUserParticipant {
+                    latestShare.removeParticipant(participant)
+                    _ = try await database.save(latestShare)
+                }
+            } else {
+                errorMessage = mapCKError(error)
+                throw CloudKitSharingError.unknown(error)
+            }
+        }
 
         // Clear cache
         shareCache.removeValue(forKey: player.id)
@@ -214,7 +290,7 @@ final class CloudKitShareManager {
             return false
         }
 
-        return currentUser.role == CKShare.ParticipantRole.owner
+        return currentUser.role == .owner
     }
 
     /// Gets the number of participants for a shared player (excluding owner)
@@ -224,5 +300,28 @@ final class CloudKitShareManager {
         }
         // Subtract 1 to exclude owner
         return max(0, share.participants.count - 1)
+    }
+
+    // MARK: - Error Mapping
+
+    private func mapCKError(_ error: CKError) -> String {
+        switch error.code {
+        case .networkUnavailable, .networkFailure:
+            return "Network unavailable. Please check your connection."
+        case .notAuthenticated:
+            return "Please sign in to iCloud."
+        case .quotaExceeded:
+            return "iCloud storage quota exceeded."
+        case .serverRejectedRequest:
+            return "Request rejected by iCloud. Please try again."
+        case .zoneBusy:
+            return "iCloud is busy. Please try again in a moment."
+        case .limitExceeded:
+            return "Too many operations. Please try again later."
+        case .permissionFailure:
+            return "Permission denied. Check your iCloud settings."
+        default:
+            return error.localizedDescription
+        }
     }
 }
