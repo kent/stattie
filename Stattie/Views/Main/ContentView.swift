@@ -24,11 +24,6 @@ struct MainTabView: View {
 
     var body: some View {
         TabView {
-            GameListView()
-                .tabItem {
-                    Label("Games", systemImage: "sportscourt")
-                }
-
             PlayerListView()
                 .tabItem {
                     Label("Players", systemImage: "person.3")
