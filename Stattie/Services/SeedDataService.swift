@@ -68,4 +68,127 @@ final class SeedDataService {
         let descriptor = FetchDescriptor<Sport>(predicate: #Predicate { $0.name == "Basketball" })
         return try? context.fetch(descriptor).first
     }
+
+    // MARK: - Test Data
+
+    func seedJackJamesIfNeeded(context: ModelContext) {
+        let descriptor = FetchDescriptor<Player>(predicate: #Predicate { $0.firstName == "Jack" && $0.lastName == "James" })
+
+        do {
+            let existingPlayers = try context.fetch(descriptor)
+            if existingPlayers.isEmpty {
+                createJackJamesWithHistory(context: context)
+            }
+        } catch {
+            print("Failed to check for Jack James: \(error)")
+        }
+    }
+
+    private func createJackJamesWithHistory(context: ModelContext) {
+        // Create Jack James
+        let jack = Player(
+            firstName: "Jack",
+            lastName: "James",
+            jerseyNumber: 23,
+            position: "Point Guard"
+        )
+        context.insert(jack)
+
+        // Get basketball sport
+        let basketball = getBasketball(context: context)
+
+        // NBA team names for opponents
+        let opponents = [
+            "Lakers", "Celtics", "Warriors", "Heat", "Nets",
+            "Bulls", "Knicks", "Suns", "Bucks", "76ers",
+            "Mavericks", "Clippers", "Nuggets", "Grizzlies", "Cavaliers"
+        ]
+
+        // Create 45 games over the past 6 months
+        let calendar = Calendar.current
+        let today = Date()
+
+        for gameIndex in 0..<45 {
+            // Game date: spread over past 180 days
+            let daysAgo = 180 - (gameIndex * 4) // roughly every 4 days
+            guard let gameDate = calendar.date(byAdding: .day, value: -daysAgo, to: today) else { continue }
+
+            let opponent = opponents[gameIndex % opponents.count]
+            let game = Game(
+                gameDate: gameDate,
+                opponent: opponent,
+                isCompleted: true,
+                sport: basketball
+            )
+            context.insert(game)
+
+            // Create PlayerGameStats for Jack in this game
+            let playerStats = PlayerGameStats(player: jack, game: game)
+            context.insert(playerStats)
+
+            // Link relationships
+            if jack.gameStats == nil { jack.gameStats = [] }
+            jack.gameStats?.append(playerStats)
+
+            if game.playerStats == nil { game.playerStats = [] }
+            game.playerStats?.append(playerStats)
+
+            // Generate realistic stats with some variance and trends
+            // Jack improves slightly over time (lower gameIndex = older games)
+            let improvementFactor = 1.0 + (Double(gameIndex) / 100.0) // 0% to 45% improvement
+
+            // Base stats with randomness
+            let twoPointMade = Int(Double.random(in: 3...8) * improvementFactor)
+            let twoPointMissed = Int.random(in: 2...6)
+            let threePointMade = Int(Double.random(in: 1...4) * improvementFactor)
+            let threePointMissed = Int.random(in: 2...5)
+            let ftMade = Int.random(in: 2...6)
+            let ftMissed = Int.random(in: 0...2)
+
+            let defensiveRebounds = Int(Double.random(in: 2...6) * improvementFactor)
+            let offensiveRebounds = Int.random(in: 0...3)
+            let steals = Int(Double.random(in: 1...4) * improvementFactor)
+            let assists = Int(Double.random(in: 3...8) * improvementFactor)
+            let fouls = Int.random(in: 1...4)
+            let drives = Int.random(in: 2...6)
+            let greatPlays = Int.random(in: 0...3)
+
+            // Create stat objects
+            let stats: [(String, Int, Int, Int, Int)] = [
+                // (statName, pointValue, made, missed, count)
+                ("2PT", 2, twoPointMade, twoPointMissed, 0),
+                ("3PT", 3, threePointMade, threePointMissed, 0),
+                ("FT", 1, ftMade, ftMissed, 0),
+                ("DREB", 0, 0, 0, defensiveRebounds),
+                ("OREB", 0, 0, 0, offensiveRebounds),
+                ("STL", 0, 0, 0, steals),
+                ("AST", 0, 0, 0, assists),
+                ("PF", 0, 0, 0, fouls),
+                ("DRV", 0, 0, 0, drives),
+                ("GP", 0, 0, 0, greatPlays),
+            ]
+
+            for (statName, pointValue, made, missed, count) in stats {
+                let stat = Stat(
+                    statName: statName,
+                    pointValue: pointValue,
+                    made: made,
+                    missed: missed,
+                    count: count,
+                    playerGameStats: playerStats
+                )
+                context.insert(stat)
+
+                if playerStats.stats == nil { playerStats.stats = [] }
+                playerStats.stats?.append(stat)
+            }
+        }
+
+        do {
+            try context.save()
+            print("Jack James seeded with 45 games of history")
+        } catch {
+            print("Failed to save Jack James: \(error)")
+        }
+    }
 }

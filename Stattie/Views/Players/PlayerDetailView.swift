@@ -90,11 +90,17 @@ struct PlayerDetailView: View {
                                             .foregroundStyle(.secondary)
                                     }
                                     Spacer()
-                                    Text("\(game.totalPoints) pts")
+                                    Text("\(pgs.totalPoints) pts")
                                         .font(.headline)
                                         .foregroundStyle(.accent)
                                 }
                             }
+                        }
+
+                        NavigationLink {
+                            PlayerStatsOverTimeView(player: player)
+                        } label: {
+                            Label("View Stats Over Time", systemImage: "chart.line.uptrend.xyaxis")
                         }
                     } else {
                         Text("No games yet")

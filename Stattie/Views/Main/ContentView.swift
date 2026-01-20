@@ -20,6 +20,8 @@ struct ContentView: View {
 }
 
 struct MainTabView: View {
+    @Environment(\.modelContext) private var modelContext
+
     var body: some View {
         TabView {
             GameListView()
@@ -36,6 +38,10 @@ struct MainTabView: View {
                 .tabItem {
                     Label("Settings", systemImage: "gearshape")
                 }
+        }
+        .onAppear {
+            // Seed test player for development
+            SeedDataService.shared.seedJackJamesIfNeeded(context: modelContext)
         }
     }
 }

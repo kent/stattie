@@ -26,6 +26,10 @@ final class PlayerGameStats {
         (stats ?? []).first(where: { $0.statName == "STL" })?.count ?? 0
     }
 
+    var totalAssists: Int {
+        (stats ?? []).first(where: { $0.statName == "AST" })?.count ?? 0
+    }
+
     var totalFouls: Int {
         (stats ?? []).first(where: { $0.statName == "PF" })?.count ?? 0
     }
