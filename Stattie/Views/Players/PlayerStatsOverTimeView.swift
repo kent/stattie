@@ -256,7 +256,7 @@ struct PlayerStatsOverTimeView: View {
 
                         ForEach(sortedGameStats.suffix(10).reversed()) { pgs in
                             if let game = pgs.game {
-                                GameStatRow(game: game, playerStats: pgs, highlightedStat: selectedStat)
+                                GameStatRow(game: game, playerStats: pgs, selectedStat: selectedStat)
                             }
                         }
                     }
@@ -298,14 +298,23 @@ struct StatSummaryCard: View {
 struct GameStatRow: View {
     let game: Game
     let playerStats: PlayerGameStats
-    let highlightedStat: PlayerStatsOverTimeView.StatType
+    let selectedStat: PlayerStatsOverTimeView.StatType
 
-    private func isHighlighted(_ stat: PlayerStatsOverTimeView.StatType) -> Bool {
-        highlightedStat == stat
-    }
-
-    private func isReboundHighlighted() -> Bool {
-        highlightedStat == .rebounds || highlightedStat == .offensiveRebounds || highlightedStat == .defensiveRebounds
+    private var statValue: Int {
+        switch selectedStat {
+        case .points: return playerStats.totalPoints
+        case .rebounds: return playerStats.totalRebounds
+        case .assists: return playerStats.totalAssists
+        case .steals: return playerStats.totalSteals
+        case .fouls: return playerStats.totalFouls
+        case .drives: return playerStats.stat(forName: "DRV")?.count ?? 0
+        case .greatPlays: return playerStats.stat(forName: "GP")?.count ?? 0
+        case .twoPointers: return playerStats.stat(forName: "2PT")?.made ?? 0
+        case .threePointers: return playerStats.stat(forName: "3PT")?.made ?? 0
+        case .freeThrows: return playerStats.stat(forName: "FT")?.made ?? 0
+        case .offensiveRebounds: return playerStats.stat(forName: "OREB")?.count ?? 0
+        case .defensiveRebounds: return playerStats.stat(forName: "DREB")?.count ?? 0
+        }
     }
 
     var body: some View {
@@ -320,15 +329,12 @@ struct GameStatRow: View {
 
             Spacer()
 
-            HStack(spacing: 12) {
-                StatPill(label: "PTS", value: playerStats.totalPoints, isHighlighted: isHighlighted(.points), color: .blue)
-                StatPill(label: "REB", value: playerStats.totalRebounds, isHighlighted: isReboundHighlighted(), color: .green)
-                StatPill(label: "AST", value: playerStats.totalAssists, isHighlighted: isHighlighted(.assists), color: .mint)
-                StatPill(label: "STL", value: playerStats.totalSteals, isHighlighted: isHighlighted(.steals), color: .indigo)
-            }
+            Text("\(statValue)")
+                .font(.title2.bold())
+                .foregroundStyle(selectedStat.color)
         }
         .padding(.horizontal)
-        .padding(.vertical, 8)
+        .padding(.vertical, 12)
         .background(Color(.secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .padding(.horizontal)
