@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import UIKit
 
 /// View for tracking stats per shift for a person in a game
 struct ShiftTrackingView: View {
@@ -7,7 +8,20 @@ struct ShiftTrackingView: View {
     @Environment(\.dismiss) private var dismiss
 
     @Bindable var personGameStats: PersonGameStats
-    @State private var showingEndShiftAlert = false
+    @State private var showingEndShiftSheet = false
+    @State private var showingStartShiftSheet = false
+
+    // Score tracking
+    @State private var teamScore: Int = 0
+    @State private var opponentScore: Int = 0
+
+    // Last known scores (to auto-populate for next shift)
+    private var lastKnownTeamScore: Int {
+        personGameStats.completedShifts.last?.endingTeamScore ?? 0
+    }
+    private var lastKnownOpponentScore: Int {
+        personGameStats.completedShifts.last?.endingOpponentScore ?? 0
+    }
 
     private var currentShift: Shift? {
         personGameStats.currentShift
@@ -44,13 +58,27 @@ struct ShiftTrackingView: View {
                     }
                 }
             }
-            .alert("End Shift?", isPresented: $showingEndShiftAlert) {
-                Button("Cancel", role: .cancel) { }
-                Button("End Shift") {
-                    endCurrentShift()
-                }
-            } message: {
-                Text("End current shift and record stats?")
+            .sheet(isPresented: $showingStartShiftSheet) {
+                StartShiftScoreSheet(
+                    teamScore: $teamScore,
+                    opponentScore: $opponentScore,
+                    onStart: {
+                        startNewShift()
+                    }
+                )
+                .presentationDetents([.medium])
+            }
+            .sheet(isPresented: $showingEndShiftSheet) {
+                EndShiftScoreSheet(
+                    teamScore: $teamScore,
+                    opponentScore: $opponentScore,
+                    startingTeamScore: currentShift?.startingTeamScore ?? 0,
+                    startingOpponentScore: currentShift?.startingOpponentScore ?? 0,
+                    onEnd: {
+                        endCurrentShift()
+                    }
+                )
+                .presentationDetents([.medium])
             }
         }
     }
@@ -83,9 +111,15 @@ struct ShiftTrackingView: View {
             // Shift toggle button
             Button {
                 if isOnCourt {
-                    showingEndShiftAlert = true
+                    // Pre-populate with starting scores (user adjusts to current)
+                    teamScore = currentShift?.startingTeamScore ?? 0
+                    opponentScore = currentShift?.startingOpponentScore ?? 0
+                    showingEndShiftSheet = true
                 } else {
-                    startNewShift()
+                    // Pre-populate with last known scores from previous shift
+                    teamScore = lastKnownTeamScore
+                    opponentScore = lastKnownOpponentScore
+                    showingStartShiftSheet = true
                 }
             } label: {
                 HStack {
@@ -208,6 +242,17 @@ struct ShiftTrackingView: View {
                     LabeledContent("Total Points", value: "\(personGameStats.totalPoints)")
                     LabeledContent("Total Time", value: personGameStats.formattedTotalShiftTime)
                     LabeledContent("Shifts", value: "\(personGameStats.completedShifts.count)")
+
+                    HStack {
+                        Text("Plus/Minus")
+                        Spacer()
+                        Text(personGameStats.formattedTotalPlusMinus)
+                            .fontWeight(.bold)
+                            .foregroundStyle(
+                                personGameStats.totalPlusMinus > 0 ? .green :
+                                personGameStats.totalPlusMinus < 0 ? .red : .secondary
+                            )
+                    }
                 }
             }
         }
@@ -216,13 +261,19 @@ struct ShiftTrackingView: View {
     // MARK: - Shift Management
 
     private func startNewShift() {
-        let shift = personGameStats.startNewShift()
+        let shift = personGameStats.startNewShift(
+            teamScore: teamScore,
+            opponentScore: opponentScore
+        )
         modelContext.insert(shift)
         try? modelContext.save()
     }
 
     private func endCurrentShift() {
-        personGameStats.endCurrentShift()
+        personGameStats.endCurrentShift(
+            teamScore: teamScore,
+            opponentScore: opponentScore
+        )
         try? modelContext.save()
     }
 
@@ -318,21 +369,258 @@ struct ShiftStatButton: View {
 struct ShiftSummaryRow: View {
     let shift: Shift
 
+    private var plusMinusColor: Color {
+        guard let pm = shift.plusMinus else { return .secondary }
+        if pm > 0 { return .green }
+        if pm < 0 { return .red }
+        return .secondary
+    }
+
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Shift \(shift.shiftNumber)")
                     .font(.headline)
-                Text(shift.formattedDuration)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    Text(shift.formattedDuration)
+                    if shift.plusMinus != nil {
+                        Text("•")
+                        Text("\(shift.startingTeamScore)-\(shift.startingOpponentScore) → \(shift.endingTeamScore ?? 0)-\(shift.endingOpponentScore ?? 0)")
+                    }
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
 
             Spacer()
 
-            Text("\(shift.totalPoints) pts")
-                .font(.headline)
-                .foregroundStyle(.blue)
+            VStack(alignment: .trailing, spacing: 2) {
+                Text("\(shift.totalPoints) pts")
+                    .font(.headline)
+                    .foregroundStyle(.blue)
+
+                Text(shift.formattedPlusMinus)
+                    .font(.subheadline.bold())
+                    .foregroundStyle(plusMinusColor)
+            }
+        }
+    }
+}
+
+// MARK: - Score Input Sheets
+
+struct StartShiftScoreSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Binding var teamScore: Int
+    @Binding var opponentScore: Int
+    let onStart: () -> Void
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 24) {
+                Text("Enter Current Score")
+                    .font(.headline)
+                    .padding(.top)
+
+                Text("What's the score when entering the game?")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                HStack(spacing: 32) {
+                    ScoreInputColumn(title: "Our Team", score: $teamScore, color: .blue)
+                    ScoreInputColumn(title: "Opponent", score: $opponentScore, color: .red)
+                }
+                .padding()
+
+                Spacer()
+
+                Button {
+                    onStart()
+                    dismiss()
+                } label: {
+                    Text("Start Shift")
+                        .font(.headline)
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.green)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .padding(.horizontal)
+                .padding(.bottom)
+            }
+            .navigationTitle("Start Shift")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct EndShiftScoreSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Binding var teamScore: Int
+    @Binding var opponentScore: Int
+    let startingTeamScore: Int
+    let startingOpponentScore: Int
+    let onEnd: () -> Void
+
+    private var plusMinus: Int {
+        let teamDiff = teamScore - startingTeamScore
+        let oppDiff = opponentScore - startingOpponentScore
+        return teamDiff - oppDiff
+    }
+
+    private var plusMinusText: String {
+        if plusMinus > 0 { return "+\(plusMinus)" }
+        return "\(plusMinus)"
+    }
+
+    private var plusMinusColor: Color {
+        if plusMinus > 0 { return .green }
+        if plusMinus < 0 { return .red }
+        return .secondary
+    }
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 24) {
+                Text("Enter Current Score")
+                    .font(.headline)
+                    .padding(.top)
+
+                Text("What's the score when leaving the game?")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                // Starting score reference
+                HStack {
+                    Text("Started at:")
+                        .foregroundStyle(.secondary)
+                    Text("\(startingTeamScore) - \(startingOpponentScore)")
+                        .font(.headline)
+                }
+                .font(.subheadline)
+
+                HStack(spacing: 32) {
+                    ScoreInputColumn(title: "Our Team", score: $teamScore, color: .blue)
+                    ScoreInputColumn(title: "Opponent", score: $opponentScore, color: .red)
+                }
+                .padding()
+
+                // Plus/Minus preview
+                VStack(spacing: 4) {
+                    Text("Plus/Minus")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(plusMinusText)
+                        .font(.system(size: 48, weight: .bold))
+                        .foregroundStyle(plusMinusColor)
+                }
+
+                Spacer()
+
+                Button {
+                    onEnd()
+                    dismiss()
+                } label: {
+                    Text("End Shift")
+                        .font(.headline)
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.red)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .padding(.horizontal)
+                .padding(.bottom)
+            }
+            .navigationTitle("End Shift")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct ScoreInputColumn: View {
+    let title: String
+    @Binding var score: Int
+    let color: Color
+
+    private let impactLight = UIImpactFeedbackGenerator(style: .light)
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Text(title)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+
+            HStack(spacing: 16) {
+                Button {
+                    if score > 0 {
+                        score -= 1
+                        impactLight.impactOccurred()
+                    }
+                } label: {
+                    Image(systemName: "minus.circle.fill")
+                        .font(.title)
+                        .foregroundStyle(color.opacity(0.7))
+                }
+
+                Text("\(score)")
+                    .font(.system(size: 48, weight: .bold))
+                    .frame(minWidth: 60)
+
+                Button {
+                    score += 1
+                    impactLight.impactOccurred()
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.title)
+                        .foregroundStyle(color)
+                }
+            }
+
+            // Quick increment buttons for basketball scoring
+            HStack(spacing: 8) {
+                QuickScoreButton(label: "+2", color: color) {
+                    score += 2
+                    impactLight.impactOccurred()
+                }
+                QuickScoreButton(label: "+3", color: color) {
+                    score += 3
+                    impactLight.impactOccurred()
+                }
+            }
+        }
+    }
+}
+
+struct QuickScoreButton: View {
+    let label: String
+    let color: Color
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(label)
+                .font(.caption.bold())
+                .foregroundStyle(color)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(color.opacity(0.15))
+                .clipShape(RoundedRectangle(cornerRadius: 6))
         }
     }
 }

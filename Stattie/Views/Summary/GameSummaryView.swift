@@ -5,11 +5,31 @@ import StoreKit
 struct GameSummaryView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.requestReview) private var requestReview
+    @Environment(\.modelContext) private var modelContext
     let game: Game
 
+    @Query private var users: [User]
     @AppStorage("hasRequestedReview") private var hasRequestedReview = false
     @AppStorage("completedGamesCount") private var completedGamesCount = 0
     @State private var showingShareSheet = false
+    @State private var newAchievements: [AchievementType] = []
+    @State private var showingAchievement = false
+    @State private var currentAchievementIndex = 0
+    @State private var showingInvitePrompt = false
+    @State private var showingTeamInvite = false
+
+    private var currentUser: User? { users.first }
+
+    private var motivationalMessage: String {
+        let messages = [
+            "Great game! Keep tracking! 🏀",
+            "Another one in the books! 📊",
+            "Stats don't lie - nice work! 💪",
+            "Building that highlight reel! 🌟",
+            "Every game counts! Keep it up! 🔥"
+        ]
+        return messages.randomElement() ?? messages[0]
+    }
 
     // Get stats sorted by category
     var shootingStats: [Stat] {
@@ -28,10 +48,31 @@ struct GameSummaryView: View {
         return dreb + oreb
     }
 
+    // Plus/minus data from player shifts
+    private var hasShiftData: Bool {
+        (game.personStats ?? []).contains { !$0.completedShifts.isEmpty }
+    }
+
+    private var playerPlusMinusData: [(person: Person, plusMinus: Int, shiftCount: Int, time: String)] {
+        (game.personStats ?? [])
+            .filter { !$0.completedShifts.isEmpty }
+            .compactMap { pgs -> (Person, Int, Int, String)? in
+                guard let person = pgs.person else { return nil }
+                return (person, pgs.totalPlusMinus, pgs.completedShifts.count, pgs.formattedTotalShiftTime)
+            }
+            .sorted { $0.1 > $1.1 } // Sort by plus/minus descending
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
+                    // Motivational header
+                    Text(motivationalMessage)
+                        .font(.headline)
+                        .foregroundStyle(.accent)
+                        .padding(.bottom, -8)
+
                     // Header with score
                     VStack(spacing: 8) {
                         if !game.opponent.isEmpty {
@@ -145,6 +186,49 @@ struct GameSummaryView: View {
                         }
                     }
 
+                    // Plus/Minus Section (when shift data available)
+                    if hasShiftData {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("PLUS/MINUS")
+                                .font(.caption.bold())
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal)
+
+                            VStack(spacing: 0) {
+                                // Header row
+                                HStack {
+                                    Text("Player")
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                    Text("Shifts")
+                                        .frame(width: 50)
+                                    Text("Time")
+                                        .frame(width: 60)
+                                    Text("+/-")
+                                        .frame(width: 50)
+                                }
+                                .font(.caption.bold())
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal)
+                                .padding(.vertical, 8)
+                                .background(Color(.tertiarySystemGroupedBackground))
+
+                                ForEach(Array(playerPlusMinusData.enumerated()), id: \.offset) { index, data in
+                                    if index > 0 {
+                                        Divider()
+                                    }
+                                    PlusMinusRow(
+                                        name: data.person.displayName,
+                                        shiftCount: data.shiftCount,
+                                        time: data.time,
+                                        plusMinus: data.plusMinus
+                                    )
+                                }
+                            }
+                            .background(Color(.secondarySystemGroupedBackground))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
+                    }
+
                     Spacer(minLength: 40)
                 }
                 .padding()
@@ -170,6 +254,74 @@ struct GameSummaryView: View {
             .sheet(isPresented: $showingShareSheet) {
                 ShareSheet(items: [generateShareText()])
             }
+            .sheet(isPresented: $showingTeamInvite) {
+                inviteSheetContent
+            }
+            .overlay {
+                invitePromptOverlay
+            }
+            .onAppear(perform: checkInvitePrompt)
+        }
+    }
+
+    // MARK: - Invite Prompt Views
+
+    /// Get players associated with this game
+    private var gamePlayers: [Person] {
+        (game.personStats ?? []).compactMap { $0.person }
+    }
+
+    /// First player's name for display
+    private var firstPlayerName: String {
+        gamePlayers.first?.fullName ?? "Player"
+    }
+
+    @ViewBuilder
+    private var inviteSheetContent: some View {
+        TeamInviteView(team: game.team, players: gamePlayers)
+    }
+
+    @ViewBuilder
+    private var invitePromptOverlay: some View {
+        if showingInvitePrompt {
+            invitePromptContent
+        }
+    }
+
+    private var invitePromptContent: some View {
+        ZStack {
+            Color.black.opacity(0.4)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    withAnimation {
+                        showingInvitePrompt = false
+                    }
+                }
+
+            PostGameInvitePrompt(
+                playerName: firstPlayerName,
+                teamName: game.team?.name ?? "My Team",
+                onInvite: {
+                    showingInvitePrompt = false
+                    showingTeamInvite = true
+                },
+                onDismiss: {
+                    withAnimation {
+                        showingInvitePrompt = false
+                    }
+                }
+            )
+            .transition(.scale.combined(with: .opacity))
+        }
+    }
+
+    private func checkInvitePrompt() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            if PostGameInvitePrompt.shouldShow() {
+                withAnimation(.spring()) {
+                    showingInvitePrompt = true
+                }
+            }
         }
     }
 
@@ -190,24 +342,27 @@ struct GameSummaryView: View {
         // Increment completed games count
         completedGamesCount += 1
 
-        // Request review after second completed game (and haven't requested before)
-        if completedGamesCount == 2 && !hasRequestedReview {
-            hasRequestedReview = true
-            // Small delay to let the view dismiss first, then show review
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                requestReview()
-            }
+        // Update user streak
+        if let user = currentUser {
+            user.recordGameCompletion(on: game.gameDate)
+            try? modelContext.save()
+
+            // Schedule streak reminder if enabled
+            NotificationManager.shared.scheduleStreakReminder(currentStreak: user.currentStreak)
         }
+
+        // Track for smart review prompting
+        ReviewManager.shared.trackGameCompleted()
 
         dismiss()
     }
 
     private func generateShareText() -> String {
-        var text = ""
+        var text = "🏀 Game Stats\n"
         if !game.opponent.isEmpty {
             text += "vs \(game.opponent)\n"
         }
-        text += "\(game.totalPoints) Points\n"
+        text += "📊 \(game.totalPoints) Points\n"
         text += "\(game.formattedDate)\n\n"
 
         text += "SHOOTING\n"
@@ -223,6 +378,17 @@ struct GameSummaryView: View {
         text += "Rebounds: \(totalRebounds) (D: \(game.stat(named: "DREB")?.count ?? 0), O: \(game.stat(named: "OREB")?.count ?? 0))\n"
         text += "Steals: \(game.stat(named: "STL")?.count ?? 0)\n"
         text += "Fouls: \(game.stat(named: "PF")?.count ?? 0)\n"
+
+        // Add plus/minus if shift data exists
+        if hasShiftData {
+            text += "\nPLUS/MINUS\n"
+            for data in playerPlusMinusData {
+                let pmText = data.plusMinus > 0 ? "+\(data.plusMinus)" : "\(data.plusMinus)"
+                text += "\(data.person.displayName): \(pmText) (\(data.shiftCount) shifts, \(data.time))\n"
+            }
+        }
+
+        text += "\nTracked with Stattie 📱"
 
         return text
     }
@@ -290,6 +456,43 @@ struct StatBox: View {
         .padding(.vertical, 16)
         .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+struct PlusMinusRow: View {
+    let name: String
+    let shiftCount: Int
+    let time: String
+    let plusMinus: Int
+
+    private var plusMinusText: String {
+        if plusMinus > 0 { return "+\(plusMinus)" }
+        return "\(plusMinus)"
+    }
+
+    private var plusMinusColor: Color {
+        if plusMinus > 0 { return .green }
+        if plusMinus < 0 { return .red }
+        return .secondary
+    }
+
+    var body: some View {
+        HStack {
+            Text(name)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .lineLimit(1)
+            Text("\(shiftCount)")
+                .frame(width: 50)
+            Text(time)
+                .frame(width: 60)
+            Text(plusMinusText)
+                .frame(width: 50)
+                .fontWeight(.bold)
+                .foregroundStyle(plusMinusColor)
+        }
+        .font(.subheadline)
+        .padding(.horizontal)
+        .padding(.vertical, 12)
     }
 }
 

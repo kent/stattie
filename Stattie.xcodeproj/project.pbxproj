@@ -7,15 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0E458EC7F75495D2C2723457 /* PostGameInvitePrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = BACDB9A33FCA993E1F17BAE1 /* PostGameInvitePrompt.swift */; };
+		8EC431B475F081128744B245 /* TeamInviteManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BE3B5E9409D77DB051711EB /* TeamInviteManager.swift */; };
+		B0260B140EDB144A102E1621 /* TeamInviteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7997BDECAA8F6DD8A163DEEF /* TeamInviteView.swift */; };
 		E01000002B000001 /* StattieApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000001 /* StattieApp.swift */; };
 		E01000002B000002 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000002 /* AppState.swift */; };
 		E01000002B000003 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000003 /* ContentView.swift */; };
 		E01000002B000004 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000004 /* User.swift */; };
-		E01000002B000005 /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000005 /* Player.swift */; };
+		E01000002B000005 /* Person.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000005 /* Person.swift */; };
 		E01000002B000006 /* Sport.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000006 /* Sport.swift */; };
 		E01000002B000007 /* StatDefinition.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000007 /* StatDefinition.swift */; };
 		E01000002B000008 /* Game.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000008 /* Game.swift */; };
-		E01000002B000009 /* PlayerGameStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000009 /* PlayerGameStats.swift */; };
+		E01000002B000009 /* PersonGameStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000009 /* PersonGameStats.swift */; };
 		E01000002B00000A /* Stat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00000A /* Stat.swift */; };
 		E01000002B00000B /* PlayerListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00000B /* PlayerListView.swift */; };
 		E01000002B00000C /* PlayerDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00000C /* PlayerDetailView.swift */; };
@@ -44,19 +47,41 @@
 		E01000002B000024 /* ShareManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000025 /* ShareManagementView.swift */; };
 		E01000002B000025 /* PlayerStatsOverTimeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000026 /* PlayerStatsOverTimeView.swift */; };
 		E01000002B000026 /* NewGameForPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000027 /* NewGameForPlayerView.swift */; };
+		E01000002B000028 /* SoccerPosition.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000028 /* SoccerPosition.swift */; };
+		E01000002B000029 /* PositionPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000029 /* PositionPickerView.swift */; };
+		E01000002B00002A /* Team.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00002A /* Team.swift */; };
+		E01000002B00002B /* TeamMembership.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00002B /* TeamMembership.swift */; };
+		E01000002B00002C /* Shift.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00002C /* Shift.swift */; };
+		E01000002B00002D /* ShiftStat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00002D /* ShiftStat.swift */; };
+		E01000002B00002E /* ShiftTrackingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00002E /* ShiftTrackingView.swift */; };
+		E01000002B00002F /* ShareInviteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00002F /* ShareInviteView.swift */; };
+		E01000002B000030 /* Achievement.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000030 /* Achievement.swift */; };
+		E01000002B000031 /* AchievementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000031 /* AchievementsView.swift */; };
+		E01000002B000032 /* ConfettiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000032 /* ConfettiView.swift */; };
+		E01000002B000033 /* PlayerComparisonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000033 /* PlayerComparisonView.swift */; };
+		E01000002B000034 /* RecentActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000034 /* RecentActivityView.swift */; };
+		E01000002B000035 /* Season.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000035 /* Season.swift */; };
+		E01000002B000036 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000036 /* NotificationManager.swift */; };
+		E01000002B000037 /* ReviewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000037 /* ReviewManager.swift */; };
+		E01000002B000038 /* ShareableStatsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000038 /* ShareableStatsCard.swift */; };
+		E01000002B000039 /* ReferralManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000039 /* ReferralManager.swift */; };
+		E01000002B00003A /* AccessibilityHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00003A /* AccessibilityHelpers.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		3BE3B5E9409D77DB051711EB /* TeamInviteManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TeamInviteManager.swift; path = Stattie/Services/TeamInviteManager.swift; sourceTree = SOURCE_ROOT; };
+		7997BDECAA8F6DD8A163DEEF /* TeamInviteView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TeamInviteView.swift; path = Stattie/Views/Teams/TeamInviteView.swift; sourceTree = SOURCE_ROOT; };
+		BACDB9A33FCA993E1F17BAE1 /* PostGameInvitePrompt.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PostGameInvitePrompt.swift; path = Stattie/Views/Components/PostGameInvitePrompt.swift; sourceTree = SOURCE_ROOT; };
 		E00000002B000000 /* Stattie.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Stattie.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E00000002B000001 /* StattieApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StattieApp.swift; sourceTree = "<group>"; };
 		E00000002B000002 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		E00000002B000003 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		E00000002B000004 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
-		E00000002B000005 /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
+		E00000002B000005 /* Person.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Person.swift; sourceTree = "<group>"; };
 		E00000002B000006 /* Sport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sport.swift; sourceTree = "<group>"; };
 		E00000002B000007 /* StatDefinition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatDefinition.swift; sourceTree = "<group>"; };
 		E00000002B000008 /* Game.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Game.swift; sourceTree = "<group>"; };
-		E00000002B000009 /* PlayerGameStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerGameStats.swift; sourceTree = "<group>"; };
+		E00000002B000009 /* PersonGameStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonGameStats.swift; sourceTree = "<group>"; };
 		E00000002B00000A /* Stat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stat.swift; sourceTree = "<group>"; };
 		E00000002B00000B /* PlayerListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerListView.swift; sourceTree = "<group>"; };
 		E00000002B00000C /* PlayerDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerDetailView.swift; sourceTree = "<group>"; };
@@ -86,6 +111,25 @@
 		E00000002B000025 /* ShareManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareManagementView.swift; sourceTree = "<group>"; };
 		E00000002B000026 /* PlayerStatsOverTimeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerStatsOverTimeView.swift; sourceTree = "<group>"; };
 		E00000002B000027 /* NewGameForPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewGameForPlayerView.swift; sourceTree = "<group>"; };
+		E00000002B000028 /* SoccerPosition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoccerPosition.swift; sourceTree = "<group>"; };
+		E00000002B000029 /* PositionPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PositionPickerView.swift; sourceTree = "<group>"; };
+		E00000002B00002A /* Team.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Team.swift; sourceTree = "<group>"; };
+		E00000002B00002B /* TeamMembership.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamMembership.swift; sourceTree = "<group>"; };
+		E00000002B00002C /* Shift.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shift.swift; sourceTree = "<group>"; };
+		E00000002B00002D /* ShiftStat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShiftStat.swift; sourceTree = "<group>"; };
+		E00000002B00002E /* ShiftTrackingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShiftTrackingView.swift; sourceTree = "<group>"; };
+		E00000002B00002F /* ShareInviteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareInviteView.swift; sourceTree = "<group>"; };
+		E00000002B000030 /* Achievement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Achievement.swift; sourceTree = "<group>"; };
+		E00000002B000031 /* AchievementsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AchievementsView.swift; sourceTree = "<group>"; };
+		E00000002B000032 /* ConfettiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfettiView.swift; sourceTree = "<group>"; };
+		E00000002B000033 /* PlayerComparisonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerComparisonView.swift; sourceTree = "<group>"; };
+		E00000002B000034 /* RecentActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentActivityView.swift; sourceTree = "<group>"; };
+		E00000002B000035 /* Season.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Season.swift; sourceTree = "<group>"; };
+		E00000002B000036 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
+		E00000002B000037 /* ReviewManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewManager.swift; sourceTree = "<group>"; };
+		E00000002B000038 /* ShareableStatsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareableStatsCard.swift; sourceTree = "<group>"; };
+		E00000002B000039 /* ReferralManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReferralManager.swift; sourceTree = "<group>"; };
+		E00000002B00003A /* AccessibilityHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityHelpers.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -99,6 +143,46 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0E1643547B062EC7C59CA91C /* Teams */ = {
+			isa = PBXGroup;
+			children = (
+				7997BDECAA8F6DD8A163DEEF /* TeamInviteView.swift */,
+			);
+			name = Teams;
+			sourceTree = "<group>";
+		};
+		39F873E40C31845A01E4C332 /* Teams */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Teams;
+			sourceTree = "<group>";
+		};
+		49CF6571D3962B08111F3B8A /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				0E1643547B062EC7C59CA91C /* Teams */,
+				C925F575E02765A0F208E72A /* Components */,
+			);
+			name = Views;
+			sourceTree = "<group>";
+		};
+		63177C4CD8600E20ABC704DB /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				3BE3B5E9409D77DB051711EB /* TeamInviteManager.swift */,
+			);
+			name = Services;
+			sourceTree = "<group>";
+		};
+		C925F575E02765A0F208E72A /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				BACDB9A33FCA993E1F17BAE1 /* PostGameInvitePrompt.swift */,
+			);
+			name = Components;
+			sourceTree = "<group>";
+		};
 		E03000002B000000 = {
 			isa = PBXGroup;
 			children = (
@@ -118,6 +202,8 @@
 				E03000002B000008 /* Utilities */,
 				E00000002B00001E /* Assets.xcassets */,
 				E00000002B00001F /* Stattie.entitlements */,
+				49CF6571D3962B08111F3B8A /* Views */,
+				63177C4CD8600E20ABC704DB /* Services */,
 			);
 			path = Stattie;
 			sourceTree = "<group>";
@@ -144,12 +230,19 @@
 			isa = PBXGroup;
 			children = (
 				E00000002B000004 /* User.swift */,
-				E00000002B000005 /* Player.swift */,
+				E00000002B000005 /* Person.swift */,
 				E00000002B000006 /* Sport.swift */,
 				E00000002B000007 /* StatDefinition.swift */,
 				E00000002B000008 /* Game.swift */,
-				E00000002B000009 /* PlayerGameStats.swift */,
+				E00000002B000009 /* PersonGameStats.swift */,
 				E00000002B00000A /* Stat.swift */,
+				E00000002B000028 /* SoccerPosition.swift */,
+				E00000002B00002A /* Team.swift */,
+				E00000002B00002B /* TeamMembership.swift */,
+				E00000002B00002C /* Shift.swift */,
+				E00000002B00002D /* ShiftStat.swift */,
+				E00000002B000030 /* Achievement.swift */,
+				E00000002B000035 /* Season.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -172,8 +265,10 @@
 				E03000002B00000D /* Tracking */,
 				E03000002B00000E /* Summary */,
 				E03000002B00000F /* Settings */,
+				E03000002B000013 /* Activity */,
 				E03000002B000011 /* Components */,
 				E03000002B000012 /* Sharing */,
+				39F873E40C31845A01E4C332 /* Teams */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -186,6 +281,9 @@
 				E00000002B000017 /* ShareService.swift */,
 				E00000002B000018 /* SeedDataService.swift */,
 				E00000002B000021 /* CloudKitShareManager.swift */,
+				E00000002B000036 /* NotificationManager.swift */,
+				E00000002B000037 /* ReviewManager.swift */,
+				E00000002B000039 /* ReferralManager.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -194,6 +292,7 @@
 			isa = PBXGroup;
 			children = (
 				E03000002B000010 /* Extensions */,
+				E03000002B000014 /* Accessibility */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -221,6 +320,7 @@
 				E00000002B00000C /* PlayerDetailView.swift */,
 				E00000002B00000D /* AddPlayerView.swift */,
 				E00000002B000026 /* PlayerStatsOverTimeView.swift */,
+				E00000002B000033 /* PlayerComparisonView.swift */,
 			);
 			path = Players;
 			sourceTree = "<group>";
@@ -241,6 +341,7 @@
 			children = (
 				E00000002B000011 /* GameTrackingView.swift */,
 				E00000002B000012 /* StatButtonView.swift */,
+				E00000002B00002E /* ShiftTrackingView.swift */,
 			);
 			path = Tracking;
 			sourceTree = "<group>";
@@ -258,6 +359,7 @@
 			isa = PBXGroup;
 			children = (
 				E00000002B00001C /* SettingsView.swift */,
+				E00000002B000031 /* AchievementsView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -276,6 +378,8 @@
 				E00000002B000022 /* CloudSharingControllerRepresentable.swift */,
 				E00000002B000023 /* SharedPlayerBadge.swift */,
 				E00000002B000024 /* SharePlayerButton.swift */,
+				E00000002B000029 /* PositionPickerView.swift */,
+				E00000002B000032 /* ConfettiView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -284,8 +388,26 @@
 			isa = PBXGroup;
 			children = (
 				E00000002B000025 /* ShareManagementView.swift */,
+				E00000002B00002F /* ShareInviteView.swift */,
+				E00000002B000038 /* ShareableStatsCard.swift */,
 			);
 			path = Sharing;
+			sourceTree = "<group>";
+		};
+		E03000002B000013 /* Activity */ = {
+			isa = PBXGroup;
+			children = (
+				E00000002B000034 /* RecentActivityView.swift */,
+			);
+			path = Activity;
+			sourceTree = "<group>";
+		};
+		E03000002B000014 /* Accessibility */ = {
+			isa = PBXGroup;
+			children = (
+				E00000002B00003A /* AccessibilityHelpers.swift */,
+			);
+			path = Accessibility;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -361,11 +483,11 @@
 				E01000002B000002 /* AppState.swift in Sources */,
 				E01000002B000003 /* ContentView.swift in Sources */,
 				E01000002B000004 /* User.swift in Sources */,
-				E01000002B000005 /* Player.swift in Sources */,
+				E01000002B000005 /* Person.swift in Sources */,
 				E01000002B000006 /* Sport.swift in Sources */,
 				E01000002B000007 /* StatDefinition.swift in Sources */,
 				E01000002B000008 /* Game.swift in Sources */,
-				E01000002B000009 /* PlayerGameStats.swift in Sources */,
+				E01000002B000009 /* PersonGameStats.swift in Sources */,
 				E01000002B00000A /* Stat.swift in Sources */,
 				E01000002B00000B /* PlayerListView.swift in Sources */,
 				E01000002B00000C /* PlayerDetailView.swift in Sources */,
@@ -393,6 +515,28 @@
 				E01000002B000024 /* ShareManagementView.swift in Sources */,
 				E01000002B000025 /* PlayerStatsOverTimeView.swift in Sources */,
 				E01000002B000026 /* NewGameForPlayerView.swift in Sources */,
+				E01000002B000028 /* SoccerPosition.swift in Sources */,
+				E01000002B000029 /* PositionPickerView.swift in Sources */,
+				E01000002B00002A /* Team.swift in Sources */,
+				E01000002B00002B /* TeamMembership.swift in Sources */,
+				E01000002B00002C /* Shift.swift in Sources */,
+				E01000002B00002D /* ShiftStat.swift in Sources */,
+				E01000002B00002E /* ShiftTrackingView.swift in Sources */,
+				E01000002B00002F /* ShareInviteView.swift in Sources */,
+				E01000002B000030 /* Achievement.swift in Sources */,
+				E01000002B000031 /* AchievementsView.swift in Sources */,
+				E01000002B000032 /* ConfettiView.swift in Sources */,
+				E01000002B000033 /* PlayerComparisonView.swift in Sources */,
+				E01000002B000034 /* RecentActivityView.swift in Sources */,
+				E01000002B000035 /* Season.swift in Sources */,
+				E01000002B000036 /* NotificationManager.swift in Sources */,
+				E01000002B000037 /* ReviewManager.swift in Sources */,
+				E01000002B000038 /* ShareableStatsCard.swift in Sources */,
+				E01000002B000039 /* ReferralManager.swift in Sources */,
+				E01000002B00003A /* AccessibilityHelpers.swift in Sources */,
+				B0260B140EDB144A102E1621 /* TeamInviteView.swift in Sources */,
+				8EC431B475F081128744B245 /* TeamInviteManager.swift in Sources */,
+				0E458EC7F75495D2C2723457 /* PostGameInvitePrompt.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

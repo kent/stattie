@@ -9,7 +9,7 @@ struct AddPersonView: View {
     @State private var firstName = ""
     @State private var lastName = ""
     @State private var jerseyNumber = ""
-    @State private var position = ""
+    @State private var positionAssignments = PositionAssignments()
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var photoData: Data?
 
@@ -60,7 +60,7 @@ struct AddPersonView: View {
                     .listRowBackground(Color.clear)
                 }
 
-                Section("Person Info") {
+                Section("Player Info") {
                     TextField("First Name", text: $firstName)
                         .textContentType(.givenName)
                         .autocorrectionDisabled()
@@ -77,11 +77,13 @@ struct AddPersonView: View {
                             .multilineTextAlignment(.trailing)
                             .frame(width: 60)
                     }
+                }
 
-                    TextField("Position (optional)", text: $position)
+                Section("Position") {
+                    PositionPickerView(assignments: $positionAssignments)
                 }
             }
-            .navigationTitle("Add Person")
+            .navigationTitle("Add Player")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -112,7 +114,8 @@ struct AddPersonView: View {
             firstName: firstName.trimmingCharacters(in: .whitespaces),
             lastName: lastName.trimmingCharacters(in: .whitespaces),
             jerseyNumber: Int(jerseyNumber) ?? 0,
-            position: position.trimmingCharacters(in: .whitespaces),
+            position: positionAssignments.displayText,
+            positionAssignments: positionAssignments,
             photoData: photoData,
             isActive: true,
             owner: currentUser

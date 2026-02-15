@@ -1,9 +1,11 @@
 import SwiftUI
 import SwiftData
 import CloudKit
+import UIKit
 
 @main
 struct StattieApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             User.self,
@@ -181,5 +183,46 @@ extension NSUserActivity {
         // Also check for the metadata in the activity's webpageURL
         // CloudKit shares come through as web activity with the share URL
         return nil
+    }
+}
+
+// MARK: - App Delegate for Quick Actions
+
+class AppDelegate: NSObject, UIApplicationDelegate {
+    static var shortcutAction: String?
+
+    func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
+        // Handle quick action if app was launched via shortcut
+        if let shortcutItem = options.shortcutItem {
+            AppDelegate.shortcutAction = shortcutItem.type
+        }
+        let config = UISceneConfiguration(name: nil, sessionRole: connectingSceneSession.role)
+        return config
+    }
+
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+        // Register quick actions
+        application.shortcutItems = [
+            UIApplicationShortcutItem(
+                type: "com.stattie.newgame",
+                localizedTitle: "New Game",
+                localizedSubtitle: "Start tracking a game",
+                icon: UIApplicationShortcutIcon(systemImageName: "plus.circle.fill"),
+                userInfo: nil
+            ),
+            UIApplicationShortcutItem(
+                type: "com.stattie.players",
+                localizedTitle: "Players",
+                localizedSubtitle: "View your players",
+                icon: UIApplicationShortcutIcon(systemImageName: "person.3.fill"),
+                userInfo: nil
+            )
+        ]
+        return true
+    }
+
+    func application(_ application: UIApplication, performActionFor shortcutItem: UIApplicationShortcutItem, completionHandler: @escaping (Bool) -> Void) {
+        AppDelegate.shortcutAction = shortcutItem.type
+        completionHandler(true)
     }
 }

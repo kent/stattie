@@ -13,13 +13,15 @@ struct PersonDetailView: View {
 
     @State private var isEditing = false
     @State private var selectedPhoto: PhotosPickerItem?
-    @State private var showShareSheet = false
+    @State private var showShareInvite = false
     @State private var showManageSharing = false
     @State private var isShared = false
     @State private var isOwner = true
+    @State private var participantCount = 0
     @State private var showingNewGame = false
     @State private var activeGame: Game?
     @State private var gameCountBeforeNew = 0
+    @State private var editingPositionAssignments = PositionAssignments()
 
     private var currentUser: User? { users.first }
     private var basketball: Sport? { sports.first }
@@ -40,7 +42,7 @@ struct PersonDetailView: View {
 
     var body: some View {
         List {
-            // Person Header
+            // Player Header
             Section {
                 HStack {
                     Spacer()
@@ -74,8 +76,8 @@ struct PersonDetailView: View {
                 .listRowBackground(Color.clear)
             }
 
-            // Person Info
-            Section("Person Info") {
+            // Player Info
+            Section("Player Info") {
                 if isEditing {
                     TextField("First Name", text: $player.firstName)
                     TextField("Last Name", text: $player.lastName)
@@ -87,12 +89,37 @@ struct PersonDetailView: View {
                             .multilineTextAlignment(.trailing)
                             .frame(width: 60)
                     }
-                    TextField("Position", text: $player.position)
                 } else {
                     LabeledContent("Name", value: player.fullName)
                     LabeledContent("Jersey", value: "#\(player.jerseyNumber)")
-                    if !player.position.isEmpty {
-                        LabeledContent("Position", value: player.position)
+                }
+            }
+
+            // Position Section
+            Section("Position") {
+                if isEditing {
+                    PositionPickerView(assignments: $editingPositionAssignments)
+                } else {
+                    if player.positionAssignments.isEmpty {
+                        Text("No position set")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(player.positionAssignments.assignments) { assignment in
+                            HStack {
+                                Image(systemName: assignment.position.iconName)
+                                    .foregroundStyle(.accent)
+                                    .frame(width: 24)
+
+                                Text(assignment.position.displayName)
+
+                                Spacer()
+
+                                if player.positionAssignments.assignments.count > 1 {
+                                    Text("\(assignment.percentage)%")
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -123,6 +150,78 @@ struct PersonDetailView: View {
                             Label("View Stats & Trends", systemImage: "chart.line.uptrend.xyaxis")
                         }
                     }
+
+                    // Career Highs Section
+                    if player.completedGamesCount > 0 {
+                        Section("Career Highs") {
+                            HStack(spacing: 16) {
+                                CareerHighCard(value: player.careerHighPoints, label: "Points", icon: "flame.fill", color: .orange)
+                                CareerHighCard(value: player.careerHighRebounds, label: "Rebounds", icon: "arrow.up.arrow.down", color: .green)
+                                CareerHighCard(value: player.careerHighAssists, label: "Assists", icon: "arrow.triangle.branch", color: .blue)
+                            }
+                            .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
+                        }
+
+                        // Plus/Minus Section (if any games have shift data)
+                        if player.careerPlusMinus != 0 || player.averagePlusMinus != 0 {
+                            Section("Plus/Minus") {
+                                HStack(spacing: 16) {
+                                    PlusMinusCard(
+                                        value: player.formattedCareerPlusMinus,
+                                        label: "Career",
+                                        plusMinus: player.careerPlusMinus
+                                    )
+                                    PlusMinusCard(
+                                        value: String(format: "%+.1f", player.averagePlusMinus),
+                                        label: "Per Game",
+                                        plusMinus: Int(player.averagePlusMinus)
+                                    )
+                                }
+                                .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
+                            }
+                        }
+                    }
+                }
+
+                // Share Section - visible and prominent
+                Section {
+                    Button {
+                        if isShared {
+                            showManageSharing = true
+                        } else {
+                            showShareInvite = true
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: isShared ? "person.2.fill" : "square.and.arrow.up")
+                                .font(.title3)
+                                .foregroundStyle(isShared ? .green : .accent)
+                                .frame(width: 32)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                if isShared {
+                                    Text("Shared with \(participantCount) \(participantCount == 1 ? "person" : "people")")
+                                        .font(.body)
+                                    Text("Tap to manage sharing")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                } else {
+                                    Text("Share with Family & Coaches")
+                                        .font(.body)
+                                    Text("Let others view and record games")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+
+                            Spacer()
+
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .buttonStyle(.plain)
                 }
 
                 // Active Games
@@ -183,9 +282,9 @@ struct PersonDetailView: View {
                             }
                         } else {
                             Button {
-                                showShareSheet = true
+                                showShareInvite = true
                             } label: {
-                                Label("Share Person...", systemImage: "square.and.arrow.up")
+                                Label("Share Player...", systemImage: "square.and.arrow.up")
                             }
                         }
                     } label: {
@@ -194,15 +293,20 @@ struct PersonDetailView: View {
 
                     Button(isEditing ? "Done" : "Edit") {
                         if isEditing {
+                            // Save position assignments back to player
+                            player.positionAssignments = editingPositionAssignments
                             try? modelContext.save()
+                        } else {
+                            // Starting edit - load current position assignments
+                            editingPositionAssignments = player.positionAssignments
                         }
                         isEditing.toggle()
                     }
                 }
             }
         }
-        .sheet(isPresented: $showShareSheet) {
-            SharePersonSheet(player: player)
+        .sheet(isPresented: $showShareInvite) {
+            ShareInviteView(player: player)
         }
         .sheet(isPresented: $showManageSharing) {
             ShareManagementView(player: player)
@@ -239,6 +343,7 @@ struct PersonDetailView: View {
         isShared = await player.checkIsShared()
         if isShared {
             isOwner = await player.checkIsOwner()
+            participantCount = await CloudKitShareManager.shared.getParticipantCount(for: player)
         }
     }
 
@@ -290,6 +395,64 @@ struct PersonGameRow: View {
             }
         }
         .padding(.vertical, 4)
+    }
+}
+
+struct CareerHighCard: View {
+    let value: Int
+    let label: String
+    let icon: String
+    let color: Color
+
+    var body: some View {
+        VStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundStyle(color)
+
+            Text("\(value)")
+                .font(.title2.bold())
+
+            Text(label)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .background(color.opacity(0.1))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+}
+
+struct PlusMinusCard: View {
+    let value: String
+    let label: String
+    let plusMinus: Int
+
+    private var color: Color {
+        if plusMinus > 0 { return .green }
+        if plusMinus < 0 { return .red }
+        return .secondary
+    }
+
+    var body: some View {
+        VStack(spacing: 6) {
+            Image(systemName: plusMinus >= 0 ? "arrow.up.right" : "arrow.down.right")
+                .font(.title3)
+                .foregroundStyle(color)
+
+            Text(value)
+                .font(.title2.bold())
+                .foregroundStyle(color)
+
+            Text(label)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .background(color.opacity(0.1))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 }
 

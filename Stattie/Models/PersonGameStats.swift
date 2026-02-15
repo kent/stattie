@@ -81,14 +81,33 @@ final class PersonGameStats {
         (stats ?? []).first { $0.statName == name }
     }
 
+    // MARK: - Plus/Minus Aggregation
+
+    /// Total plus/minus across all completed shifts
+    var totalPlusMinus: Int {
+        completedShifts.compactMap { $0.plusMinus }.reduce(0, +)
+    }
+
+    /// Formatted total plus/minus
+    var formattedTotalPlusMinus: String {
+        let pm = totalPlusMinus
+        if pm > 0 { return "+\(pm)" }
+        return "\(pm)"
+    }
+
     // MARK: - Shift Management
 
-    func startNewShift() -> Shift {
-        // End any active shift first
+    func startNewShift(teamScore: Int = 0, opponentScore: Int = 0) -> Shift {
+        // End any active shift first (without scores - they should be passed separately)
         currentShift?.endShift()
 
         let shiftNumber = (shifts ?? []).count + 1
-        let shift = Shift(shiftNumber: shiftNumber, personGameStats: self)
+        let shift = Shift(
+            shiftNumber: shiftNumber,
+            personGameStats: self,
+            teamScore: teamScore,
+            opponentScore: opponentScore
+        )
 
         if shifts == nil { shifts = [] }
         shifts?.append(shift)
@@ -96,8 +115,8 @@ final class PersonGameStats {
         return shift
     }
 
-    func endCurrentShift() {
-        currentShift?.endShift()
+    func endCurrentShift(teamScore: Int? = nil, opponentScore: Int? = nil) {
+        currentShift?.endShift(teamScore: teamScore, opponentScore: opponentScore)
     }
 
     // MARK: - Aggregated Stat Helpers

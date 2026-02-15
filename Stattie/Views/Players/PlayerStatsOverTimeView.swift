@@ -8,9 +8,11 @@ struct PersonStatsOverTimeView: View {
 
     @State private var selectedStat: StatType = .points
     @State private var timeRange: TimeRange = .all
+    @State private var showingShareSheet = false
 
     enum StatType: String, CaseIterable {
         case points = "Points"
+        case plusMinus = "Plus/Minus"
         case rebounds = "Rebounds"
         case assists = "Assists"
         case steals = "Steals"
@@ -26,6 +28,7 @@ struct PersonStatsOverTimeView: View {
         var color: Color {
             switch self {
             case .points: return .blue
+            case .plusMinus: return .purple
             case .rebounds: return .green
             case .assists: return .mint
             case .steals: return .indigo
@@ -43,6 +46,7 @@ struct PersonStatsOverTimeView: View {
         var shortName: String {
             switch self {
             case .points: return "PTS"
+            case .plusMinus: return "+/-"
             case .rebounds: return "REB"
             case .assists: return "AST"
             case .steals: return "STL"
@@ -56,29 +60,41 @@ struct PersonStatsOverTimeView: View {
             case .defensiveRebounds: return "DREB"
             }
         }
+
+        /// Whether this stat can be negative (affects chart display)
+        var canBeNegative: Bool {
+            self == .plusMinus
+        }
     }
 
     enum TimeRange: String, CaseIterable {
-        case last10 = "Last 10"
-        case last20 = "Last 20"
-        case all = "All Games"
+        case thisMonth = "This Month"
+        case last3Months = "3 Months"
+        case thisYear = "This Year"
+        case all = "All Time"
 
-        var limit: Int? {
+        var dateFilter: Date? {
+            let calendar = Calendar.current
             switch self {
-            case .last10: return 10
-            case .last20: return 20
-            case .all: return nil
+            case .thisMonth:
+                return calendar.date(byAdding: .month, value: -1, to: Date())
+            case .last3Months:
+                return calendar.date(byAdding: .month, value: -3, to: Date())
+            case .thisYear:
+                return calendar.date(from: calendar.dateComponents([.year], from: Date()))
+            case .all:
+                return nil
             }
         }
     }
 
     var sortedGameStats: [PersonGameStats] {
         let allStats = (player.gameStats ?? [])
-            .filter { $0.game != nil }
+            .filter { $0.game != nil && $0.game?.isCompleted == true }
             .sorted { ($0.game?.gameDate ?? .distantPast) < ($1.game?.gameDate ?? .distantPast) }
 
-        if let limit = timeRange.limit {
-            return Array(allStats.suffix(limit))
+        if let minDate = timeRange.dateFilter {
+            return allStats.filter { ($0.game?.gameDate ?? .distantPast) >= minDate }
         }
         return allStats
     }
@@ -93,6 +109,7 @@ struct PersonStatsOverTimeView: View {
     private func statValue(for stat: StatType, from pgs: PersonGameStats) -> Int {
         switch stat {
         case .points: return pgs.totalPoints
+        case .plusMinus: return pgs.totalPlusMinus
         case .rebounds: return pgs.totalRebounds
         case .assists: return pgs.totalAssists
         case .steals: return pgs.totalSteals
@@ -195,11 +212,17 @@ struct PersonStatsOverTimeView: View {
                                 x: .value("Game", item.gameNumber),
                                 y: .value(selectedStat.rawValue, item.value)
                             )
-                            .foregroundStyle(selectedStat.color)
+                            .foregroundStyle(selectedStat.canBeNegative ? (item.value >= 0 ? Color.green : Color.red) : selectedStat.color)
 
                             RuleMark(y: .value("Average", averageValue))
                                 .foregroundStyle(.gray.opacity(0.5))
                                 .lineStyle(StrokeStyle(dash: [5, 5]))
+
+                            // Zero line for plus/minus
+                            if selectedStat.canBeNegative {
+                                RuleMark(y: .value("Zero", 0))
+                                    .foregroundStyle(.secondary.opacity(0.3))
+                            }
                         }
                         .chartYAxis {
                             AxisMarks(position: .leading)
@@ -269,6 +292,18 @@ struct PersonStatsOverTimeView: View {
         }
         .navigationTitle("Stats Over Time")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showingShareSheet = true
+                } label: {
+                    Image(systemName: "square.and.arrow.up")
+                }
+            }
+        }
+        .sheet(isPresented: $showingShareSheet) {
+            ShareStatsSheet(player: player, stats: chartData, selectedStat: selectedStat, averageValue: averageValue)
+        }
     }
 }
 
@@ -303,6 +338,7 @@ struct GameStatRow: View {
     private var statValue: Int {
         switch selectedStat {
         case .points: return playerStats.totalPoints
+        case .plusMinus: return playerStats.totalPlusMinus
         case .rebounds: return playerStats.totalRebounds
         case .assists: return playerStats.totalAssists
         case .steals: return playerStats.totalSteals
@@ -317,6 +353,24 @@ struct GameStatRow: View {
         }
     }
 
+    /// Display string for stat value (handles +/- formatting)
+    private var statDisplayValue: String {
+        if selectedStat == .plusMinus {
+            return statValue > 0 ? "+\(statValue)" : "\(statValue)"
+        }
+        return "\(statValue)"
+    }
+
+    /// Color for the stat value (special handling for +/-)
+    private var statDisplayColor: Color {
+        if selectedStat == .plusMinus {
+            if statValue > 0 { return .green }
+            if statValue < 0 { return .red }
+            return .secondary
+        }
+        return selectedStat.color
+    }
+
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
@@ -329,9 +383,9 @@ struct GameStatRow: View {
 
             Spacer()
 
-            Text("\(statValue)")
+            Text(statDisplayValue)
                 .font(.title2.bold())
-                .foregroundStyle(selectedStat.color)
+                .foregroundStyle(statDisplayColor)
         }
         .padding(.horizontal)
         .padding(.vertical, 12)
@@ -358,6 +412,135 @@ struct StatPill: View {
         }
         .frame(width: 36)
     }
+}
+
+// MARK: - Share Stats Sheet
+
+struct ShareStatsSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let player: Person
+    let stats: [(date: Date, value: Int, gameNumber: Int)]
+    let selectedStat: PersonStatsOverTimeView.StatType
+    let averageValue: Double
+
+    @State private var showingActivitySheet = false
+
+    var shareText: String {
+        let gamesCount = stats.count
+        let highValue = stats.map { $0.value }.max() ?? 0
+
+        return """
+        \(player.fullName) Stats 📊
+
+        \(selectedStat.rawValue) over \(gamesCount) games:
+        • Average: \(String(format: "%.1f", averageValue))
+        • Career High: \(highValue)
+
+        Tracked with Stattie 📱
+        """
+    }
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 20) {
+                // Preview card
+                VStack(spacing: 16) {
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text(player.fullName)
+                                .font(.title2.bold())
+                            Text("#\(player.jerseyNumber)")
+                                .font(.headline)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Image(systemName: "chart.line.uptrend.xyaxis")
+                            .font(.largeTitle)
+                            .foregroundStyle(.accent)
+                    }
+
+                    Divider()
+
+                    HStack(spacing: 24) {
+                        VStack {
+                            Text(String(format: "%.1f", averageValue))
+                                .font(.system(size: 36, weight: .bold))
+                                .foregroundStyle(selectedStat.color)
+                            Text("Avg \(selectedStat.shortName)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+
+                        VStack {
+                            Text("\(stats.map { $0.value }.max() ?? 0)")
+                                .font(.system(size: 36, weight: .bold))
+                                .foregroundStyle(.green)
+                            Text("High")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+
+                        VStack {
+                            Text("\(stats.count)")
+                                .font(.system(size: 36, weight: .bold))
+                            Text("Games")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    Text("Tracked with Stattie")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .padding(.top, 8)
+                }
+                .padding(24)
+                .background(Color(.systemBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .shadow(color: .black.opacity(0.1), radius: 10)
+                .padding(.horizontal)
+
+                Spacer()
+
+                Button {
+                    showingActivitySheet = true
+                } label: {
+                    Label("Share Stats", systemImage: "square.and.arrow.up")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.accentColor)
+                        .foregroundStyle(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .padding(.horizontal)
+                .padding(.bottom)
+            }
+            .padding(.top)
+            .navigationTitle("Share Stats")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+            }
+            .sheet(isPresented: $showingActivitySheet) {
+                ActivityView(items: [shareText])
+            }
+        }
+    }
+}
+
+struct ActivityView: UIViewControllerRepresentable {
+    let items: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: items, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 #Preview {

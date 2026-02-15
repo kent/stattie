@@ -7,13 +7,14 @@ struct NewGameView: View {
 
     @Query(sort: \Person.jerseyNumber) private var players: [Person]
     @Query private var users: [User]
-    @Query(filter: #Predicate<Sport> { $0.name == "Basketball" }) private var sports: [Sport]
+    @Query(sort: \Sport.name) private var allSports: [Sport]
 
     @State private var opponent = ""
     @State private var location = ""
     @State private var gameDate = Date()
     @State private var selectedPersons: Set<UUID> = []
     @State private var notes = ""
+    @State private var selectedSport: Sport?
 
     // Quick add player fields
     @State private var quickAddName = ""
@@ -24,8 +25,8 @@ struct NewGameView: View {
         users.first
     }
 
-    private var basketball: Sport? {
-        sports.first
+    private var availableSports: [Sport] {
+        allSports
     }
 
     private var activePersons: [Person] {
@@ -39,6 +40,19 @@ struct NewGameView: View {
     var body: some View {
         NavigationStack {
             Form {
+                // Sport Selection
+                if availableSports.count > 1 {
+                    Section("Sport") {
+                        Picker("Sport", selection: $selectedSport) {
+                            ForEach(availableSports) { sport in
+                                Label(sport.name, systemImage: sport.iconName)
+                                    .tag(sport as Sport?)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                    }
+                }
+
                 Section("Game Details") {
                     TextField("Opponent (optional)", text: $opponent)
                     TextField("Location (optional)", text: $location)
@@ -56,7 +70,7 @@ struct NewGameView: View {
                             Text("Add players to track their stats")
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
-                            Button("Add Persons") {
+                            Button("Add Players") {
                                 showingQuickAdd = true
                             }
                             .buttonStyle(.borderedProminent)
@@ -85,7 +99,7 @@ struct NewGameView: View {
                     }
                 } header: {
                     HStack {
-                        Text("Select Persons")
+                        Text("Select Players")
                         Spacer()
                         if !activePersons.isEmpty {
                             Button(selectedPersons.count == activePersons.count ? "Deselect All" : "Select All") {
@@ -100,7 +114,7 @@ struct NewGameView: View {
                     }
                 }
 
-                // Quick Add Persons Section
+                // Quick Add Players Section
                 Section {
                     if showingQuickAdd || !activePersons.isEmpty {
                         HStack(spacing: 12) {
@@ -109,7 +123,7 @@ struct NewGameView: View {
                                 .frame(width: 50)
                                 .textFieldStyle(.roundedBorder)
 
-                            TextField("Person name", text: $quickAddName)
+                            TextField("Player name", text: $quickAddName)
                                 .textFieldStyle(.roundedBorder)
 
                             Button {
@@ -123,7 +137,7 @@ struct NewGameView: View {
                     }
                 } header: {
                     if showingQuickAdd || !activePersons.isEmpty {
-                        Text("Quick Add Person")
+                        Text("Quick Add Player")
                     }
                 } footer: {
                     if showingQuickAdd || !activePersons.isEmpty {
@@ -145,6 +159,12 @@ struct NewGameView: View {
                         createGame()
                     }
                     .disabled(!isValid)
+                }
+            }
+            .onAppear {
+                // Set default sport if not already set
+                if selectedSport == nil {
+                    selectedSport = availableSports.first
                 }
             }
         }
@@ -190,13 +210,16 @@ struct NewGameView: View {
     }
 
     private func createGame() {
+        // Use selected sport or first available
+        let sportToUse = selectedSport ?? availableSports.first
+
         let game = Game(
             gameDate: gameDate,
             opponent: opponent.trimmingCharacters(in: .whitespaces),
             location: location.trimmingCharacters(in: .whitespaces),
             notes: notes.trimmingCharacters(in: .whitespaces),
             isCompleted: false,
-            sport: basketball,
+            sport: sportToUse,
             trackedBy: currentUser
         )
 

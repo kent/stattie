@@ -26,8 +26,15 @@ struct MainTabView: View {
         TabView {
             PersonListView()
                 .tabItem {
-                    Label("Persons", systemImage: "person.3")
+                    Label("Players", systemImage: "person.3.fill")
                 }
+
+            NavigationStack {
+                RecentActivityView()
+            }
+            .tabItem {
+                Label("Activity", systemImage: "clock.arrow.circlepath")
+            }
 
             SettingsView()
                 .tabItem {
