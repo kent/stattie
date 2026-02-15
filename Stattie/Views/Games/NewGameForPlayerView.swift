@@ -3,11 +3,11 @@ import SwiftData
 import UIKit
 
 /// Simplified new game view for creating a game for a specific player
-struct NewGameForPlayerView: View {
+struct NewGameForPersonView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
-    let player: Player
+    let player: Person
 
     @Query private var users: [User]
     @Query(filter: #Predicate<Sport> { $0.name == "Basketball" }) private var sports: [Sport]
@@ -54,7 +54,7 @@ struct NewGameForPlayerView: View {
                         }
                     }
                 } header: {
-                    Text("Player")
+                    Text("Person")
                 }
 
                 Section("Game Details") {
@@ -94,14 +94,14 @@ struct NewGameForPlayerView: View {
 
         modelContext.insert(game)
 
-        // Create player stats for this game
-        let playerStats = PlayerGameStats(player: player, game: game)
-        modelContext.insert(playerStats)
+        // Create person stats for this game
+        let personStats = PersonGameStats(person: player, game: game)
+        modelContext.insert(personStats)
 
-        if game.playerStats == nil {
-            game.playerStats = []
+        if game.personStats == nil {
+            game.personStats = []
         }
-        game.playerStats?.append(playerStats)
+        game.personStats?.append(personStats)
 
         try? modelContext.save()
         dismiss()
@@ -109,6 +109,6 @@ struct NewGameForPlayerView: View {
 }
 
 #Preview {
-    NewGameForPlayerView(player: Player(firstName: "John", lastName: "Doe", jerseyNumber: 23, position: "Guard"))
-        .modelContainer(for: [Game.self, Player.self, User.self, Sport.self], inMemory: true)
+    NewGameForPersonView(player: Person(firstName: "John", lastName: "Doe", jerseyNumber: 23, position: "Guard"))
+        .modelContainer(for: [Game.self, Person.self, User.self, Sport.self], inMemory: true)
 }

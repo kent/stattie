@@ -24,9 +24,9 @@ struct MainTabView: View {
 
     var body: some View {
         TabView {
-            PlayerListView()
+            PersonListView()
                 .tabItem {
-                    Label("Players", systemImage: "person.3")
+                    Label("Persons", systemImage: "person.3")
                 }
 
             SettingsView()
@@ -43,5 +43,5 @@ struct MainTabView: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: [User.self, Player.self, Game.self, Sport.self, StatDefinition.self], inMemory: true)
+        .modelContainer(for: [User.self, Person.self, Game.self, Sport.self, StatDefinition.self], inMemory: true)
 }

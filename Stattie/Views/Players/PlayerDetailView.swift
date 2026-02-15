@@ -3,10 +3,10 @@ import SwiftData
 import PhotosUI
 import UIKit
 
-struct PlayerDetailView: View {
+struct PersonDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @Bindable var player: Player
+    @Bindable var player: Person
 
     @Query private var users: [User]
     @Query(filter: #Predicate<Sport> { $0.name == "Basketball" }) private var sports: [Sport]
@@ -25,22 +25,22 @@ struct PlayerDetailView: View {
     private var basketball: Sport? { sports.first }
 
     // Get player's games sorted by date
-    private var playerGames: [PlayerGameStats] {
+    private var playerGames: [PersonGameStats] {
         (player.gameStats ?? [])
             .sorted { ($0.game?.gameDate ?? .distantPast) > ($1.game?.gameDate ?? .distantPast) }
     }
 
-    private var activeGames: [PlayerGameStats] {
+    private var activeGames: [PersonGameStats] {
         playerGames.filter { $0.game?.isCompleted == false }
     }
 
-    private var completedGames: [PlayerGameStats] {
+    private var completedGames: [PersonGameStats] {
         playerGames.filter { $0.game?.isCompleted == true }
     }
 
     var body: some View {
         List {
-            // Player Header
+            // Person Header
             Section {
                 HStack {
                     Spacer()
@@ -74,8 +74,8 @@ struct PlayerDetailView: View {
                 .listRowBackground(Color.clear)
             }
 
-            // Player Info
-            Section("Player Info") {
+            // Person Info
+            Section("Person Info") {
                 if isEditing {
                     TextField("First Name", text: $player.firstName)
                     TextField("Last Name", text: $player.lastName)
@@ -118,7 +118,7 @@ struct PlayerDetailView: View {
                 if !playerGames.isEmpty {
                     Section {
                         NavigationLink {
-                            PlayerStatsOverTimeView(player: player)
+                            PersonStatsOverTimeView(player: player)
                         } label: {
                             Label("View Stats & Trends", systemImage: "chart.line.uptrend.xyaxis")
                         }
@@ -133,7 +133,7 @@ struct PlayerDetailView: View {
                                 Button {
                                     activeGame = game
                                 } label: {
-                                    PlayerGameRow(game: game)
+                                    PersonGameRow(game: game)
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -147,7 +147,7 @@ struct PlayerDetailView: View {
                         ForEach(completedGames) { pgs in
                             if let game = pgs.game {
                                 NavigationLink(value: game) {
-                                    PlayerGameRow(game: game)
+                                    PersonGameRow(game: game)
                                 }
                             }
                         }
@@ -185,7 +185,7 @@ struct PlayerDetailView: View {
                             Button {
                                 showShareSheet = true
                             } label: {
-                                Label("Share Player...", systemImage: "square.and.arrow.up")
+                                Label("Share Person...", systemImage: "square.and.arrow.up")
                             }
                         }
                     } label: {
@@ -202,7 +202,7 @@ struct PlayerDetailView: View {
             }
         }
         .sheet(isPresented: $showShareSheet) {
-            SharePlayerSheet(player: player)
+            SharePersonSheet(player: player)
         }
         .sheet(isPresented: $showManageSharing) {
             ShareManagementView(player: player)
@@ -217,7 +217,7 @@ struct PlayerDetailView: View {
                 }
             }
         }) {
-            NewGameForPlayerView(player: player)
+            NewGameForPersonView(player: player)
         }
         .fullScreenCover(item: $activeGame) { game in
             GameTrackingView(game: game)
@@ -248,9 +248,9 @@ struct PlayerDetailView: View {
     }
 }
 
-// MARK: - Player Game Row
+// MARK: - Person Game Row
 
-struct PlayerGameRow: View {
+struct PersonGameRow: View {
     let game: Game
 
     var body: some View {
@@ -295,7 +295,7 @@ struct PlayerGameRow: View {
 
 #Preview {
     NavigationStack {
-        PlayerDetailView(player: Player(firstName: "John", lastName: "Doe", jerseyNumber: 23, position: "Guard"))
+        PersonDetailView(player: Person(firstName: "John", lastName: "Doe", jerseyNumber: 23, position: "Guard"))
     }
-    .modelContainer(for: Player.self, inMemory: true)
+    .modelContainer(for: Person.self, inMemory: true)
 }

@@ -14,6 +14,9 @@ final class Sport {
     @Relationship(deleteRule: .nullify, inverse: \Game.sport)
     var games: [Game]? = []
 
+    @Relationship(deleteRule: .nullify, inverse: \Team.sport)
+    var teams: [Team]? = []
+
     var sortedStatDefinitions: [StatDefinition] {
         (statDefinitions ?? []).sorted { $0.sortOrder < $1.sortOrder }
     }

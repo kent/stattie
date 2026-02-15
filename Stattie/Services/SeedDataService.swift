@@ -69,14 +69,87 @@ final class SeedDataService {
         return try? context.fetch(descriptor).first
     }
 
+    // MARK: - Soccer Seeding
+
+    func seedSoccerIfNeeded(context: ModelContext) {
+        let descriptor = FetchDescriptor<Sport>(predicate: #Predicate { $0.name == "Soccer" })
+
+        do {
+            let existingSports = try context.fetch(descriptor)
+            if existingSports.isEmpty {
+                createSoccerSport(context: context)
+            }
+        } catch {
+            print("Failed to check for existing soccer sport: \(error)")
+            createSoccerSport(context: context)
+        }
+    }
+
+    private func createSoccerSport(context: ModelContext) {
+        let soccer = Sport(name: "Soccer", iconName: "soccerball", isBuiltIn: true)
+        context.insert(soccer)
+
+        let statDefinitions: [(String, String, String, Bool, Int, Int, String)] = [
+            ("Goal", "GOL", "shooting", false, 1, 0, "soccerball"),
+            ("Shot on Target", "SOT", "shooting", true, 0, 1, "scope"),
+            ("Assist", "AST", "offense", false, 0, 2, "arrow.triangle.branch"),
+            ("Pass", "PAS", "offense", false, 0, 3, "arrow.right"),
+            ("Tackle", "TKL", "defense", false, 0, 4, "figure.fall"),
+            ("Interception", "INT", "defense", false, 0, 5, "hand.raised.fill"),
+            ("Save", "SAV", "defense", false, 0, 6, "hand.raised.square.fill"),
+            ("Foul", "FLS", "other", false, 0, 7, "exclamationmark.triangle.fill"),
+            ("Yellow Card", "YC", "other", false, 0, 8, "rectangle.fill"),
+            ("Red Card", "RC", "other", false, 0, 9, "rectangle.fill"),
+            ("Corner", "CRN", "other", false, 0, 10, "arrow.turn.up.right"),
+        ]
+
+        for def in statDefinitions {
+            let statDef = StatDefinition(
+                name: def.0,
+                shortName: def.1,
+                category: def.2,
+                hasMadeAndMissed: def.3,
+                pointValue: def.4,
+                sortOrder: def.5,
+                iconName: def.6,
+                sport: soccer
+            )
+            context.insert(statDef)
+
+            if soccer.statDefinitions == nil {
+                soccer.statDefinitions = []
+            }
+            soccer.statDefinitions?.append(statDef)
+        }
+
+        do {
+            try context.save()
+            print("Soccer sport seeded successfully")
+        } catch {
+            print("Failed to save soccer sport: \(error)")
+        }
+    }
+
+    func getSoccer(context: ModelContext) -> Sport? {
+        let descriptor = FetchDescriptor<Sport>(predicate: #Predicate { $0.name == "Soccer" })
+        return try? context.fetch(descriptor).first
+    }
+
+    // MARK: - Seed All Sports
+
+    func seedAllSportsIfNeeded(context: ModelContext) {
+        seedBasketballIfNeeded(context: context)
+        seedSoccerIfNeeded(context: context)
+    }
+
     // MARK: - Test Data
 
     func seedJackJamesIfNeeded(context: ModelContext) {
-        let descriptor = FetchDescriptor<Player>(predicate: #Predicate { $0.firstName == "Jack" && $0.lastName == "James" })
+        let descriptor = FetchDescriptor<Person>(predicate: #Predicate { $0.firstName == "Jack" && $0.lastName == "James" })
 
         do {
-            let existingPlayers = try context.fetch(descriptor)
-            if existingPlayers.isEmpty {
+            let existingPeople = try context.fetch(descriptor)
+            if existingPeople.isEmpty {
                 createJackJamesWithHistory(context: context)
             }
         } catch {
@@ -86,7 +159,7 @@ final class SeedDataService {
 
     private func createJackJamesWithHistory(context: ModelContext) {
         // Create Jack James
-        let jack = Player(
+        let jack = Person(
             firstName: "Jack",
             lastName: "James",
             jerseyNumber: 23,
@@ -122,16 +195,16 @@ final class SeedDataService {
             )
             context.insert(game)
 
-            // Create PlayerGameStats for Jack in this game
-            let playerStats = PlayerGameStats(player: jack, game: game)
-            context.insert(playerStats)
+            // Create PersonGameStats for Jack in this game
+            let personStats = PersonGameStats(person: jack, game: game)
+            context.insert(personStats)
 
             // Link relationships
             if jack.gameStats == nil { jack.gameStats = [] }
-            jack.gameStats?.append(playerStats)
+            jack.gameStats?.append(personStats)
 
-            if game.playerStats == nil { game.playerStats = [] }
-            game.playerStats?.append(playerStats)
+            if game.personStats == nil { game.personStats = [] }
+            game.personStats?.append(personStats)
 
             // Generate realistic stats with some variance and trends
             // Jack improves slightly over time (lower gameIndex = older games)
@@ -175,12 +248,12 @@ final class SeedDataService {
                     made: made,
                     missed: missed,
                     count: count,
-                    playerGameStats: playerStats
+                    personGameStats: personStats
                 )
                 context.insert(stat)
 
-                if playerStats.stats == nil { playerStats.stats = [] }
-                playerStats.stats?.append(stat)
+                if personStats.stats == nil { personStats.stats = [] }
+                personStats.stats?.append(stat)
             }
         }
 

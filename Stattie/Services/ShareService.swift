@@ -29,17 +29,17 @@ final class ShareService {
         lines.append("FINAL SCORE: \(game.totalPoints) points")
         lines.append(String(repeating: "-", count: 40))
 
-        let playerStats = (game.playerStats ?? []).sorted {
-            ($0.player?.jerseyNumber ?? 0) < ($1.player?.jerseyNumber ?? 0)
+        let personStats = (game.personStats ?? []).sorted {
+            ($0.person?.jerseyNumber ?? 0) < ($1.person?.jerseyNumber ?? 0)
         }
 
-        for pgs in playerStats {
-            guard let player = pgs.player else { continue }
+        for pgs in personStats {
+            guard let person = pgs.person else { continue }
             let stats = pgs.stats ?? []
             if stats.isEmpty || stats.allSatisfy({ $0.total == 0 }) { continue }
 
             lines.append("")
-            lines.append("\(player.displayName)")
+            lines.append("\(person.displayName)")
             lines.append("  Points: \(pgs.totalPoints)")
 
             let shootingStats = stats.filter { $0.definition?.hasMadeAndMissed == true && $0.total > 0 }

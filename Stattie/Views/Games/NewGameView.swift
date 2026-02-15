@@ -5,14 +5,14 @@ struct NewGameView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
-    @Query(sort: \Player.jerseyNumber) private var players: [Player]
+    @Query(sort: \Person.jerseyNumber) private var players: [Person]
     @Query private var users: [User]
     @Query(filter: #Predicate<Sport> { $0.name == "Basketball" }) private var sports: [Sport]
 
     @State private var opponent = ""
     @State private var location = ""
     @State private var gameDate = Date()
-    @State private var selectedPlayers: Set<UUID> = []
+    @State private var selectedPersons: Set<UUID> = []
     @State private var notes = ""
 
     // Quick add player fields
@@ -28,12 +28,12 @@ struct NewGameView: View {
         sports.first
     }
 
-    private var activePlayers: [Player] {
+    private var activePersons: [Person] {
         players.filter { $0.isActive }.sorted { $0.jerseyNumber < $1.jerseyNumber }
     }
 
     private var isValid: Bool {
-        !selectedPlayers.isEmpty
+        !selectedPersons.isEmpty
     }
 
     var body: some View {
@@ -46,7 +46,7 @@ struct NewGameView: View {
                 }
 
                 Section {
-                    if activePlayers.isEmpty && !showingQuickAdd {
+                    if activePersons.isEmpty && !showingQuickAdd {
                         VStack(spacing: 12) {
                             Image(systemName: "person.3")
                                 .font(.largeTitle)
@@ -56,7 +56,7 @@ struct NewGameView: View {
                             Text("Add players to track their stats")
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
-                            Button("Add Players") {
+                            Button("Add Persons") {
                                 showingQuickAdd = true
                             }
                             .buttonStyle(.borderedProminent)
@@ -64,14 +64,14 @@ struct NewGameView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical)
                     } else {
-                        ForEach(activePlayers) { player in
+                        ForEach(activePersons) { player in
                             Button {
-                                togglePlayer(player)
+                                togglePerson(player)
                             } label: {
                                 HStack {
-                                    PlayerSelectionRow(player: player)
+                                    PersonSelectionRow(player: player)
                                     Spacer()
-                                    if selectedPlayers.contains(player.id) {
+                                    if selectedPersons.contains(player.id) {
                                         Image(systemName: "checkmark.circle.fill")
                                             .foregroundStyle(.accent)
                                     } else {
@@ -85,14 +85,14 @@ struct NewGameView: View {
                     }
                 } header: {
                     HStack {
-                        Text("Select Players")
+                        Text("Select Persons")
                         Spacer()
-                        if !activePlayers.isEmpty {
-                            Button(selectedPlayers.count == activePlayers.count ? "Deselect All" : "Select All") {
-                                if selectedPlayers.count == activePlayers.count {
-                                    selectedPlayers.removeAll()
+                        if !activePersons.isEmpty {
+                            Button(selectedPersons.count == activePersons.count ? "Deselect All" : "Select All") {
+                                if selectedPersons.count == activePersons.count {
+                                    selectedPersons.removeAll()
                                 } else {
-                                    selectedPlayers = Set(activePlayers.map { $0.id })
+                                    selectedPersons = Set(activePersons.map { $0.id })
                                 }
                             }
                             .font(.caption)
@@ -100,20 +100,20 @@ struct NewGameView: View {
                     }
                 }
 
-                // Quick Add Players Section
+                // Quick Add Persons Section
                 Section {
-                    if showingQuickAdd || !activePlayers.isEmpty {
+                    if showingQuickAdd || !activePersons.isEmpty {
                         HStack(spacing: 12) {
                             TextField("#", text: $quickAddNumber)
                                 .keyboardType(.numberPad)
                                 .frame(width: 50)
                                 .textFieldStyle(.roundedBorder)
 
-                            TextField("Player name", text: $quickAddName)
+                            TextField("Person name", text: $quickAddName)
                                 .textFieldStyle(.roundedBorder)
 
                             Button {
-                                quickAddPlayer()
+                                quickAddPerson()
                             } label: {
                                 Image(systemName: "plus.circle.fill")
                                     .font(.title2)
@@ -122,11 +122,11 @@ struct NewGameView: View {
                         }
                     }
                 } header: {
-                    if showingQuickAdd || !activePlayers.isEmpty {
-                        Text("Quick Add Player")
+                    if showingQuickAdd || !activePersons.isEmpty {
+                        Text("Quick Add Person")
                     }
                 } footer: {
-                    if showingQuickAdd || !activePlayers.isEmpty {
+                    if showingQuickAdd || !activePersons.isEmpty {
                         Text("Enter jersey # and/or name, then tap + to add")
                     }
                 }
@@ -150,15 +150,15 @@ struct NewGameView: View {
         }
     }
 
-    private func togglePlayer(_ player: Player) {
-        if selectedPlayers.contains(player.id) {
-            selectedPlayers.remove(player.id)
+    private func togglePerson(_ player: Person) {
+        if selectedPersons.contains(player.id) {
+            selectedPersons.remove(player.id)
         } else {
-            selectedPlayers.insert(player.id)
+            selectedPersons.insert(player.id)
         }
     }
 
-    private func quickAddPlayer() {
+    private func quickAddPerson() {
         let name = quickAddName.trimmingCharacters(in: .whitespaces)
         let number = Int(quickAddNumber) ?? 0
 
@@ -169,7 +169,7 @@ struct NewGameView: View {
         let firstName = nameParts.first.map(String.init) ?? ""
         let lastName = nameParts.count > 1 ? String(nameParts[1]) : ""
 
-        let player = Player(
+        let player = Person(
             firstName: firstName,
             lastName: lastName,
             jerseyNumber: number,
@@ -182,7 +182,7 @@ struct NewGameView: View {
         try? modelContext.save()
 
         // Auto-select the new player
-        selectedPlayers.insert(player.id)
+        selectedPersons.insert(player.id)
 
         // Clear fields
         quickAddName = ""
@@ -202,14 +202,14 @@ struct NewGameView: View {
 
         modelContext.insert(game)
 
-        for player in activePlayers where selectedPlayers.contains(player.id) {
-            let playerStats = PlayerGameStats(player: player, game: game)
-            modelContext.insert(playerStats)
+        for person in activePersons where selectedPersons.contains(person.id) {
+            let personStats = PersonGameStats(person: person, game: game)
+            modelContext.insert(personStats)
 
-            if game.playerStats == nil {
-                game.playerStats = []
+            if game.personStats == nil {
+                game.personStats = []
             }
-            game.playerStats?.append(playerStats)
+            game.personStats?.append(personStats)
         }
 
         try? modelContext.save()
@@ -217,8 +217,8 @@ struct NewGameView: View {
     }
 }
 
-struct PlayerSelectionRow: View {
-    let player: Player
+struct PersonSelectionRow: View {
+    let player: Person
 
     var body: some View {
         HStack(spacing: 12) {
@@ -240,5 +240,5 @@ struct PlayerSelectionRow: View {
 
 #Preview {
     NewGameView()
-        .modelContainer(for: [Game.self, Player.self, User.self, Sport.self], inMemory: true)
+        .modelContainer(for: [Game.self, Person.self, User.self, Sport.self], inMemory: true)
 }

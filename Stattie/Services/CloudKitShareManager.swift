@@ -2,13 +2,13 @@ import Foundation
 import SwiftData
 import CloudKit
 
-/// Manages CloudKit sharing for Player records.
-/// Creates shareable CloudKit records linked to SwiftData Player entities.
+/// Manages CloudKit sharing for Person records.
+/// Creates shareable CloudKit records linked to SwiftData Person entities.
 ///
 /// Architecture:
-/// - SwiftData manages the primary Player data with automatic CloudKit sync
+/// - SwiftData manages the primary Person data with automatic CloudKit sync
 /// - For sharing, we create separate CKRecords in a dedicated sharing zone
-/// - These share records are linked to Players via the Player's UUID
+/// - These share records are linked to People via the Person's UUID
 /// - Recipients see a read-only snapshot that can be refreshed
 @MainActor
 @Observable
@@ -18,12 +18,12 @@ final class CloudKitShareManager {
     private let provider = CloudKitContainerProvider.shared
 
     // Use a dedicated zone for sharing to avoid conflicts with SwiftData's zone
-    private let sharingZoneName = "PlayerSharingZone"
+    private let sharingZoneName = "PersonSharingZone"
     private var sharingZoneID: CKRecordZone.ID {
         CKRecordZone.ID(zoneName: sharingZoneName, ownerName: CKCurrentUserDefaultName)
     }
 
-    // Cache of shares by player ID
+    // Cache of shares by person ID
     private var shareCache: [UUID: CKShare] = [:]
 
     // Track zone creation
@@ -31,7 +31,7 @@ final class CloudKitShareManager {
 
     // Currently active share for presentation
     private(set) var activeShare: CKShare?
-    private(set) var activePlayerID: UUID?
+    private(set) var activePersonID: UUID?
 
     var isLoading = false
     var errorMessage: String?
@@ -60,8 +60,8 @@ final class CloudKitShareManager {
 
     // MARK: - Share Creation
 
-    /// Creates a CKShare for a player and returns it for presentation
-    func createShare(for player: Player) async throws -> CKShare {
+    /// Creates a CKShare for a person and returns it for presentation
+    func createShare(for person: Person) async throws -> CKShare {
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
@@ -77,27 +77,27 @@ final class CloudKitShareManager {
         try await ensureSharingZoneExists()
 
         // Check if share already exists
-        if let existingShare = await getShare(for: player) {
+        if let existingShare = await getShare(for: person) {
             activeShare = existingShare
-            activePlayerID = player.id
+            activePersonID = person.id
             return existingShare
         }
 
-        // Create a CKRecord for the player in our sharing zone
-        let recordID = CKRecord.ID(recordName: "Player_\(player.id.uuidString)", zoneID: sharingZoneID)
-        let playerRecord = CKRecord(recordType: "SharedPlayer", recordID: recordID)
+        // Create a CKRecord for the person in our sharing zone
+        let recordID = CKRecord.ID(recordName: "Person_\(person.id.uuidString)", zoneID: sharingZoneID)
+        let personRecord = CKRecord(recordType: "SharedPerson", recordID: recordID)
 
-        // Set player data
-        playerRecord["firstName"] = player.firstName as CKRecordValue
-        playerRecord["lastName"] = player.lastName as CKRecordValue
-        playerRecord["jerseyNumber"] = player.jerseyNumber as CKRecordValue
-        playerRecord["position"] = player.position as CKRecordValue
-        playerRecord["playerID"] = player.id.uuidString as CKRecordValue
+        // Set person data
+        personRecord["firstName"] = person.firstName as CKRecordValue
+        personRecord["lastName"] = person.lastName as CKRecordValue
+        personRecord["jerseyNumber"] = person.jerseyNumber as CKRecordValue
+        personRecord["position"] = person.position as CKRecordValue
+        personRecord["personID"] = person.id.uuidString as CKRecordValue
 
         // Create the share
-        let share = CKShare(rootRecord: playerRecord)
-        share[CKShare.SystemFieldKey.title] = player.fullName as CKRecordValue
-        share[CKShare.SystemFieldKey.shareType] = "com.stattie.player" as CKRecordValue
+        let share = CKShare(rootRecord: personRecord)
+        share[CKShare.SystemFieldKey.title] = person.fullName as CKRecordValue
+        share[CKShare.SystemFieldKey.shareType] = "com.stattie.person" as CKRecordValue
         share.publicPermission = .none // Only invited participants
 
         // Save both records using modern async API with retry logic
@@ -106,7 +106,7 @@ final class CloudKitShareManager {
         do {
             // Use modifyRecords for atomic save of record + share
             let (savedResults, _) = try await database.modifyRecords(
-                saving: [playerRecord, share],
+                saving: [personRecord, share],
                 deleting: [],
                 savePolicy: .changedKeys
             )
@@ -125,9 +125,9 @@ final class CloudKitShareManager {
             }
 
             // Cache and set active
-            shareCache[player.id] = finalShare
+            shareCache[person.id] = finalShare
             activeShare = finalShare
-            activePlayerID = player.id
+            activePersonID = person.id
 
             return finalShare
 
@@ -142,19 +142,19 @@ final class CloudKitShareManager {
 
     // MARK: - Share Retrieval
 
-    /// Gets existing share for a player if one exists
-    func getShare(for player: Player) async -> CKShare? {
+    /// Gets existing share for a person if one exists
+    func getShare(for person: Person) async -> CKShare? {
         // Check cache first
-        if let cached = shareCache[player.id] {
+        if let cached = shareCache[person.id] {
             return cached
         }
 
-        let recordID = CKRecord.ID(recordName: "Player_\(player.id.uuidString)", zoneID: sharingZoneID)
+        let recordID = CKRecord.ID(recordName: "Person_\(person.id.uuidString)", zoneID: sharingZoneID)
 
         do {
             let share = try await provider.getShare(for: recordID)
             if let share = share {
-                shareCache[player.id] = share
+                shareCache[person.id] = share
             }
             return share
         } catch {
@@ -163,20 +163,20 @@ final class CloudKitShareManager {
         }
     }
 
-    /// Checks if a player is currently shared
-    func isPlayerShared(_ player: Player) async -> Bool {
-        return await getShare(for: player) != nil
+    /// Checks if a person is currently shared
+    func isPersonShared(_ person: Person) async -> Bool {
+        return await getShare(for: person) != nil
     }
 
     // MARK: - Share Management
 
-    /// Stops sharing a player (removes the share)
-    func stopSharing(_ player: Player) async throws {
+    /// Stops sharing a person (removes the share)
+    func stopSharing(_ person: Person) async throws {
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
 
-        guard let share = await getShare(for: player) else {
+        guard let share = await getShare(for: person) else {
             throw CloudKitSharingError.shareNotFound
         }
 
@@ -191,16 +191,16 @@ final class CloudKitShareManager {
         }
 
         // Clear from cache
-        shareCache.removeValue(forKey: player.id)
-        if activePlayerID == player.id {
+        shareCache.removeValue(forKey: person.id)
+        if activePersonID == person.id {
             activeShare = nil
-            activePlayerID = nil
+            activePersonID = nil
         }
     }
 
-    /// Gets participants for a shared player
-    func getParticipants(for player: Player) async -> [CKShare.Participant] {
-        guard let share = await getShare(for: player) else {
+    /// Gets participants for a shared person
+    func getParticipants(for person: Person) async -> [CKShare.Participant] {
+        guard let share = await getShare(for: person) else {
             return []
         }
         // Filter to return only non-owner participants
@@ -226,12 +226,12 @@ final class CloudKitShareManager {
     // MARK: - Leave Share
 
     /// Leave a share that was shared with the current user
-    func leaveShare(_ player: Player) async throws {
+    func leaveShare(_ person: Person) async throws {
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
 
-        guard let share = await getShare(for: player) else {
+        guard let share = await getShare(for: person) else {
             throw CloudKitSharingError.shareNotFound
         }
 
@@ -256,7 +256,7 @@ final class CloudKitShareManager {
             if error.code == .serverRecordChanged {
                 // Fetch latest and retry once
                 if let latestShare = try? await provider.getShare(
-                    for: CKRecord.ID(recordName: "Player_\(player.id.uuidString)", zoneID: sharingZoneID)
+                    for: CKRecord.ID(recordName: "Person_\(person.id.uuidString)", zoneID: sharingZoneID)
                 ), let participant = latestShare.currentUserParticipant {
                     latestShare.removeParticipant(participant)
                     _ = try await database.save(latestShare)
@@ -268,7 +268,7 @@ final class CloudKitShareManager {
         }
 
         // Clear cache
-        shareCache.removeValue(forKey: player.id)
+        shareCache.removeValue(forKey: person.id)
     }
 
     // MARK: - Utilities
@@ -277,12 +277,12 @@ final class CloudKitShareManager {
     func clearCache() {
         shareCache.removeAll()
         activeShare = nil
-        activePlayerID = nil
+        activePersonID = nil
     }
 
     /// Check if current user is the owner of a share
-    func isOwner(of player: Player) async -> Bool {
-        guard let share = await getShare(for: player) else {
+    func isOwner(of person: Person) async -> Bool {
+        guard let share = await getShare(for: person) else {
             return true // If not shared, current user owns it
         }
 
@@ -293,9 +293,9 @@ final class CloudKitShareManager {
         return currentUser.role == .owner
     }
 
-    /// Gets the number of participants for a shared player (excluding owner)
-    func getParticipantCount(for player: Player) async -> Int {
-        guard let share = await getShare(for: player) else {
+    /// Gets the number of participants for a shared person (excluding owner)
+    func getParticipantCount(for person: Person) async -> Int {
+        guard let share = await getShare(for: person) else {
             return 0
         }
         // Subtract 1 to exclude owner

@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 import PhotosUI
 
-struct AddPlayerView: View {
+struct AddPersonView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
@@ -60,7 +60,7 @@ struct AddPlayerView: View {
                     .listRowBackground(Color.clear)
                 }
 
-                Section("Player Info") {
+                Section("Person Info") {
                     TextField("First Name", text: $firstName)
                         .textContentType(.givenName)
                         .autocorrectionDisabled()
@@ -81,7 +81,7 @@ struct AddPlayerView: View {
                     TextField("Position (optional)", text: $position)
                 }
             }
-            .navigationTitle("Add Player")
+            .navigationTitle("Add Person")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -92,7 +92,7 @@ struct AddPlayerView: View {
 
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add") {
-                        addPlayer()
+                        addPerson()
                     }
                     .disabled(!isValid)
                 }
@@ -107,8 +107,8 @@ struct AddPlayerView: View {
         }
     }
 
-    private func addPlayer() {
-        let player = Player(
+    private func addPerson() {
+        let player = Person(
             firstName: firstName.trimmingCharacters(in: .whitespaces),
             lastName: lastName.trimmingCharacters(in: .whitespaces),
             jerseyNumber: Int(jerseyNumber) ?? 0,
@@ -125,6 +125,6 @@ struct AddPlayerView: View {
 }
 
 #Preview {
-    AddPlayerView()
-        .modelContainer(for: [Player.self, User.self], inMemory: true)
+    AddPersonView()
+        .modelContainer(for: [Person.self, User.self], inMemory: true)
 }

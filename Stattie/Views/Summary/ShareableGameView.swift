@@ -3,13 +3,13 @@ import SwiftUI
 struct ShareableGameView: View {
     let game: Game
 
-    var sortedPlayerStats: [PlayerGameStats] {
-        (game.playerStats ?? [])
+    var sortedPersonStats: [PersonGameStats] {
+        (game.personStats ?? [])
             .filter { pgs in
                 let stats = pgs.stats ?? []
                 return !stats.isEmpty && stats.contains { $0.total > 0 }
             }
-            .sorted { ($0.player?.jerseyNumber ?? 0) < ($1.player?.jerseyNumber ?? 0) }
+            .sorted { ($0.person?.jerseyNumber ?? 0) < ($1.person?.jerseyNumber ?? 0) }
     }
 
     var body: some View {
@@ -37,7 +37,7 @@ struct ShareableGameView: View {
 
             VStack(spacing: 12) {
                 HStack {
-                    Text("Player")
+                    Text("Person")
                         .font(.caption.bold())
                         .frame(maxWidth: .infinity, alignment: .leading)
                     Text("PTS")
@@ -58,9 +58,9 @@ struct ShareableGameView: View {
                 }
                 .foregroundStyle(.secondary)
 
-                ForEach(sortedPlayerStats, id: \.id) { pgs in
-                    if let player = pgs.player {
-                        PlayerStatRow(player: player, stats: pgs)
+                ForEach(sortedPersonStats, id: \.id) { pgs in
+                    if let person = pgs.person {
+                        PersonStatRow(person: person, stats: pgs)
                     }
                 }
             }
@@ -79,9 +79,9 @@ struct ShareableGameView: View {
     }
 }
 
-struct PlayerStatRow: View {
-    let player: Player
-    let stats: PlayerGameStats
+struct PersonStatRow: View {
+    let person: Person
+    let stats: PersonGameStats
 
     private func statValue(for shortName: String) -> Stat? {
         (stats.stats ?? []).first { $0.definition?.shortName == shortName }
@@ -107,7 +107,7 @@ struct PlayerStatRow: View {
 
     var body: some View {
         HStack {
-            Text("#\(player.jerseyNumber) \(player.lastName)")
+            Text("#\(person.jerseyNumber) \(person.lastName)")
                 .font(.caption)
                 .lineLimit(1)
                 .frame(maxWidth: .infinity, alignment: .leading)

@@ -2,9 +2,9 @@ import SwiftUI
 import SwiftData
 import Charts
 
-struct PlayerStatsOverTimeView: View {
+struct PersonStatsOverTimeView: View {
     @Environment(\.modelContext) private var modelContext
-    let player: Player
+    let player: Person
 
     @State private var selectedStat: StatType = .points
     @State private var timeRange: TimeRange = .all
@@ -72,7 +72,7 @@ struct PlayerStatsOverTimeView: View {
         }
     }
 
-    var sortedGameStats: [PlayerGameStats] {
+    var sortedGameStats: [PersonGameStats] {
         let allStats = (player.gameStats ?? [])
             .filter { $0.game != nil }
             .sorted { ($0.game?.gameDate ?? .distantPast) < ($1.game?.gameDate ?? .distantPast) }
@@ -90,7 +90,7 @@ struct PlayerStatsOverTimeView: View {
         }
     }
 
-    private func statValue(for stat: StatType, from pgs: PlayerGameStats) -> Int {
+    private func statValue(for stat: StatType, from pgs: PersonGameStats) -> Int {
         switch stat {
         case .points: return pgs.totalPoints
         case .rebounds: return pgs.totalRebounds
@@ -297,8 +297,8 @@ struct StatSummaryCard: View {
 
 struct GameStatRow: View {
     let game: Game
-    let playerStats: PlayerGameStats
-    let selectedStat: PlayerStatsOverTimeView.StatType
+    let playerStats: PersonGameStats
+    let selectedStat: PersonStatsOverTimeView.StatType
 
     private var statValue: Int {
         switch selectedStat {
@@ -362,7 +362,7 @@ struct StatPill: View {
 
 #Preview {
     NavigationStack {
-        PlayerStatsOverTimeView(player: Player(firstName: "Jack", lastName: "James", jerseyNumber: 23, position: "Guard"))
+        PersonStatsOverTimeView(player: Person(firstName: "Jack", lastName: "James", jerseyNumber: 23, position: "Guard"))
     }
-    .modelContainer(for: [Player.self, PlayerGameStats.self, Game.self, Stat.self], inMemory: true)
+    .modelContainer(for: [Person.self, PersonGameStats.self, Game.self, Stat.self], inMemory: true)
 }

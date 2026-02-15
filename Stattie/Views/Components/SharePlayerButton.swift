@@ -2,8 +2,8 @@ import SwiftUI
 
 /// A button that initiates sharing for a player.
 /// Shows different states based on whether the player is already shared.
-struct SharePlayerButton: View {
-    let player: Player
+struct SharePersonButton: View {
+    let player: Person
     @Binding var isPresented: Bool
 
     @State private var isShared = false
@@ -23,7 +23,7 @@ struct SharePlayerButton: View {
                     Label("Shared with You", systemImage: "person.2")
                 }
             } else {
-                Label("Share Player...", systemImage: "square.and.arrow.up")
+                Label("Share Person...", systemImage: "square.and.arrow.up")
             }
         }
         .disabled(!isOwner && isShared)

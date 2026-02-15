@@ -7,12 +7,16 @@ struct StattieApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             User.self,
-            Player.self,
+            Person.self,
+            Team.self,
+            TeamMembership.self,
             Sport.self,
             StatDefinition.self,
             Game.self,
-            PlayerGameStats.self,
-            Stat.self
+            PersonGameStats.self,
+            Stat.self,
+            Shift.self,
+            ShiftStat.self
         ])
 
         // Try CloudKit first, fall back to local-only if not available
@@ -69,7 +73,7 @@ struct StattieApp: App {
                 .alert("Share Accepted", isPresented: $showShareAcceptedSuccess) {
                     Button("OK", role: .cancel) {}
                 } message: {
-                    Text("You now have access to the shared player.")
+                    Text("You now have access to the shared person.")
                 }
         }
         .modelContainer(sharedModelContainer)

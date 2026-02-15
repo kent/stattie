@@ -4,7 +4,7 @@ import CloudKit
 /// View for managing share participants for a player.
 /// Shows list of participants and allows owner to stop sharing or add more people.
 struct ShareManagementView: View {
-    let player: Player
+    let player: Person
     @Environment(\.dismiss) private var dismiss
 
     @State private var participants: [CKShare.Participant] = []
@@ -48,7 +48,7 @@ struct ShareManagementView: View {
                 }
             }
             .sheet(isPresented: $showShareSheet) {
-                SharePlayerSheet(player: player)
+                SharePersonSheet(player: player)
             }
             .alert("Stop Sharing?", isPresented: $showStopSharingAlert) {
                 Button("Cancel", role: .cancel) {}

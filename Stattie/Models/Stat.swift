@@ -14,7 +14,7 @@ final class Stat {
     var pointValue: Int = 0    // Points per made shot (2, 3, 1, or 0)
 
     var definition: StatDefinition?
-    var playerGameStats: PlayerGameStats?
+    var personGameStats: PersonGameStats?
     var game: Game?  // Direct link to game (when tracking without players)
 
     var total: Int {
@@ -50,7 +50,7 @@ final class Stat {
         missed: Int = 0,
         count: Int = 0,
         definition: StatDefinition? = nil,
-        playerGameStats: PlayerGameStats? = nil
+        personGameStats: PersonGameStats? = nil
     ) {
         self.id = UUID()
         self.statName = statName
@@ -59,7 +59,7 @@ final class Stat {
         self.missed = missed
         self.count = count
         self.definition = definition
-        self.playerGameStats = playerGameStats
+        self.personGameStats = personGameStats
         self.timestamp = Date()
     }
 }

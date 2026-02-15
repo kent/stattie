@@ -13,12 +13,13 @@ final class Game {
 
     var sport: Sport?
     var trackedBy: User?
+    var team: Team?
 
     var lockedByUserID: String?
     var lockExpiresAt: Date?
 
-    @Relationship(deleteRule: .cascade, inverse: \PlayerGameStats.game)
-    var playerStats: [PlayerGameStats]? = []
+    @Relationship(deleteRule: .cascade, inverse: \PersonGameStats.game)
+    var personStats: [PersonGameStats]? = []
 
     // Direct stats storage (for quick tracking without players)
     @Relationship(deleteRule: .cascade, inverse: \Stat.game)
@@ -30,11 +31,11 @@ final class Game {
     }
 
     var totalPoints: Int {
-        // Points from player stats
-        let playerPoints = (playerStats ?? []).reduce(0) { $0 + $1.totalPoints }
+        // Points from person stats
+        let personPoints = (personStats ?? []).reduce(0) { $0 + $1.totalPoints }
         // Points from direct game stats
         let directPoints = (stats ?? []).reduce(0) { $0 + $1.points }
-        return playerPoints + directPoints
+        return personPoints + directPoints
     }
 
     // Helper to get or create a stat by name

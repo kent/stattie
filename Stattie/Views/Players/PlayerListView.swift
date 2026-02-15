@@ -2,13 +2,13 @@ import SwiftUI
 import SwiftData
 import UIKit
 
-struct PlayerListView: View {
+struct PersonListView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \Player.jerseyNumber) private var players: [Player]
-    @State private var showingAddPlayer = false
+    @Query(sort: \Person.jerseyNumber) private var players: [Person]
+    @State private var showingAddPerson = false
     @State private var searchText = ""
 
-    var filteredPlayers: [Player] {
+    var filteredPersons: [Person] {
         if searchText.isEmpty {
             return players.filter { $0.isActive }
         }
@@ -24,59 +24,59 @@ struct PlayerListView: View {
     var body: some View {
         NavigationStack {
             Group {
-                if filteredPlayers.isEmpty {
+                if filteredPersons.isEmpty {
                     ContentUnavailableView {
-                        Label("No Players", systemImage: "person.3")
+                        Label("No Persons", systemImage: "person.3")
                     } description: {
                         Text("Add players to start tracking their stats")
                     } actions: {
-                        Button("Add Player") {
-                            showingAddPlayer = true
+                        Button("Add Person") {
+                            showingAddPerson = true
                         }
                         .buttonStyle(.borderedProminent)
                     }
                 } else {
                     List {
-                        ForEach(filteredPlayers) { player in
+                        ForEach(filteredPersons) { player in
                             NavigationLink(value: player) {
-                                PlayerRowView(player: player)
+                                PersonRowView(player: player)
                             }
                         }
-                        .onDelete(perform: deletePlayer)
+                        .onDelete(perform: deletePerson)
                     }
                 }
             }
-            .navigationTitle("Players")
-            .navigationDestination(for: Player.self) { player in
-                PlayerDetailView(player: player)
+            .navigationTitle("Persons")
+            .navigationDestination(for: Person.self) { player in
+                PersonDetailView(player: player)
             }
             .searchable(text: $searchText, prompt: "Search players")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
-                        showingAddPlayer = true
+                        showingAddPerson = true
                     } label: {
                         Image(systemName: "plus")
                     }
                 }
             }
-            .sheet(isPresented: $showingAddPlayer) {
-                AddPlayerView()
+            .sheet(isPresented: $showingAddPerson) {
+                AddPersonView()
             }
         }
     }
 
-    private func deletePlayer(at offsets: IndexSet) {
+    private func deletePerson(at offsets: IndexSet) {
         for index in offsets {
-            let player = filteredPlayers[index]
+            let player = filteredPersons[index]
             player.isActive = false
         }
         try? modelContext.save()
     }
 }
 
-struct PlayerRowView: View {
-    let player: Player
+struct PersonRowView: View {
+    let player: Person
 
     var body: some View {
         HStack(spacing: 12) {
@@ -103,7 +103,7 @@ struct PlayerRowView: View {
                 HStack(spacing: 6) {
                     Text(player.fullName)
                         .font(.headline)
-                    AsyncSharedPlayerBadge(player: player)
+                    AsyncSharedPersonBadge(player: player)
                 }
 
                 if !player.position.isEmpty {
@@ -120,6 +120,6 @@ struct PlayerRowView: View {
 }
 
 #Preview {
-    PlayerListView()
-        .modelContainer(for: Player.self, inMemory: true)
+    PersonListView()
+        .modelContainer(for: Person.self, inMemory: true)
 }

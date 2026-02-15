@@ -11,8 +11,11 @@ final class User {
     @Relationship(deleteRule: .nullify, inverse: \Game.trackedBy)
     var trackedGames: [Game]? = []
 
-    @Relationship(deleteRule: .cascade, inverse: \Player.owner)
-    var players: [Player]? = []
+    @Relationship(deleteRule: .cascade, inverse: \Person.owner)
+    var people: [Person]? = []
+
+    @Relationship(deleteRule: .cascade, inverse: \Team.owner)
+    var teams: [Team]? = []
 
     init(displayName: String = "", cloudKitUserID: String? = nil) {
         self.id = UUID()

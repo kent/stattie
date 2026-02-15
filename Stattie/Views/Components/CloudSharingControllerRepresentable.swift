@@ -7,7 +7,7 @@ import UIKit
 struct CloudSharingControllerRepresentable: UIViewControllerRepresentable {
     let share: CKShare
     let container: CKContainer
-    let player: Player
+    let player: Person
     let onDismiss: () -> Void
 
     func makeUIViewController(context: Context) -> UICloudSharingController {
@@ -56,8 +56,8 @@ struct CloudSharingControllerRepresentable: UIViewControllerRepresentable {
 }
 
 /// A view that prepares and presents the cloud sharing controller
-struct SharePlayerSheet: View {
-    let player: Player
+struct SharePersonSheet: View {
+    let player: Person
     @Environment(\.dismiss) private var dismiss
 
     @State private var share: CKShare?

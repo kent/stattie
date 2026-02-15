@@ -2,7 +2,7 @@ import SwiftUI
 
 /// A badge that indicates a player is shared with others.
 /// Shows a person.2 icon with optional participant count.
-struct SharedPlayerBadge: View {
+struct SharedPersonBadge: View {
     let participantCount: Int
 
     init(participantCount: Int = 0) {
@@ -27,8 +27,8 @@ struct SharedPlayerBadge: View {
 }
 
 /// An async badge that loads sharing status for a player
-struct AsyncSharedPlayerBadge: View {
-    let player: Player
+struct AsyncSharedPersonBadge: View {
+    let player: Person
 
     @State private var isShared = false
     @State private var participantCount = 0
@@ -39,7 +39,7 @@ struct AsyncSharedPlayerBadge: View {
             if isLoading {
                 EmptyView()
             } else if isShared {
-                SharedPlayerBadge(participantCount: participantCount)
+                SharedPersonBadge(participantCount: participantCount)
             }
         }
         .task {
@@ -58,9 +58,9 @@ struct AsyncSharedPlayerBadge: View {
 
 #Preview {
     VStack(spacing: 20) {
-        SharedPlayerBadge()
-        SharedPlayerBadge(participantCount: 2)
-        SharedPlayerBadge(participantCount: 5)
+        SharedPersonBadge()
+        SharedPersonBadge(participantCount: 2)
+        SharedPersonBadge(participantCount: 5)
     }
     .padding()
 }

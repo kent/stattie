@@ -8,9 +8,9 @@ struct GameDetailView: View {
     @State private var showingSummary = false
     @State private var showingTracking = false
 
-    var sortedPlayerStats: [PlayerGameStats] {
-        (game.playerStats ?? []).sorted {
-            ($0.player?.jerseyNumber ?? 0) < ($1.player?.jerseyNumber ?? 0)
+    var sortedPersonStats: [PersonGameStats] {
+        (game.personStats ?? []).sorted {
+            ($0.person?.jerseyNumber ?? 0) < ($1.person?.jerseyNumber ?? 0)
         }
     }
 
@@ -42,10 +42,10 @@ struct GameDetailView: View {
                 LabeledContent("Status", value: game.isCompleted ? "Completed" : "In Progress")
             }
 
-            Section("Player Stats") {
-                ForEach(sortedPlayerStats) { pgs in
-                    if let player = pgs.player {
-                        PlayerStatsRow(player: player, stats: pgs)
+            Section("Person Stats") {
+                ForEach(sortedPersonStats) { pgs in
+                    if let person = pgs.person {
+                        PersonStatsRow(person: person, stats: pgs)
                     }
                 }
             }
@@ -84,14 +84,14 @@ struct GameDetailView: View {
     }
 }
 
-struct PlayerStatsRow: View {
-    let player: Player
-    let stats: PlayerGameStats
+struct PersonStatsRow: View {
+    let person: Person
+    let stats: PersonGameStats
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text(player.displayName)
+                Text(person.displayName)
                     .font(.headline)
                 Spacer()
                 Text("\(stats.totalPoints) pts")

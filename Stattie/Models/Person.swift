@@ -2,7 +2,7 @@ import Foundation
 import SwiftData
 
 @Model
-final class Player {
+final class Person {
     var id: UUID = UUID()
     var firstName: String = ""
     var lastName: String = ""
@@ -14,12 +14,19 @@ final class Player {
 
     var owner: User?
 
-    @Relationship(deleteRule: .cascade, inverse: \PlayerGameStats.player)
-    var gameStats: [PlayerGameStats]? = []
+    @Relationship(deleteRule: .cascade, inverse: \TeamMembership.person)
+    var teamMemberships: [TeamMembership]? = []
+
+    @Relationship(deleteRule: .cascade, inverse: \PersonGameStats.person)
+    var gameStats: [PersonGameStats]? = []
+
+    var teams: [Team] {
+        (teamMemberships ?? []).compactMap { $0.team }
+    }
 
     var fullName: String {
         if firstName.isEmpty && lastName.isEmpty {
-            return "Player #\(jerseyNumber)"
+            return "Person #\(jerseyNumber)"
         }
         return "\(firstName) \(lastName)".trimmingCharacters(in: .whitespaces)
     }
@@ -54,18 +61,18 @@ final class Player {
 
 // MARK: - Sharing Support
 
-extension Player {
-    /// Checks if this player is shared (async operation via CloudKitShareManager)
+extension Person {
+    /// Checks if this person is shared (async operation via CloudKitShareManager)
     func checkIsShared() async -> Bool {
-        await CloudKitShareManager.shared.isPlayerShared(self)
+        await CloudKitShareManager.shared.isPersonShared(self)
     }
 
-    /// Checks if current user is the owner of this player's share
+    /// Checks if current user is the owner of this person's share
     func checkIsOwner() async -> Bool {
         await CloudKitShareManager.shared.isOwner(of: self)
     }
 
-    /// Gets the count of participants this player is shared with (excluding owner)
+    /// Gets the count of participants this person is shared with (excluding owner)
     func getShareParticipantCount() async -> Int {
         await CloudKitShareManager.shared.getParticipantCount(for: self)
     }
