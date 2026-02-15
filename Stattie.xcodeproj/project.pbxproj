@@ -10,6 +10,9 @@
 		0E458EC7F75495D2C2723457 /* PostGameInvitePrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = BACDB9A33FCA993E1F17BAE1 /* PostGameInvitePrompt.swift */; };
 		8EC431B475F081128744B245 /* TeamInviteManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BE3B5E9409D77DB051711EB /* TeamInviteManager.swift */; };
 		B0260B140EDB144A102E1621 /* TeamInviteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7997BDECAA8F6DD8A163DEEF /* TeamInviteView.swift */; };
+		C10000002B00003B /* TeamListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000002B00003B /* TeamListView.swift */; };
+		C10000002B00003C /* TeamDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000002B00003C /* TeamDetailView.swift */; };
+		C10000002B00003D /* AddTeamView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000002B00003D /* AddTeamView.swift */; };
 		E01000002B000001 /* StattieApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000001 /* StattieApp.swift */; };
 		E01000002B000002 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000002 /* AppState.swift */; };
 		E01000002B000003 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000003 /* ContentView.swift */; };
@@ -71,6 +74,9 @@
 /* Begin PBXFileReference section */
 		3BE3B5E9409D77DB051711EB /* TeamInviteManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TeamInviteManager.swift; path = Stattie/Services/TeamInviteManager.swift; sourceTree = SOURCE_ROOT; };
 		7997BDECAA8F6DD8A163DEEF /* TeamInviteView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TeamInviteView.swift; path = Stattie/Views/Teams/TeamInviteView.swift; sourceTree = SOURCE_ROOT; };
+		D10000002B00003B /* TeamListView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TeamListView.swift; path = Stattie/Views/Teams/TeamListView.swift; sourceTree = SOURCE_ROOT; };
+		D10000002B00003C /* TeamDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TeamDetailView.swift; path = Stattie/Views/Teams/TeamDetailView.swift; sourceTree = SOURCE_ROOT; };
+		D10000002B00003D /* AddTeamView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AddTeamView.swift; path = Stattie/Views/Teams/AddTeamView.swift; sourceTree = SOURCE_ROOT; };
 		BACDB9A33FCA993E1F17BAE1 /* PostGameInvitePrompt.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PostGameInvitePrompt.swift; path = Stattie/Views/Components/PostGameInvitePrompt.swift; sourceTree = SOURCE_ROOT; };
 		E00000002B000000 /* Stattie.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Stattie.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E00000002B000001 /* StattieApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StattieApp.swift; sourceTree = "<group>"; };
@@ -147,6 +153,9 @@
 			isa = PBXGroup;
 			children = (
 				7997BDECAA8F6DD8A163DEEF /* TeamInviteView.swift */,
+				D10000002B00003B /* TeamListView.swift */,
+				D10000002B00003C /* TeamDetailView.swift */,
+				D10000002B00003D /* AddTeamView.swift */,
 			);
 			name = Teams;
 			sourceTree = "<group>";
@@ -535,6 +544,9 @@
 				E01000002B000039 /* ReferralManager.swift in Sources */,
 				E01000002B00003A /* AccessibilityHelpers.swift in Sources */,
 				B0260B140EDB144A102E1621 /* TeamInviteView.swift in Sources */,
+				C10000002B00003B /* TeamListView.swift in Sources */,
+				C10000002B00003C /* TeamDetailView.swift in Sources */,
+				C10000002B00003D /* AddTeamView.swift in Sources */,
 				8EC431B475F081128744B245 /* TeamInviteManager.swift in Sources */,
 				0E458EC7F75495D2C2723457 /* PostGameInvitePrompt.swift in Sources */,
 			);

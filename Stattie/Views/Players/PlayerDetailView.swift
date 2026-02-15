@@ -21,7 +21,9 @@ struct PersonDetailView: View {
     @State private var showingNewGame = false
     @State private var activeGame: Game?
     @State private var gameCountBeforeNew = 0
-    @State private var editingPositionAssignments = PositionAssignments()
+    @State private var showingAddToTeam = false
+
+    @Query(sort: \Team.name) private var allTeams: [Team]
 
     private var currentUser: User? { users.first }
     private var basketball: Sport? { sports.first }
@@ -95,33 +97,9 @@ struct PersonDetailView: View {
                 }
             }
 
-            // Position Section
-            Section("Position") {
-                if isEditing {
-                    PositionPickerView(assignments: $editingPositionAssignments)
-                } else {
-                    if player.positionAssignments.isEmpty {
-                        Text("No position set")
-                            .foregroundStyle(.secondary)
-                    } else {
-                        ForEach(player.positionAssignments.assignments) { assignment in
-                            HStack {
-                                Image(systemName: assignment.position.iconName)
-                                    .foregroundStyle(.accent)
-                                    .frame(width: 24)
-
-                                Text(assignment.position.displayName)
-
-                                Spacer()
-
-                                if player.positionAssignments.assignments.count > 1 {
-                                    Text("\(assignment.percentage)%")
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-                        }
-                    }
-                }
+            // Teams Section
+            if !isEditing {
+                teamsSection
             }
 
             // Actions
@@ -270,6 +248,9 @@ struct PersonDetailView: View {
         .navigationDestination(for: Game.self) { game in
             GameDetailView(game: game)
         }
+        .navigationDestination(for: Team.self) { team in
+            TeamDetailView(team: team)
+        }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 HStack {
@@ -293,12 +274,7 @@ struct PersonDetailView: View {
 
                     Button(isEditing ? "Done" : "Edit") {
                         if isEditing {
-                            // Save position assignments back to player
-                            player.positionAssignments = editingPositionAssignments
                             try? modelContext.save()
-                        } else {
-                            // Starting edit - load current position assignments
-                            editingPositionAssignments = player.positionAssignments
                         }
                         isEditing.toggle()
                     }
@@ -350,6 +326,289 @@ struct PersonDetailView: View {
     private func startNewGame() {
         gameCountBeforeNew = playerGames.count
         showingNewGame = true
+    }
+
+    // MARK: - Teams Section
+
+    private var playerTeams: [TeamMembership] {
+        (player.teamMemberships ?? []).filter { $0.isActive }
+    }
+
+    private var availableTeams: [Team] {
+        let currentTeamIDs = Set(playerTeams.compactMap { $0.team?.id })
+        return allTeams.filter { $0.isActive && !currentTeamIDs.contains($0.id) }
+    }
+
+    @ViewBuilder
+    private var teamsSection: some View {
+        Section {
+            if playerTeams.isEmpty {
+                HStack {
+                    Image(systemName: "person.3")
+                        .foregroundStyle(.secondary)
+                        .frame(width: 28)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("No team yet")
+                            .foregroundStyle(.secondary)
+                        Text("Add to a team to track position per team")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            } else {
+                ForEach(playerTeams) { membership in
+                    if let team = membership.team {
+                        NavigationLink(value: team) {
+                            PersonTeamRow(team: team, membership: membership)
+                        }
+                    }
+                }
+            }
+
+            Button {
+                showingAddToTeam = true
+            } label: {
+                Label("Add to Team", systemImage: "plus.circle")
+            }
+            .disabled(availableTeams.isEmpty && !allTeams.isEmpty)
+        } header: {
+            HStack {
+                Text("Teams")
+                Spacer()
+                if playerTeams.count > 0 {
+                    Text("\(playerTeams.count)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .sheet(isPresented: $showingAddToTeam) {
+            AddPersonToTeamView(person: player, availableTeams: availableTeams)
+        }
+    }
+}
+
+// MARK: - Person Team Row
+
+struct PersonTeamRow: View {
+    let team: Team
+    let membership: TeamMembership
+
+    var body: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(Color(hex: team.colorHex))
+                    .frame(width: 40, height: 40)
+
+                Image(systemName: team.iconName.isEmpty ? "sportscourt" : team.iconName)
+                    .font(.headline)
+                    .foregroundStyle(.white)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(team.name)
+                    .font(.headline)
+
+                HStack(spacing: 8) {
+                    if let sport = team.sport {
+                        Text(sport.name)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    if !membership.positionShortText.isEmpty && membership.positionShortText != "-" {
+                        Text("•")
+                            .foregroundStyle(.secondary)
+                        Text(membership.positionShortText)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+
+                        if membership.hasMultiplePositions {
+                            Image(systemName: "arrow.triangle.branch")
+                                .font(.caption2)
+                                .foregroundStyle(.orange)
+                        }
+                    }
+                }
+            }
+
+            Spacer()
+        }
+    }
+}
+
+// MARK: - Add Person to Team View
+
+struct AddPersonToTeamView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+
+    let person: Person
+    let availableTeams: [Team]
+
+    @State private var selectedTeam: Team?
+    @State private var positionAssignments: PositionAssignments = PositionAssignments()
+    @State private var jerseyNumber: Int?
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    HStack {
+                        ZStack {
+                            Circle()
+                                .fill(Color.accentColor.opacity(0.2))
+                                .frame(width: 50, height: 50)
+
+                            if let photoData = person.photoData,
+                               let uiImage = UIImage(data: photoData) {
+                                Image(uiImage: uiImage)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 50, height: 50)
+                                    .clipShape(Circle())
+                            } else {
+                                Text("#\(person.jerseyNumber)")
+                                    .font(.headline)
+                                    .foregroundStyle(.accent)
+                            }
+                        }
+
+                        VStack(alignment: .leading) {
+                            Text(person.fullName)
+                                .font(.headline)
+                            Text("Adding to team")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .listRowBackground(Color.clear)
+                }
+
+                Section("Select Team") {
+                    if availableTeams.isEmpty {
+                        Text("No teams available. Create a team first.")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(availableTeams) { team in
+                            Button {
+                                selectedTeam = team
+                            } label: {
+                                HStack(spacing: 12) {
+                                    ZStack {
+                                        Circle()
+                                            .fill(Color(hex: team.colorHex))
+                                            .frame(width: 36, height: 36)
+
+                                        Image(systemName: team.iconName.isEmpty ? "sportscourt" : team.iconName)
+                                            .font(.subheadline)
+                                            .foregroundStyle(.white)
+                                    }
+
+                                    VStack(alignment: .leading) {
+                                        Text(team.name)
+                                            .foregroundStyle(.primary)
+
+                                        if let sport = team.sport {
+                                            Text(sport.name)
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
+                                        }
+                                    }
+
+                                    Spacer()
+
+                                    if selectedTeam?.id == team.id {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .foregroundStyle(.accent)
+                                    }
+                                }
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+
+                if selectedTeam != nil {
+                    Section("Jersey Number") {
+                        HStack {
+                            Text("Number")
+                            Spacer()
+                            TextField("", value: $jerseyNumber, format: .number)
+                                .keyboardType(.numberPad)
+                                .multilineTextAlignment(.trailing)
+                                .frame(width: 60)
+                        }
+                    }
+
+                    Section("Position on This Team") {
+                        PositionPickerView(assignments: $positionAssignments)
+                    }
+
+                    if positionAssignments.assignments.count > 1 {
+                        Section {
+                            HStack {
+                                Image(systemName: "info.circle")
+                                    .foregroundStyle(.blue)
+                                Text("Multiple positions: You'll confirm position when starting a shift.")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Add to Team")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Add") {
+                        addToTeam()
+                    }
+                    .disabled(selectedTeam == nil)
+                }
+            }
+            .onAppear {
+                // Default to person's jersey number only (positions are team-specific)
+                jerseyNumber = person.jerseyNumber
+            }
+        }
+    }
+
+    private func addToTeam() {
+        guard let team = selectedTeam else { return }
+
+        let membership = TeamMembership(
+            person: person,
+            team: team,
+            role: "player",
+            jerseyNumber: jerseyNumber,
+            position: positionAssignments.displayText,
+            positionAssignments: positionAssignments
+        )
+
+        modelContext.insert(membership)
+
+        if team.memberships == nil {
+            team.memberships = []
+        }
+        team.memberships?.append(membership)
+
+        if person.teamMemberships == nil {
+            person.teamMemberships = []
+        }
+        person.teamMemberships?.append(membership)
+
+        try? modelContext.save()
+        dismiss()
     }
 }
 

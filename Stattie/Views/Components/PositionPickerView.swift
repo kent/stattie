@@ -1,6 +1,8 @@
 import SwiftUI
 
-/// A view for selecting soccer positions with support for split roles
+/// A simple multi-select view for choosing positions
+/// If one position is selected, that's the player's position
+/// If multiple are selected, they'll confirm which one when starting a shift
 struct PositionPickerView: View {
     @Binding var assignments: PositionAssignments
     @State private var showingPicker = false
@@ -31,12 +33,6 @@ struct PositionPickerView: View {
 
                         Spacer()
 
-                        if assignments.assignments.count > 1 {
-                            Text("\(assignment.percentage)%")
-                                .foregroundStyle(.secondary)
-                                .font(.subheadline)
-                        }
-
                         Button {
                             withAnimation {
                                 assignments.removePosition(assignment.position)
@@ -47,6 +43,17 @@ struct PositionPickerView: View {
                         }
                         .buttonStyle(.plain)
                     }
+                }
+
+                if assignments.assignments.count > 1 {
+                    HStack {
+                        Image(systemName: "info.circle")
+                            .foregroundStyle(.blue)
+                        Text("You'll choose position when starting a shift")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.top, 4)
                 }
 
                 Button {
@@ -63,160 +70,69 @@ struct PositionPickerView: View {
             }
         }
         .sheet(isPresented: $showingPicker) {
-            PositionSelectionSheet(assignments: $assignments)
+            SimplePositionSelectionSheet(assignments: $assignments)
         }
     }
 }
 
-/// Sheet for selecting positions with percentages
-struct PositionSelectionSheet: View {
+/// Simple multi-select sheet for positions - no percentage sliders
+struct SimplePositionSelectionSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var assignments: PositionAssignments
 
-    @State private var selectedPosition: SoccerPosition?
-    @State private var percentage: Double = 100
-
-    private var availablePositions: [SoccerPosition] {
-        let existingPositions = Set(assignments.assignments.map { $0.position })
-        return SoccerPosition.allCases.filter { !existingPositions.contains($0) }
-    }
-
-    private var remainingPercentage: Int {
-        100 - assignments.totalPercentage
-    }
+    @State private var selectedPositions: Set<SoccerPosition> = []
 
     var body: some View {
         NavigationStack {
             List {
-                if !assignments.isEmpty {
-                    Section {
-                        HStack {
-                            Text("Remaining")
-                            Spacer()
-                            Text("\(remainingPercentage)%")
-                                .foregroundStyle(remainingPercentage > 0 ? .accent : .secondary)
-                        }
-                    }
-                }
-
                 ForEach(SoccerPosition.PositionCategory.allCases, id: \.self) { category in
-                    let categoryPositions = availablePositions.filter { $0.category == category }
-                    if !categoryPositions.isEmpty {
-                        Section(category.rawValue) {
-                            ForEach(categoryPositions) { position in
-                                Button {
-                                    selectedPosition = position
-                                    percentage = Double(min(100, remainingPercentage > 0 ? remainingPercentage : 50))
-                                } label: {
-                                    HStack {
-                                        Image(systemName: position.iconName)
+                    let categoryPositions = SoccerPosition.allCases.filter { $0.category == category }
+                    Section(category.rawValue) {
+                        ForEach(categoryPositions) { position in
+                            Button {
+                                togglePosition(position)
+                            } label: {
+                                HStack {
+                                    Image(systemName: position.iconName)
+                                        .foregroundStyle(.accent)
+                                        .frame(width: 24)
+
+                                    Text(position.displayName)
+                                        .foregroundStyle(.primary)
+
+                                    Spacer()
+
+                                    Text(position.shortName)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+
+                                    if selectedPositions.contains(position) {
+                                        Image(systemName: "checkmark.circle.fill")
                                             .foregroundStyle(.accent)
-                                            .frame(width: 24)
-
-                                        Text(position.displayName)
-                                            .foregroundStyle(.primary)
-
-                                        Spacer()
-
-                                        Text(position.shortName)
-                                            .font(.caption)
+                                    } else {
+                                        Image(systemName: "circle")
                                             .foregroundStyle(.secondary)
                                     }
                                 }
                             }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+
+                if selectedPositions.count > 1 {
+                    Section {
+                        HStack {
+                            Image(systemName: "info.circle")
+                                .foregroundStyle(.blue)
+                            Text("Multiple positions selected. You'll confirm which position when starting a shift.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
                     }
                 }
             }
-            .navigationTitle("Select Position")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
-            .sheet(item: $selectedPosition) { position in
-                PercentagePickerSheet(
-                    position: position,
-                    percentage: $percentage,
-                    maxPercentage: remainingPercentage > 0 ? remainingPercentage : 100
-                ) {
-                    withAnimation {
-                        assignments.addPosition(position, percentage: Int(percentage))
-                    }
-                    selectedPosition = nil
-                }
-            }
-        }
-    }
-}
-
-/// Sheet for selecting the percentage for a position
-struct PercentagePickerSheet: View {
-    @Environment(\.dismiss) private var dismiss
-    let position: SoccerPosition
-    @Binding var percentage: Double
-    let maxPercentage: Int
-    let onConfirm: () -> Void
-
-    var body: some View {
-        NavigationStack {
-            VStack(spacing: 24) {
-                VStack(spacing: 8) {
-                    Image(systemName: position.iconName)
-                        .font(.largeTitle)
-                        .foregroundStyle(.accent)
-
-                    Text(position.displayName)
-                        .font(.title2.bold())
-                }
-                .padding(.top, 32)
-
-                VStack(spacing: 16) {
-                    Text("Playing Time")
-                        .font(.headline)
-
-                    Text("\(Int(percentage))%")
-                        .font(.system(size: 48, weight: .bold, design: .rounded))
-                        .foregroundStyle(.accent)
-
-                    Slider(value: $percentage, in: 5...Double(max(5, maxPercentage)), step: 5)
-                        .padding(.horizontal)
-
-                    // Quick select buttons
-                    HStack(spacing: 12) {
-                        ForEach([25, 50, 75, 100], id: \.self) { pct in
-                            if pct <= maxPercentage {
-                                Button("\(pct)%") {
-                                    percentage = Double(pct)
-                                }
-                                .buttonStyle(.bordered)
-                            }
-                        }
-                    }
-                }
-                .padding()
-
-                Spacer()
-
-                Button {
-                    onConfirm()
-                    dismiss()
-                } label: {
-                    Text("Add Position")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.accentColor)
-                        .foregroundStyle(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                }
-                .padding(.horizontal)
-                .padding(.bottom)
-            }
-            .navigationTitle("Set Percentage")
+            .navigationTitle("Select Positions")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -224,9 +140,47 @@ struct PercentagePickerSheet: View {
                         dismiss()
                     }
                 }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        savePositions()
+                        dismiss()
+                    }
+                }
+            }
+            .onAppear {
+                // Load existing positions
+                selectedPositions = Set(assignments.assignments.map { $0.position })
             }
         }
-        .presentationDetents([.medium])
+    }
+
+    private func togglePosition(_ position: SoccerPosition) {
+        if selectedPositions.contains(position) {
+            selectedPositions.remove(position)
+        } else {
+            selectedPositions.insert(position)
+        }
+    }
+
+    private func savePositions() {
+        // Clear existing and add selected positions with equal distribution
+        assignments = PositionAssignments()
+        let positions = Array(selectedPositions)
+
+        if positions.count == 1 {
+            assignments.addPosition(positions[0], percentage: 100)
+        } else if positions.count > 1 {
+            // Equal distribution
+            let perPosition = 100 / positions.count
+            let remainder = 100 % positions.count
+
+            for (index, position) in positions.enumerated() {
+                // Give first position any remainder to ensure 100% total
+                let pct = index == 0 ? perPosition + remainder : perPosition
+                assignments.addPosition(position, percentage: pct)
+            }
+        }
     }
 }
 
@@ -257,128 +211,7 @@ struct InlinePositionPicker: View {
             }
         }
         .sheet(isPresented: $showingPicker) {
-            PositionEditorSheet(assignments: $assignments)
-        }
-    }
-}
-
-/// Full editor sheet for managing all position assignments
-struct PositionEditorSheet: View {
-    @Environment(\.dismiss) private var dismiss
-    @Binding var assignments: PositionAssignments
-
-    @State private var localAssignments: PositionAssignments = PositionAssignments()
-    @State private var showingAddPosition = false
-
-    private var isValid: Bool {
-        localAssignments.isEmpty || localAssignments.totalPercentage == 100
-    }
-
-    var body: some View {
-        NavigationStack {
-            List {
-                if !localAssignments.isEmpty {
-                    Section {
-                        ForEach(Array(localAssignments.assignments.enumerated()), id: \.element.id) { index, assignment in
-                            HStack {
-                                Image(systemName: assignment.position.iconName)
-                                    .foregroundStyle(.accent)
-                                    .frame(width: 24)
-
-                                Text(assignment.position.displayName)
-
-                                Spacer()
-
-                                Stepper(
-                                    "\(assignment.percentage)%",
-                                    value: Binding(
-                                        get: { assignment.percentage },
-                                        set: { newValue in
-                                            localAssignments.updatePercentage(for: assignment.position, to: newValue)
-                                        }
-                                    ),
-                                    in: 5...100,
-                                    step: 5
-                                )
-                                .fixedSize()
-                            }
-                            .swipeActions {
-                                Button(role: .destructive) {
-                                    localAssignments.removePosition(assignment.position)
-                                } label: {
-                                    Label("Remove", systemImage: "trash")
-                                }
-                            }
-                        }
-                    } header: {
-                        Text("Positions")
-                    } footer: {
-                        if !isValid && !localAssignments.isEmpty {
-                            HStack {
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .foregroundStyle(.orange)
-                                Text("Total must equal 100% (currently \(localAssignments.totalPercentage)%)")
-                            }
-                            .font(.caption)
-                        }
-                    }
-                }
-
-                Section {
-                    Button {
-                        showingAddPosition = true
-                    } label: {
-                        HStack {
-                            Image(systemName: "plus.circle.fill")
-                            Text("Add Position")
-                        }
-                    }
-
-                    if localAssignments.assignments.count > 1 {
-                        Button {
-                            localAssignments.normalize()
-                        } label: {
-                            HStack {
-                                Image(systemName: "arrow.triangle.2.circlepath")
-                                Text("Balance to 100%")
-                            }
-                        }
-                    }
-                }
-
-                if localAssignments.isEmpty {
-                    Section {
-                        ContentUnavailableView {
-                            Label("No Position", systemImage: "figure.run")
-                        } description: {
-                            Text("Add a position to define where this player plays")
-                        }
-                    }
-                }
-            }
-            .navigationTitle("Edit Position")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        assignments = localAssignments
-                        dismiss()
-                    }
-                    .disabled(!isValid)
-                }
-            }
-            .onAppear {
-                localAssignments = assignments
-            }
-            .sheet(isPresented: $showingAddPosition) {
-                PositionSelectionSheet(assignments: $localAssignments)
-            }
+            SimplePositionSelectionSheet(assignments: $assignments)
         }
     }
 }
@@ -403,7 +236,7 @@ struct PositionEditorSheet: View {
     struct PreviewWrapper: View {
         @State var assignments = PositionAssignments(assignments: [
             PositionAssignment(position: .defender, percentage: 50),
-            PositionAssignment(position: .goalkeeper, percentage: 50)
+            PositionAssignment(position: .midfielder, percentage: 50)
         ])
 
         var body: some View {

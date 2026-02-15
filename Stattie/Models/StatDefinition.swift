@@ -14,6 +14,13 @@ final class StatDefinition {
 
     var sport: Sport?
 
+    // Inverse relationships for CloudKit compatibility
+    @Relationship(deleteRule: .nullify, inverse: \Stat.definition)
+    var stats: [Stat]? = []
+
+    @Relationship(deleteRule: .nullify, inverse: \ShiftStat.definition)
+    var shiftStats: [ShiftStat]? = []
+
     init(
         name: String = "",
         shortName: String = "",

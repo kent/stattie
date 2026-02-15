@@ -26,7 +26,12 @@ struct MainTabView: View {
         TabView {
             PersonListView()
                 .tabItem {
-                    Label("Players", systemImage: "person.3.fill")
+                    Label("Players", systemImage: "person.fill")
+                }
+
+            TeamListView()
+                .tabItem {
+                    Label("Teams", systemImage: "person.3.fill")
                 }
 
             NavigationStack {
@@ -42,6 +47,8 @@ struct MainTabView: View {
                 }
         }
         .onAppear {
+            // Ensure all sports are seeded (for existing users who may not have all sports)
+            SeedDataService.shared.seedAllSportsIfNeeded(context: modelContext)
             // Seed test player for development
             SeedDataService.shared.seedJackJamesIfNeeded(context: modelContext)
         }

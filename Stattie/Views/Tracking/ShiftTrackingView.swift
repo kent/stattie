@@ -10,6 +10,8 @@ struct ShiftTrackingView: View {
     @Bindable var personGameStats: PersonGameStats
     @State private var showingEndShiftSheet = false
     @State private var showingStartShiftSheet = false
+    @State private var showingPositionConfirmation = false
+    @State private var selectedShiftPosition: SoccerPosition?
 
     // Score tracking
     @State private var teamScore: Int = 0
@@ -80,7 +82,42 @@ struct ShiftTrackingView: View {
                 )
                 .presentationDetents([.medium])
             }
+            .sheet(isPresented: $showingPositionConfirmation) {
+                PositionConfirmationSheet(
+                    positionAssignments: playerPositionAssignments,
+                    playerName: personGameStats.person?.displayName ?? "Player",
+                    selectedPosition: $selectedShiftPosition,
+                    onConfirm: {
+                        showingPositionConfirmation = false
+                        showingStartShiftSheet = true
+                    }
+                )
+                .presentationDetents([.medium])
+            }
         }
+    }
+
+    // MARK: - Position Helpers
+
+    /// Check if the player has multiple positions defined (on team or person level)
+    private var hasMultiplePositions: Bool {
+        playerPositionAssignments.assignments.count > 1
+    }
+
+    /// Get position assignments - prioritize team membership, fall back to person
+    private var playerPositionAssignments: PositionAssignments {
+        // Check if person is part of a team with the game
+        if let game = personGameStats.game,
+           let team = game.team,
+           let person = personGameStats.person,
+           let membership = team.memberships?.first(where: { $0.person?.id == person.id && $0.isActive }) {
+            if !membership.positionAssignments.isEmpty {
+                return membership.positionAssignments
+            }
+        }
+
+        // Fall back to person's default positions
+        return personGameStats.person?.positionAssignments ?? PositionAssignments()
     }
 
     // MARK: - Shift Status Header
@@ -119,7 +156,13 @@ struct ShiftTrackingView: View {
                     // Pre-populate with last known scores from previous shift
                     teamScore = lastKnownTeamScore
                     opponentScore = lastKnownOpponentScore
-                    showingStartShiftSheet = true
+
+                    // Check if player has multiple positions that need confirmation
+                    if hasMultiplePositions {
+                        showingPositionConfirmation = true
+                    } else {
+                        showingStartShiftSheet = true
+                    }
                 }
             } label: {
                 HStack {
@@ -621,6 +664,126 @@ struct QuickScoreButton: View {
                 .padding(.vertical, 6)
                 .background(color.opacity(0.15))
                 .clipShape(RoundedRectangle(cornerRadius: 6))
+        }
+    }
+}
+
+// MARK: - Position Confirmation Sheet
+
+struct PositionConfirmationSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let positionAssignments: PositionAssignments
+    let playerName: String
+    @Binding var selectedPosition: SoccerPosition?
+    let onConfirm: () -> Void
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 24) {
+                // Header
+                VStack(spacing: 8) {
+                    Image(systemName: "arrow.triangle.branch")
+                        .font(.largeTitle)
+                        .foregroundStyle(.orange)
+
+                    Text("Which position?")
+                        .font(.title2.bold())
+
+                    Text("\(playerName) has multiple positions. Select the position for this shift.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                }
+                .padding(.top)
+
+                // Position options
+                VStack(spacing: 12) {
+                    ForEach(positionAssignments.assignments) { assignment in
+                        Button {
+                            selectedPosition = assignment.position
+                        } label: {
+                            HStack(spacing: 16) {
+                                ZStack {
+                                    Circle()
+                                        .fill(selectedPosition == assignment.position ?
+                                              Color.accentColor : Color(.systemGray5))
+                                        .frame(width: 50, height: 50)
+
+                                    Image(systemName: assignment.position.iconName)
+                                        .font(.title3)
+                                        .foregroundStyle(selectedPosition == assignment.position ?
+                                                        .white : .primary)
+                                }
+
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(assignment.position.displayName)
+                                        .font(.headline)
+                                        .foregroundStyle(.primary)
+
+                                    Text("\(assignment.percentage)% of play time")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+
+                                Spacer()
+
+                                if selectedPosition == assignment.position {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.title2)
+                                        .foregroundStyle(.accent)
+                                }
+                            }
+                            .padding()
+                            .background(
+                                selectedPosition == assignment.position ?
+                                Color.accentColor.opacity(0.1) : Color(.secondarySystemBackground)
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .stroke(selectedPosition == assignment.position ?
+                                           Color.accentColor : Color.clear, lineWidth: 2)
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal)
+
+                Spacer()
+
+                // Confirm button
+                Button {
+                    onConfirm()
+                } label: {
+                    Text("Start Shift as \(selectedPosition?.displayName ?? "Selected Position")")
+                        .font(.headline)
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(selectedPosition != nil ? Color.green : Color.gray)
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                }
+                .disabled(selectedPosition == nil)
+                .padding(.horizontal)
+                .padding(.bottom)
+            }
+            .navigationTitle("Select Position")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+            }
+            .onAppear {
+                // Default to primary position
+                if selectedPosition == nil {
+                    selectedPosition = positionAssignments.primaryPosition
+                }
+            }
         }
     }
 }
