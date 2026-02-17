@@ -31,11 +31,17 @@ final class Game {
     }
 
     var totalPoints: Int {
-        // Points from person stats
-        let personPoints = (personStats ?? []).reduce(0) { $0 + $1.totalPoints }
-        // Points from direct game stats
         let directPoints = (stats ?? []).reduce(0) { $0 + $1.points }
-        return personPoints + directPoints
+        // GameTrackingView records direct game stats and may also mirror data into
+        // shift/person stats, so summing both sources can double-count points.
+        // Treat direct game stats as canonical when present, and only fall back
+        // to person-level totals for legacy/person-only games.
+        if !(stats ?? []).isEmpty {
+            return directPoints
+        }
+
+        let personPoints = (personStats ?? []).reduce(0) { $0 + $1.totalPoints }
+        return personPoints
     }
 
     // Helper to get or create a stat by name
