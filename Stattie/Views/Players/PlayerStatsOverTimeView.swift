@@ -17,8 +17,11 @@ struct PersonStatsOverTimeView: View {
         case assists = "Assists"
         case steals = "Steals"
         case fouls = "Fouls"
-        case drives = "Drives"
-        case greatPlays = "Great Plays"
+        case missedDrives = "Missed Drives"
+        case badPlaysOffense = "Bad Plays Offense"
+        case badPlaysDefense = "Bad Plays Defense"
+        case greatPlaysOffense = "Great Plays Offense"
+        case greatPlaysDefense = "Great Plays Defense"
         case twoPointers = "2PT Made"
         case threePointers = "3PT Made"
         case freeThrows = "FT Made"
@@ -33,8 +36,11 @@ struct PersonStatsOverTimeView: View {
             case .assists: return .mint
             case .steals: return .indigo
             case .fouls: return .red
-            case .drives: return .cyan
-            case .greatPlays: return .yellow
+            case .missedDrives: return .orange
+            case .badPlaysOffense: return .red
+            case .badPlaysDefense: return .pink
+            case .greatPlaysOffense: return .yellow
+            case .greatPlaysDefense: return .green
             case .twoPointers: return .blue
             case .threePointers: return .purple
             case .freeThrows: return .orange
@@ -51,8 +57,11 @@ struct PersonStatsOverTimeView: View {
             case .assists: return "AST"
             case .steals: return "STL"
             case .fouls: return "PF"
-            case .drives: return "DRV"
-            case .greatPlays: return "GP"
+            case .missedDrives: return "MD"
+            case .badPlaysOffense: return "BPO"
+            case .badPlaysDefense: return "BPD"
+            case .greatPlaysOffense: return "GPO"
+            case .greatPlaysDefense: return "GPD"
             case .twoPointers: return "2PT"
             case .threePointers: return "3PT"
             case .freeThrows: return "FT"
@@ -114,8 +123,11 @@ struct PersonStatsOverTimeView: View {
         case .assists: return pgs.totalAssists
         case .steals: return pgs.totalSteals
         case .fouls: return pgs.totalFouls
-        case .drives: return pgs.stat(forName: "DRV")?.count ?? 0
-        case .greatPlays: return pgs.stat(forName: "GP")?.count ?? 0
+        case .missedDrives: return pgs.stat(forName: "MD")?.count ?? 0
+        case .badPlaysOffense: return pgs.stat(forName: "BPO")?.count ?? 0
+        case .badPlaysDefense: return pgs.stat(forName: "BPD")?.count ?? 0
+        case .greatPlaysOffense: return pgs.stat(forName: "GPO")?.count ?? 0
+        case .greatPlaysDefense: return pgs.stat(forName: "GPD")?.count ?? 0
         case .twoPointers: return pgs.stat(forName: "2PT")?.made ?? 0
         case .threePointers: return pgs.stat(forName: "3PT")?.made ?? 0
         case .freeThrows: return pgs.stat(forName: "FT")?.made ?? 0
@@ -343,8 +355,11 @@ struct GameStatRow: View {
         case .assists: return playerStats.totalAssists
         case .steals: return playerStats.totalSteals
         case .fouls: return playerStats.totalFouls
-        case .drives: return playerStats.stat(forName: "DRV")?.count ?? 0
-        case .greatPlays: return playerStats.stat(forName: "GP")?.count ?? 0
+        case .missedDrives: return playerStats.stat(forName: "MD")?.count ?? 0
+        case .badPlaysOffense: return playerStats.stat(forName: "BPO")?.count ?? 0
+        case .badPlaysDefense: return playerStats.stat(forName: "BPD")?.count ?? 0
+        case .greatPlaysOffense: return playerStats.stat(forName: "GPO")?.count ?? 0
+        case .greatPlaysDefense: return playerStats.stat(forName: "GPD")?.count ?? 0
         case .twoPointers: return playerStats.stat(forName: "2PT")?.made ?? 0
         case .threePointers: return playerStats.stat(forName: "3PT")?.made ?? 0
         case .freeThrows: return playerStats.stat(forName: "FT")?.made ?? 0

@@ -84,9 +84,9 @@ export function Hero() {
               Track Every Shot. Own Every Stat.
             </h1>
             <p className="mt-6 text-lg text-gray-600">
-              Real-time basketball statistics tracking for players, coaches, and families.
-              Record games live, share with your team via iCloud, and keep a complete
-              history of every player&apos;s performance.
+              Team-based basketball tracking for players, coaches, and families.
+              Pick a team before each game, keep jerseys and positions in team context,
+              track every shift live, and manage games with quick edit and delete actions.
             </p>
             <div className="mt-8 flex flex-wrap gap-x-6 gap-y-4">
               <AppStoreLink />
@@ -111,7 +111,7 @@ export function Hero() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
-                <span className="text-sm text-gray-700">Live stat tracking</span>
+                <span className="text-sm text-gray-700">Live shift tracking</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100">
@@ -127,7 +127,15 @@ export function Hero() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                 </div>
-                <span className="text-sm text-gray-700">Team sharing</span>
+                <span className="text-sm text-gray-700">Team-first setup</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100">
+                  <svg className="h-5 w-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h4m6 5H5a2 2 0 01-2-2V7a2 2 0 012-2h5l2-2h7a2 2 0 012 2v14a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <span className="text-sm text-gray-700">Game edit & delete</span>
               </div>
             </div>
           </div>

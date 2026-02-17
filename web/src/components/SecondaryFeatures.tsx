@@ -4,40 +4,40 @@ import { Container } from '@/components/Container'
 
 const features = [
   {
-    name: 'Player Profiles',
+    name: 'Team-Based Player Info',
     description:
-      'Create detailed profiles for each player with jersey numbers, positions, and season stats that follow them across games.',
+      'Jersey numbers and positions are tracked per team, so the same player can keep accurate context across different rosters.',
     icon: DeviceUserIcon,
+  },
+  {
+    name: 'Team Required Before Start',
+    description:
+      'Record New Game is disabled until a team is selected. This prevents orphan games and keeps stats connected to the right team.',
+    icon: DeviceAlertIcon,
+  },
+  {
+    name: 'Game CRUD + Swipe Actions',
+    description:
+      'Create, edit, and delete games quickly. Swipe actions on game rows make cleanup and corrections fast on mobile.',
+    icon: DeviceCalendarIcon,
+  },
+  {
+    name: 'Shift Quick Summary',
+    description:
+      'End a shift to get an instant recap, then start a new shift with one tap to keep your tracking flow uninterrupted.',
+    icon: DeviceTapIcon,
+  },
+  {
+    name: 'Basketball Event Presets',
+    description:
+      'Track custom actions including Missed Drive, Bad Play Offense, Bad Play Defense, Great Play Offense, and Great Play Defense.',
+    icon: DeviceTargetIcon,
   },
   {
     name: 'Works Offline',
     description:
       'Track games in gyms with spotty wifi. Stats sync automatically when you\'re back online.',
     icon: DeviceOfflineIcon,
-  },
-  {
-    name: 'Game Management',
-    description:
-      'Set up games with opponents, dates, and locations. Keep your entire season organized in one place.',
-    icon: DeviceCalendarIcon,
-  },
-  {
-    name: 'Quick Stat Entry',
-    description:
-      'Big, easy-to-tap buttons designed for tracking while watching the game. No looking down required.',
-    icon: DeviceTapIcon,
-  },
-  {
-    name: 'Shooting Splits',
-    description:
-      'Track 2-pointers, 3-pointers, and free throws separately. Know exactly where your shots are falling.',
-    icon: DeviceTargetIcon,
-  },
-  {
-    name: 'Foul Tracking',
-    description:
-      'Keep count of personal fouls for each player. Get notified when someone is in foul trouble.',
-    icon: DeviceAlertIcon,
   },
 ]
 
@@ -199,8 +199,8 @@ export function SecondaryFeatures() {
             Built for the sidelines.
           </h2>
           <p className="mt-2 text-lg text-gray-600">
-            Every feature in Stattie was designed to work while you&apos;re
-            watching the game. No complicated menus, no tiny buttons.
+            Every flow is optimized for fast taps, clean list actions, and
+            team-aware data from setup through game tracking.
           </p>
         </div>
         <ul

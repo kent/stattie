@@ -1,6 +1,6 @@
 import Foundation
 
-/// Soccer positions with display names and categorization
+/// Team positions for supported sports (soccer + basketball)
 enum SoccerPosition: String, CaseIterable, Codable, Identifiable {
     case goalkeeper = "GK"
     case defender = "DEF"
@@ -17,6 +17,12 @@ enum SoccerPosition: String, CaseIterable, Codable, Identifiable {
     case striker = "ST"
     case leftWing = "LW"
     case rightWing = "RW"
+
+    case pointGuard = "PG"
+    case shootingGuard = "SG"
+    case smallForward = "SF"
+    case powerForward = "PF"
+    case center = "C"
 
     var id: String { rawValue }
 
@@ -37,10 +43,26 @@ enum SoccerPosition: String, CaseIterable, Codable, Identifiable {
         case .striker: return "Striker"
         case .leftWing: return "Left Wing"
         case .rightWing: return "Right Wing"
+        case .pointGuard: return "Point Guard"
+        case .shootingGuard: return "Shooting Guard"
+        case .smallForward: return "Small Forward"
+        case .powerForward: return "Power Forward"
+        case .center: return "Center"
         }
     }
 
     var shortName: String { rawValue }
+
+    var supportedSport: SupportedSport {
+        switch self {
+        case .goalkeeper, .defender, .leftBack, .rightBack, .centerBack,
+                .midfielder, .defensiveMidfielder, .centralMidfielder, .attackingMidfielder,
+                .leftMidfielder, .rightMidfielder, .forward, .striker, .leftWing, .rightWing:
+            return .soccer
+        case .pointGuard, .shootingGuard, .smallForward, .powerForward, .center:
+            return .basketball
+        }
+    }
 
     var category: PositionCategory {
         switch self {
@@ -52,6 +74,12 @@ enum SoccerPosition: String, CaseIterable, Codable, Identifiable {
             return .midfield
         case .forward, .striker, .leftWing, .rightWing:
             return .attack
+        case .pointGuard, .shootingGuard:
+            return .guards
+        case .smallForward, .powerForward:
+            return .forwards
+        case .center:
+            return .center
         }
     }
 
@@ -61,14 +89,63 @@ enum SoccerPosition: String, CaseIterable, Codable, Identifiable {
         case .defender, .leftBack, .rightBack, .centerBack: return "shield.fill"
         case .midfielder, .defensiveMidfielder, .centralMidfielder, .attackingMidfielder, .leftMidfielder, .rightMidfielder: return "figure.run"
         case .forward, .striker, .leftWing, .rightWing: return "scope"
+        case .pointGuard, .shootingGuard: return "figure.basketball"
+        case .smallForward, .powerForward: return "figure.run"
+        case .center: return "person.fill"
         }
     }
 
-    enum PositionCategory: String, CaseIterable {
+    static func supportedSport(for sportName: String?) -> SupportedSport {
+        SupportedSport.from(sportName: sportName)
+    }
+
+    static func categories(for sport: SupportedSport) -> [PositionCategory] {
+        PositionCategory.allCases.filter { $0.supportedSport == sport }
+    }
+
+    static func positions(for sport: SupportedSport) -> [SoccerPosition] {
+        allCases.filter { $0.supportedSport == sport }
+    }
+
+    enum SupportedSport: Equatable {
+        case soccer
+        case basketball
+
+        static func from(sportName: String?) -> SupportedSport {
+            guard let name = sportName?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+                  !name.isEmpty else {
+                return .soccer
+            }
+            if name.contains("basketball") {
+                return .basketball
+            }
+            if name.contains("soccer") {
+                return .soccer
+            }
+            // Default to soccer for backward compatibility on existing data.
+            return .soccer
+        }
+    }
+
+    enum PositionCategory: String, CaseIterable, Identifiable {
         case goalkeeper = "Goalkeeper"
         case defense = "Defense"
         case midfield = "Midfield"
         case attack = "Attack"
+        case guards = "Guards"
+        case forwards = "Forwards"
+        case center = "Center"
+
+        var id: String { rawValue }
+
+        var supportedSport: SupportedSport {
+            switch self {
+            case .goalkeeper, .defense, .midfield, .attack:
+                return .soccer
+            case .guards, .forwards, .center:
+                return .basketball
+            }
+        }
 
         var positions: [SoccerPosition] {
             SoccerPosition.allCases.filter { $0.category == self }

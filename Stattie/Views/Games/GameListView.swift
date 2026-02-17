@@ -6,6 +6,9 @@ struct GameListView: View {
     @Query(sort: \Game.gameDate, order: .reverse) private var games: [Game]
     @State private var showingNewGame = false
     @State private var selectedGame: Game?
+    @State private var editingGame: Game?
+    @State private var gamePendingDelete: Game?
+    @State private var showingDeleteConfirmation = false
     @State private var gameCountBeforeNew = 0
 
     var activeGames: [Game] {
@@ -41,8 +44,22 @@ struct GameListView: View {
                                         .onTapGesture {
                                             selectedGame = game
                                         }
+                                        .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                                            Button {
+                                                editingGame = game
+                                            } label: {
+                                                Label("Edit", systemImage: "pencil")
+                                            }
+                                            .tint(.blue)
+                                        }
+                                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                            Button(role: .destructive) {
+                                                confirmDelete(game)
+                                            } label: {
+                                                Label("Delete", systemImage: "trash")
+                                            }
+                                        }
                                 }
-                                .onDelete(perform: deleteActiveGame)
                             }
                         }
 
@@ -52,8 +69,22 @@ struct GameListView: View {
                                     NavigationLink(value: game) {
                                         GameRowView(game: game)
                                     }
+                                    .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                                        Button {
+                                            editingGame = game
+                                        } label: {
+                                            Label("Edit", systemImage: "pencil")
+                                        }
+                                        .tint(.blue)
+                                    }
+                                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                        Button(role: .destructive) {
+                                            confirmDelete(game)
+                                        } label: {
+                                            Label("Delete", systemImage: "trash")
+                                        }
+                                    }
                                 }
-                                .onDelete(perform: deleteCompletedGame)
                             }
                         }
                     }
@@ -87,29 +118,50 @@ struct GameListView: View {
             }) {
                 NewGameView()
             }
+            .sheet(item: $editingGame) { game in
+                EditGameSheetView(game: game)
+            }
             .fullScreenCover(item: $selectedGame) { game in
                 GameTrackingView(game: game)
+            }
+            .alert("Delete Game?", isPresented: $showingDeleteConfirmation, presenting: gamePendingDelete) { game in
+                Button("Delete", role: .destructive) {
+                    deleteGame(game)
+                }
+                Button("Cancel", role: .cancel) {
+                    gamePendingDelete = nil
+                }
+            } message: { _ in
+                Text("This will permanently remove the game and all tracked stats.")
             }
         }
     }
 
-    private func deleteActiveGame(at offsets: IndexSet) {
-        for index in offsets {
-            modelContext.delete(activeGames[index])
-        }
-        try? modelContext.save()
+    private func confirmDelete(_ game: Game) {
+        gamePendingDelete = game
+        showingDeleteConfirmation = true
     }
 
-    private func deleteCompletedGame(at offsets: IndexSet) {
-        for index in offsets {
-            modelContext.delete(completedGames[index])
-        }
+    private func deleteGame(_ game: Game) {
+        modelContext.delete(game)
         try? modelContext.save()
+        gamePendingDelete = nil
     }
 }
 
 struct GameRowView: View {
     let game: Game
+
+    private var metadataText: String {
+        var parts: [String] = []
+        if let teamName = game.team?.name, !teamName.isEmpty {
+            parts.append(teamName)
+        }
+        if let sportName = game.sport?.name, !sportName.isEmpty {
+            parts.append(sportName)
+        }
+        return parts.joined(separator: " • ")
+    }
 
     var body: some View {
         HStack {
@@ -133,6 +185,12 @@ struct GameRowView: View {
                 Text(game.formattedDate)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+
+                if !metadataText.isEmpty {
+                    Text(metadataText)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
 
                 if !game.location.isEmpty {
                     HStack(spacing: 4) {
@@ -164,4 +222,70 @@ struct GameRowView: View {
 #Preview {
     GameListView()
         .modelContainer(for: Game.self, inMemory: true)
+}
+
+struct EditGameSheetView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+
+    @Bindable var game: Game
+
+    @State private var opponent: String
+    @State private var location: String
+    @State private var gameDate: Date
+    @State private var notes: String
+    @State private var isCompleted: Bool
+
+    init(game: Game) {
+        self.game = game
+        _opponent = State(initialValue: game.opponent)
+        _location = State(initialValue: game.location)
+        _gameDate = State(initialValue: game.gameDate)
+        _notes = State(initialValue: game.notes)
+        _isCompleted = State(initialValue: game.isCompleted)
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Game Details") {
+                    TextField("Opponent (optional)", text: $opponent)
+                    TextField("Location (optional)", text: $location)
+                    DatePicker("Date & Time", selection: $gameDate)
+                    Toggle("Completed", isOn: $isCompleted)
+                }
+
+                Section("Notes") {
+                    TextEditor(text: $notes)
+                        .frame(minHeight: 120)
+                }
+            }
+            .navigationTitle("Edit Game")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        save()
+                    }
+                }
+            }
+        }
+    }
+
+    private func save() {
+        game.opponent = opponent.trimmingCharacters(in: .whitespaces)
+        game.location = location.trimmingCharacters(in: .whitespaces)
+        game.gameDate = gameDate
+        game.notes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
+        game.isCompleted = isCompleted
+
+        try? modelContext.save()
+        dismiss()
+    }
 }

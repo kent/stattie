@@ -25,9 +25,11 @@ function CheckIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
 
 const features = [
   'Unlimited players and games',
-  'Real-time stat tracking',
+  'Team-first game setup',
+  'Shift-based live tracking',
+  'Game edit and delete tools',
   'iCloud sharing with team',
-  'Detailed game summaries',
+  'Detailed game and shift summaries',
   'Offline mode',
   'All future updates included',
 ]

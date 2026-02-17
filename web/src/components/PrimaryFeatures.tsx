@@ -16,8 +16,8 @@ import { CircleBackground } from '@/components/CircleBackground'
 import { Container } from '@/components/Container'
 import { PhoneFrame } from '@/components/PhoneFrame'
 import { StatTrackingScreen } from '@/components/mockups/StatTrackingScreen'
-import { GameSummaryScreen } from '@/components/mockups/GameSummaryScreen'
-import { ShareScreen } from '@/components/mockups/ShareScreen'
+import { TeamGameSetupScreen } from '@/components/mockups/TeamGameSetupScreen'
+import { GameManagementScreen } from '@/components/mockups/GameManagementScreen'
 
 interface CustomAnimationProps {
   isForwards: boolean
@@ -26,25 +26,25 @@ interface CustomAnimationProps {
 
 const features = [
   {
-    name: 'Track Stats in Real-Time',
+    name: 'Team-First Game Setup',
     description:
-      'Tap to record points, rebounds, assists, steals, and more as the game happens. Quick stat entry keeps you focused on the action, not the app.',
+      'Games start with the right context. Select a team first, then keep jersey number and position tied to that team so every stat stays accurate.',
+    icon: DeviceShareIcon,
+    screen: TeamGameSetupScreen,
+  },
+  {
+    name: 'Shift-Based Live Tracking',
+    description:
+      'Track every shift with fast basketball actions like Missed Drive, Bad Play Offense/Defense, and Great Play Offense/Defense. End a shift, review quickly, and start the next one.',
     icon: DeviceChartIcon,
     screen: StatTrackingScreen,
   },
   {
-    name: 'Share with Your Team',
+    name: 'Manage Games Fast',
     description:
-      'Invite coaches, parents, and players to view stats via iCloud sharing. Everyone stays updated with real-time sync across all devices.',
-    icon: DeviceShareIcon,
-    screen: ShareScreen,
-  },
-  {
-    name: 'Detailed Game Summaries',
-    description:
-      'After each game, get comprehensive breakdowns of every player\'s performance. Track shooting percentages, plus/minus, and more.',
+      'Create, edit, and delete games from one place. Active game rows show team and sport at a glance, and quick actions make cleanup painless.',
     icon: DeviceListIcon,
-    screen: GameSummaryScreen,
+    screen: GameManagementScreen,
   },
 ]
 
@@ -361,12 +361,11 @@ export function PrimaryFeatures() {
       <Container>
         <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-3xl">
           <h2 className="text-3xl font-medium tracking-tight text-white">
-            Everything you need to track games like a pro.
+            Built for real game flow, not spreadsheets.
           </h2>
           <p className="mt-2 text-lg text-gray-400">
-            Stattie was built for basketball families who want accurate stats
-            without the complexity. Simple enough for parents, detailed enough
-            for coaches.
+            Start with team context, track by shift, and manage games cleanly.
+            Fast enough for parents on the sidelines, structured enough for coaches.
           </p>
         </div>
       </Container>

@@ -8,14 +8,14 @@ const faqs = [
         'Yes! With iCloud sharing, you can invite coaches, parents, or anyone else to view and track stats for your team. Everyone sees updates in real-time.',
     },
     {
-      question: 'Does it work without internet?',
+      question: 'Can I start a game without assigning a team?',
       answer:
-        'Absolutely. Stattie works completely offline. Your stats are saved locally and sync to iCloud automatically when you\'re back online.',
+        'No. Stattie requires team selection before Start Game, so jersey number, position, and stats are always tied to the correct team context.',
     },
     {
       question: 'What stats can I track?',
       answer:
-        'Points (2PT, 3PT, FT), rebounds, assists, steals, blocks, turnovers, and fouls. Everything you need for a complete game summary.',
+        'Core basketball stats plus custom impact actions like Missed Drive, Bad Play Offense/Defense, and Great Play Offense/Defense.',
     },
   ],
   [
@@ -25,9 +25,9 @@ const faqs = [
         'Nope! Stattie is a one-time purchase of $4.99. No subscriptions, no ads, no in-app purchases. You own it forever.',
     },
     {
-      question: 'How many players can I add?',
+      question: 'Can I edit or delete games later?',
       answer:
-        'Unlimited! Add as many players and games as you want. There are no artificial limits.',
+        'Yes. Games are fully manageable after creation, including quick edit/delete actions from your game lists.',
     },
     {
       question: 'Can I export my data?',
@@ -42,14 +42,14 @@ const faqs = [
         'Stattie works on iPhone and iPad. Your data syncs seamlessly between devices via iCloud.',
     },
     {
-      question: 'Is my data private?',
+      question: 'How do shifts work during tracking?',
       answer:
-        'Your data is stored securely in your personal iCloud account. We never see or access your information.',
+        'Run tracking in shifts, tap End Shift for a quick recap, then start a new shift immediately to continue recording without breaking flow.',
     },
     {
-      question: 'Do you offer refunds?',
+      question: 'Does it work without internet?',
       answer:
-        'App Store purchases are handled by Apple. If you\'re not satisfied, you can request a refund through Apple within their refund window.',
+        'Absolutely. Stattie works completely offline. Your stats are saved locally and sync to iCloud automatically when you\'re back online.',
     },
   ],
 ]

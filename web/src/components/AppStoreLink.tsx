@@ -8,7 +8,7 @@ export function AppStoreLink({
 }) {
   return (
     <Link
-      href="#"
+      href="#" // TODO: Replace with App Store URL after app is published: https://apps.apple.com/app/stattie/id[APP_ID]
       aria-label="Download on the App Store"
       className={clsx(
         'rounded-lg transition-colors',

@@ -47,7 +47,7 @@ struct PersonListView: View {
                             TipCard(
                                 icon: "person.badge.plus",
                                 title: "Add a player",
-                                description: "Enter their name, jersey number, and position"
+                                description: "Enter their name, then assign jersey on a team"
                             )
 
                             TipCard(
@@ -146,9 +146,15 @@ struct PersonRowView: View {
                         .frame(width: 50, height: 50)
                         .clipShape(Circle())
                 } else {
-                    Text("#\(player.jerseyNumber)")
-                        .font(.headline)
-                        .foregroundStyle(.accent)
+                    if player.jerseyNumber > 0 {
+                        Text("#\(player.jerseyNumber)")
+                            .font(.headline)
+                            .foregroundStyle(.accent)
+                    } else {
+                        Image(systemName: "person.fill")
+                            .font(.headline)
+                            .foregroundStyle(.accent)
+                    }
                 }
 
                 // Active game indicator

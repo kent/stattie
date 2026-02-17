@@ -1,7 +1,7 @@
 {
   "name": "Stattie",
   "short_name": "Stattie",
-  "description": "Track Every Shot. Own Every Stat. Real-time basketball statistics tracking.",
+  "description": "Track Every Shot. Own Every Stat. Team-first basketball tracking with shift flow and game management.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f9fafb",

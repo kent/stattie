@@ -212,50 +212,45 @@ struct ShiftTrackingView: View {
 
                 // Shooting buttons
                 HStack(spacing: 10) {
-                    ShiftStatButton(title: "2 PTS", subtitle: shiftMadeString("2PT"), color: .blue) {
-                        recordShiftMade("2PT", points: 2)
-                    }
-                    ShiftStatButton(title: "3 PTS", subtitle: shiftMadeString("3PT"), color: .purple) {
-                        recordShiftMade("3PT", points: 3)
-                    }
-                    ShiftStatButton(title: "FT", subtitle: shiftMadeString("FT"), color: .orange) {
-                        recordShiftMade("FT", points: 1)
-                    }
+                    ShiftStatButton(title: "2 PTS", subtitle: shiftMadeString("2PT"), color: .blue, action: { recordShiftMade("2PT", points: 2) }, undoAction: { undoShiftMade("2PT") })
+                    ShiftStatButton(title: "3 PTS", subtitle: shiftMadeString("3PT"), color: .purple, action: { recordShiftMade("3PT", points: 3) }, undoAction: { undoShiftMade("3PT") })
+                    ShiftStatButton(title: "FT", subtitle: shiftMadeString("FT"), color: .orange, action: { recordShiftMade("FT", points: 1) }, undoAction: { undoShiftMade("FT") })
                 }
                 .padding(.horizontal)
 
                 // Miss buttons
                 HStack(spacing: 8) {
-                    MissButton(title: "2PT Miss") { recordShiftMiss("2PT", points: 2) }
-                    MissButton(title: "3PT Miss") { recordShiftMiss("3PT", points: 3) }
-                    MissButton(title: "FT Miss") { recordShiftMiss("FT", points: 1) }
+                    MissButton(title: "2PT Miss", action: { recordShiftMiss("2PT", points: 2) }, undoAction: { undoShiftMiss("2PT") })
+                    MissButton(title: "3PT Miss", action: { recordShiftMiss("3PT", points: 3) }, undoAction: { undoShiftMiss("3PT") })
+                    MissButton(title: "FT Miss", action: { recordShiftMiss("FT", points: 1) }, undoAction: { undoShiftMiss("FT") })
                 }
                 .padding(.horizontal)
 
                 // Other stats
                 HStack(spacing: 10) {
-                    ShiftStatButton(title: "D-REB", subtitle: shiftCountString("DREB"), color: .green) {
-                        recordShiftCount("DREB")
-                    }
-                    ShiftStatButton(title: "O-REB", subtitle: shiftCountString("OREB"), color: .teal) {
-                        recordShiftCount("OREB")
-                    }
-                    ShiftStatButton(title: "STEAL", subtitle: shiftCountString("STL"), color: .indigo) {
-                        recordShiftCount("STL")
-                    }
+                    ShiftStatButton(title: "D-REB", subtitle: shiftCountString("DREB"), color: .green, action: { recordShiftCount("DREB") }, undoAction: { undoShiftCount("DREB") })
+                    ShiftStatButton(title: "O-REB", subtitle: shiftCountString("OREB"), color: .teal, action: { recordShiftCount("OREB") }, undoAction: { undoShiftCount("OREB") })
+                    ShiftStatButton(title: "STEAL", subtitle: shiftCountString("STL"), color: .indigo, action: { recordShiftCount("STL") }, undoAction: { undoShiftCount("STL") })
                 }
                 .padding(.horizontal)
 
                 HStack(spacing: 10) {
-                    ShiftStatButton(title: "ASSIST", subtitle: shiftCountString("AST"), color: .mint) {
-                        recordShiftCount("AST")
-                    }
-                    ShiftStatButton(title: "DRIVE", subtitle: shiftCountString("DRV"), color: .cyan) {
-                        recordShiftCount("DRV")
-                    }
-                    ShiftStatButton(title: "FOUL", subtitle: shiftCountString("PF"), color: .red) {
-                        recordShiftCount("PF")
-                    }
+                    ShiftStatButton(title: "ASSIST", subtitle: shiftCountString("AST"), color: .mint, action: { recordShiftCount("AST") }, undoAction: { undoShiftCount("AST") })
+                    ShiftStatButton(title: "FOUL", subtitle: shiftCountString("PF"), color: .red, action: { recordShiftCount("PF") }, undoAction: { undoShiftCount("PF") })
+                    ShiftStatButton(title: "MISSED DRIVE", subtitle: shiftCountString("MD"), color: .orange, action: { recordShiftCount("MD") }, undoAction: { undoShiftCount("MD") })
+                }
+                .padding(.horizontal)
+
+                HStack(spacing: 10) {
+                    ShiftStatButton(title: "BAD OFF", subtitle: shiftCountString("BPO"), color: .red, action: { recordShiftCount("BPO") }, undoAction: { undoShiftCount("BPO") })
+                    ShiftStatButton(title: "BAD DEF", subtitle: shiftCountString("BPD"), color: .pink, action: { recordShiftCount("BPD") }, undoAction: { undoShiftCount("BPD") })
+                    ShiftStatButton(title: "SUCCESS DRIVE", subtitle: shiftCountString("SD"), color: .green, action: { recordShiftCount("SD") }, undoAction: { undoShiftCount("SD") })
+                }
+                .padding(.horizontal)
+
+                HStack(spacing: 10) {
+                    ShiftStatButton(title: "GREAT OFF", subtitle: shiftCountString("GPO"), color: .yellow, action: { recordShiftCount("GPO") }, undoAction: { undoShiftCount("GPO") })
+                    ShiftStatButton(title: "GREAT DEF", subtitle: shiftCountString("GPD"), color: .green, action: { recordShiftCount("GPD") }, undoAction: { undoShiftCount("GPD") })
                 }
                 .padding(.horizontal)
             }
@@ -364,6 +359,33 @@ struct ShiftTrackingView: View {
         try? modelContext.save()
     }
 
+    private func undoShiftMade(_ name: String) {
+        guard let shift = currentShift,
+              let stat = shift.statValue(forName: name),
+              stat.made > 0 else { return }
+        stat.made -= 1
+        stat.timestamp = Date()
+        try? modelContext.save()
+    }
+
+    private func undoShiftMiss(_ name: String) {
+        guard let shift = currentShift,
+              let stat = shift.statValue(forName: name),
+              stat.missed > 0 else { return }
+        stat.missed -= 1
+        stat.timestamp = Date()
+        try? modelContext.save()
+    }
+
+    private func undoShiftCount(_ name: String) {
+        guard let shift = currentShift,
+              let stat = shift.statValue(forName: name),
+              stat.count > 0 else { return }
+        stat.count -= 1
+        stat.timestamp = Date()
+        try? modelContext.save()
+    }
+
     // MARK: - Display Helpers
 
     private func shiftMadeString(_ name: String) -> String {
@@ -390,22 +412,42 @@ struct ShiftStatButton: View {
     let subtitle: String
     let color: Color
     let action: () -> Void
+    let undoAction: (() -> Void)?
+
+    init(
+        title: String,
+        subtitle: String,
+        color: Color,
+        action: @escaping () -> Void,
+        undoAction: (() -> Void)? = nil
+    ) {
+        self.title = title
+        self.subtitle = subtitle
+        self.color = color
+        self.action = action
+        self.undoAction = undoAction
+    }
 
     var body: some View {
-        Button(action: action) {
-            VStack(spacing: 4) {
-                Text(title)
-                    .font(.title3.bold())
-                Text(subtitle)
-                    .font(.headline)
-                    .opacity(0.85)
-            }
-            .foregroundStyle(.white)
-            .frame(maxWidth: .infinity)
-            .frame(height: 70)
-            .background(color)
-            .clipShape(RoundedRectangle(cornerRadius: 14))
+        VStack(spacing: 4) {
+            Text(title)
+                .font(.title3.bold())
+            Text(subtitle)
+                .font(.headline)
+                .opacity(0.85)
         }
+        .foregroundStyle(.white)
+        .frame(maxWidth: .infinity)
+        .frame(height: 70)
+        .background(color)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .contentShape(RoundedRectangle(cornerRadius: 14))
+        .onTapGesture(perform: action)
+        .onLongPressGesture(minimumDuration: 0.45) {
+            undoAction?()
+        }
+        .accessibilityHint(undoAction == nil ? "Double tap to record" : "Double tap to record. Long press to undo one.")
+        .accessibilityAddTraits(.isButton)
     }
 }
 
@@ -469,11 +511,12 @@ struct StartShiftScoreSheet: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
-                HStack(spacing: 32) {
-                    ScoreInputColumn(title: "Our Team", score: $teamScore, color: .blue)
-                    ScoreInputColumn(title: "Opponent", score: $opponentScore, color: .red)
-                }
-                .padding()
+                Text("Pre-filled from the previous shift. Type to adjust quickly.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                ScoreInputPairView(teamScore: $teamScore, opponentScore: $opponentScore)
+                    .padding(.horizontal)
 
                 Spacer()
 
@@ -498,6 +541,17 @@ struct StartShiftScoreSheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
                         dismiss()
+                    }
+                }
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        UIApplication.shared.sendAction(
+                            #selector(UIResponder.resignFirstResponder),
+                            to: nil,
+                            from: nil,
+                            for: nil
+                        )
                     }
                 }
             }
@@ -541,6 +595,10 @@ struct EndShiftScoreSheet: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
+                Text("Type scores directly for larger totals, or use quick buttons.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
                 // Starting score reference
                 HStack {
                     Text("Started at:")
@@ -550,11 +608,8 @@ struct EndShiftScoreSheet: View {
                 }
                 .font(.subheadline)
 
-                HStack(spacing: 32) {
-                    ScoreInputColumn(title: "Our Team", score: $teamScore, color: .blue)
-                    ScoreInputColumn(title: "Opponent", score: $opponentScore, color: .red)
-                }
-                .padding()
+                ScoreInputPairView(teamScore: $teamScore, opponentScore: $opponentScore)
+                    .padding(.horizontal)
 
                 // Plus/Minus preview
                 VStack(spacing: 4) {
@@ -591,6 +646,38 @@ struct EndShiftScoreSheet: View {
                         dismiss()
                     }
                 }
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        UIApplication.shared.sendAction(
+                            #selector(UIResponder.resignFirstResponder),
+                            to: nil,
+                            from: nil,
+                            for: nil
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct ScoreInputPairView: View {
+    @Binding var teamScore: Int
+    @Binding var opponentScore: Int
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 14) {
+                ScoreInputColumn(title: "Our Team", score: $teamScore, color: .blue)
+                    .frame(maxWidth: .infinity)
+                ScoreInputColumn(title: "Opponent", score: $opponentScore, color: .red)
+                    .frame(maxWidth: .infinity)
+            }
+
+            VStack(spacing: 16) {
+                ScoreInputColumn(title: "Our Team", score: $teamScore, color: .blue)
+                ScoreInputColumn(title: "Opponent", score: $opponentScore, color: .red)
             }
         }
     }
@@ -609,7 +696,7 @@ struct ScoreInputColumn: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 
-            HStack(spacing: 16) {
+            HStack(spacing: 10) {
                 Button {
                     if score > 0 {
                         score -= 1
@@ -617,20 +704,31 @@ struct ScoreInputColumn: View {
                     }
                 } label: {
                     Image(systemName: "minus.circle.fill")
-                        .font(.title)
+                        .font(.title2)
                         .foregroundStyle(color.opacity(0.7))
                 }
 
-                Text("\(score)")
-                    .font(.system(size: 48, weight: .bold))
-                    .frame(minWidth: 60)
+                TextField("0", value: $score, format: .number)
+                    .keyboardType(.numberPad)
+                    .multilineTextAlignment(.center)
+                    .font(.system(size: 44, weight: .bold, design: .rounded))
+                    .frame(minWidth: 64, idealWidth: 78, maxWidth: 96)
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 6)
+                    .background(Color(.secondarySystemBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .onChange(of: score) { _, newValue in
+                        if newValue < 0 {
+                            score = 0
+                        }
+                    }
 
                 Button {
                     score += 1
                     impactLight.impactOccurred()
                 } label: {
                     Image(systemName: "plus.circle.fill")
-                        .font(.title)
+                        .font(.title2)
                         .foregroundStyle(color)
                 }
             }

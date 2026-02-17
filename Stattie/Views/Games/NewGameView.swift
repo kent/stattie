@@ -30,11 +30,25 @@ struct NewGameView: View {
     }
 
     private var activePersons: [Person] {
-        players.filter { $0.isActive }.sorted { $0.jerseyNumber < $1.jerseyNumber }
+        players.filter { $0.isActive }
+    }
+
+    private var eligiblePersons: [Person] {
+        activePersons
+            .filter { person in
+                (person.teamMemberships ?? []).contains { membership in
+                    membership.isActive && membership.team?.isActive == true
+                }
+            }
+            .sorted { $0.jerseyNumber < $1.jerseyNumber }
+    }
+
+    private var selectedEligiblePersonIDs: Set<UUID> {
+        Set(eligiblePersons.map(\.id)).intersection(selectedPersons)
     }
 
     private var isValid: Bool {
-        !selectedPersons.isEmpty
+        !selectedEligiblePersonIDs.isEmpty
     }
 
     var body: some View {
@@ -77,8 +91,22 @@ struct NewGameView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical)
+                    } else if eligiblePersons.isEmpty {
+                        VStack(spacing: 10) {
+                            Image(systemName: "person.3.sequence")
+                                .font(.title2)
+                                .foregroundStyle(.secondary)
+                            Text("No team-assigned players")
+                                .font(.headline)
+                            Text("Players must be on an active team before starting a game.")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .multilineTextAlignment(.center)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical)
                     } else {
-                        ForEach(activePersons) { player in
+                        ForEach(eligiblePersons) { player in
                             Button {
                                 togglePerson(player)
                             } label: {
@@ -101,12 +129,12 @@ struct NewGameView: View {
                     HStack {
                         Text("Select Players")
                         Spacer()
-                        if !activePersons.isEmpty {
-                            Button(selectedPersons.count == activePersons.count ? "Deselect All" : "Select All") {
-                                if selectedPersons.count == activePersons.count {
-                                    selectedPersons.removeAll()
+                        if !eligiblePersons.isEmpty {
+                            Button(selectedEligiblePersonIDs.count == eligiblePersons.count ? "Deselect All" : "Select All") {
+                                if selectedEligiblePersonIDs.count == eligiblePersons.count {
+                                    selectedPersons.subtract(selectedEligiblePersonIDs)
                                 } else {
-                                    selectedPersons = Set(activePersons.map { $0.id })
+                                    selectedPersons.formUnion(eligiblePersons.map(\.id))
                                 }
                             }
                             .font(.caption)
@@ -201,15 +229,14 @@ struct NewGameView: View {
         modelContext.insert(player)
         try? modelContext.save()
 
-        // Auto-select the new player
-        selectedPersons.insert(player.id)
-
         // Clear fields
         quickAddName = ""
         quickAddNumber = ""
     }
 
     private func createGame() {
+        guard !selectedEligiblePersonIDs.isEmpty else { return }
+
         // Use selected sport or first available
         let sportToUse = selectedSport ?? availableSports.first
 
@@ -225,7 +252,7 @@ struct NewGameView: View {
 
         modelContext.insert(game)
 
-        for person in activePersons where selectedPersons.contains(person.id) {
+        for person in eligiblePersons where selectedEligiblePersonIDs.contains(person.id) {
             let personStats = PersonGameStats(person: person, game: game)
             modelContext.insert(personStats)
 

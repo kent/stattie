@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     default: 'Stattie - Track Every Shot. Own Every Stat.',
   },
   description:
-    'Real-time basketball statistics tracking for players, coaches, and families. Record games live, share with your team via iCloud, and keep a complete history of every performance.',
+    'Team-first basketball stat tracking for players, coaches, and families. Require team selection before games, track shifts live, and manage games with quick edit and delete actions.',
   applicationName: 'Stattie',
   keywords: [
     'basketball stats',
@@ -38,6 +38,9 @@ export const metadata: Metadata = {
     'coach app',
     'basketball analytics',
     'live stats',
+    'shift tracking',
+    'team-based jersey tracking',
+    'game edit delete',
     'stat tracker',
     'basketball box score',
   ],
@@ -54,7 +57,7 @@ export const metadata: Metadata = {
     siteName: 'Stattie',
     title: 'Stattie - Track Every Shot. Own Every Stat.',
     description:
-      'Real-time basketball statistics tracking for players, coaches, and families. Record games live, share with your team via iCloud.',
+      'Team-first basketball tracking with shift flow, team-aware jerseys, and fast game management.',
     images: [
       {
         url: '/og-image.png',
@@ -68,7 +71,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Stattie - Track Every Shot. Own Every Stat.',
     description:
-      'Real-time basketball statistics tracking for players, coaches, and families.',
+      'Team-first basketball tracking with shift flow and fast game management.',
     images: ['/og-image.png'],
   },
   appleWebApp: {

@@ -3,10 +3,19 @@ import SwiftData
 
 struct GameDetailView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
     @Bindable var game: Game
+
+    @State private var isEditing = false
+    @State private var draftOpponent = ""
+    @State private var draftLocation = ""
+    @State private var draftDate = Date()
+    @State private var draftNotes = ""
+    @State private var draftIsCompleted = false
 
     @State private var showingSummary = false
     @State private var showingTracking = false
+    @State private var showingDeleteConfirmation = false
 
     var sortedPersonStats: [PersonGameStats] {
         (game.personStats ?? []).sorted {
@@ -54,14 +63,21 @@ struct GameDetailView: View {
             }
 
             Section("Game Info") {
-                if !game.opponent.isEmpty {
-                    LabeledContent("Opponent", value: game.opponent)
+                if isEditing {
+                    TextField("Opponent", text: $draftOpponent)
+                    DatePicker("Date & Time", selection: $draftDate)
+                    TextField("Location", text: $draftLocation)
+                    Toggle("Completed", isOn: $draftIsCompleted)
+                } else {
+                    if !game.opponent.isEmpty {
+                        LabeledContent("Opponent", value: game.opponent)
+                    }
+                    LabeledContent("Date", value: game.formattedDate)
+                    if !game.location.isEmpty {
+                        LabeledContent("Location", value: game.location)
+                    }
+                    LabeledContent("Status", value: game.isCompleted ? "Ended" : "In Progress")
                 }
-                LabeledContent("Date", value: game.formattedDate)
-                if !game.location.isEmpty {
-                    LabeledContent("Location", value: game.location)
-                }
-                LabeledContent("Status", value: game.isCompleted ? "Completed" : "In Progress")
             }
 
             Section("Player Stats") {
@@ -72,37 +88,118 @@ struct GameDetailView: View {
                 }
             }
 
-            if !game.notes.isEmpty {
+            if isEditing || !game.notes.isEmpty {
                 Section("Notes") {
-                    Text(game.notes)
-                        .foregroundStyle(.secondary)
+                    if isEditing {
+                        TextEditor(text: $draftNotes)
+                            .frame(minHeight: 120)
+                    } else {
+                        Text(game.notes)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
 
-            Section {
-                if game.isCompleted {
-                    Button {
-                        showingSummary = true
-                    } label: {
-                        Label("View & Share Summary", systemImage: "square.and.arrow.up")
+            if isEditing {
+                Section {
+                    Button("Delete Game", role: .destructive) {
+                        showingDeleteConfirmation = true
                     }
-                } else {
-                    Button {
-                        showingTracking = true
-                    } label: {
-                        Label("Continue Tracking", systemImage: "play.fill")
+                }
+            }
+
+            if !isEditing {
+                Section {
+                    if game.isCompleted {
+                        Button {
+                            showingSummary = true
+                        } label: {
+                            Label("View & Share Summary", systemImage: "square.and.arrow.up")
+                        }
+                    } else {
+                        Button {
+                            showingTracking = true
+                        } label: {
+                            Label("Continue Tracking", systemImage: "play.fill")
+                        }
                     }
                 }
             }
         }
         .navigationTitle(game.opponent.isEmpty ? "Game Details" : "vs \(game.opponent)")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if isEditing {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        loadDraftFromGame()
+                        isEditing = false
+                    }
+                }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        applyDraftToGame()
+                    }
+                }
+            } else {
+                ToolbarItem(placement: .primaryAction) {
+                    Menu {
+                        Button("Edit", systemImage: "pencil") {
+                            loadDraftFromGame()
+                            isEditing = true
+                        }
+                        Button("Delete Game", systemImage: "trash", role: .destructive) {
+                            showingDeleteConfirmation = true
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
+                }
+            }
+        }
         .sheet(isPresented: $showingSummary) {
             GameSummaryView(game: game)
         }
         .fullScreenCover(isPresented: $showingTracking) {
             GameTrackingView(game: game)
         }
+        .alert("Delete Game?", isPresented: $showingDeleteConfirmation) {
+            Button("Delete", role: .destructive) {
+                deleteGame()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This will permanently remove the game and all tracked stats.")
+        }
+        .onAppear {
+            loadDraftFromGame()
+        }
+    }
+
+    private func loadDraftFromGame() {
+        draftOpponent = game.opponent
+        draftLocation = game.location
+        draftDate = game.gameDate
+        draftNotes = game.notes
+        draftIsCompleted = game.isCompleted
+    }
+
+    private func applyDraftToGame() {
+        game.opponent = draftOpponent.trimmingCharacters(in: .whitespaces)
+        game.location = draftLocation.trimmingCharacters(in: .whitespaces)
+        game.gameDate = draftDate
+        game.notes = draftNotes.trimmingCharacters(in: .whitespacesAndNewlines)
+        game.isCompleted = draftIsCompleted
+
+        try? modelContext.save()
+        isEditing = false
+    }
+
+    private func deleteGame() {
+        modelContext.delete(game)
+        try? modelContext.save()
+        dismiss()
     }
 }
 

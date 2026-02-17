@@ -17,7 +17,7 @@ export function CallToAction() {
             Start tracking today
           </h2>
           <p className="mt-4 text-lg text-gray-300">
-            Download Stattie and record your first game in minutes.
+            Download Stattie, set up your team, and track your first shift in minutes.
             No account required, no complicated setup.
           </p>
           <div className="mt-8 flex justify-center">

@@ -6,12 +6,41 @@ final class SeedDataService {
 
     private init() {}
 
+    private typealias StatSeed = (
+        name: String,
+        shortName: String,
+        category: String,
+        hasMadeAndMissed: Bool,
+        pointValue: Int,
+        sortOrder: Int,
+        iconName: String
+    )
+
+    private let basketballStatDefinitions: [StatSeed] = [
+        ("2-Point Shot", "2PT", "shooting", true, 2, 0, "basketball.fill"),
+        ("3-Point Shot", "3PT", "shooting", true, 3, 1, "basketball.fill"),
+        ("Free Throw", "FT", "shooting", true, 1, 2, "basketball.fill"),
+        ("Defensive Rebound", "DREB", "rebounding", false, 0, 3, "arrow.down.circle.fill"),
+        ("Offensive Rebound", "OREB", "rebounding", false, 0, 4, "arrow.up.circle.fill"),
+        ("Steal", "STL", "defense", false, 0, 5, "hand.raised.fill"),
+        ("Assist", "AST", "offense", false, 0, 6, "arrow.triangle.branch"),
+        ("Foul", "PF", "other", false, 0, 7, "exclamationmark.triangle.fill"),
+        ("Missed Drive", "MD", "offense", false, 0, 8, "xmark.circle.fill"),
+        ("Successful Drive", "SD", "offense", false, 0, 9, "checkmark.circle.fill"),
+        ("Bad Play Offense", "BPO", "offense", false, 0, 10, "arrow.down.circle"),
+        ("Bad Play Defense", "BPD", "defense", false, 0, 11, "shield.lefthalf.filled.slash"),
+        ("Great Play Offense", "GPO", "offense", false, 0, 12, "sparkles"),
+        ("Great Play Defense", "GPD", "defense", false, 0, 13, "shield.fill"),
+    ]
+
     func seedBasketballIfNeeded(context: ModelContext) {
         let descriptor = FetchDescriptor<Sport>(predicate: #Predicate { $0.name == "Basketball" })
 
         do {
             let existingSports = try context.fetch(descriptor)
-            if existingSports.isEmpty {
+            if let basketball = existingSports.first {
+                ensureBasketballStatDefinitions(for: basketball, context: context)
+            } else {
                 createBasketballSport(context: context)
             }
         } catch {
@@ -24,36 +53,39 @@ final class SeedDataService {
         let basketball = Sport(name: "Basketball", iconName: "basketball.fill", isBuiltIn: true)
         context.insert(basketball)
 
-        let statDefinitions: [(String, String, String, Bool, Int, Int, String)] = [
-            ("2-Point Shot", "2PT", "shooting", true, 2, 0, "basketball.fill"),
-            ("3-Point Shot", "3PT", "shooting", true, 3, 1, "basketball.fill"),
-            ("Free Throw", "FT", "shooting", true, 1, 2, "basketball.fill"),
-            ("Defensive Rebound", "DREB", "rebounding", false, 0, 3, "arrow.down.circle.fill"),
-            ("Offensive Rebound", "OREB", "rebounding", false, 0, 4, "arrow.up.circle.fill"),
-            ("Steal", "STL", "defense", false, 0, 5, "hand.raised.fill"),
-            ("Assist", "AST", "offense", false, 0, 6, "arrow.triangle.branch"),
-            ("Foul", "PF", "other", false, 0, 7, "exclamationmark.triangle.fill"),
-            ("Drive", "DRV", "offense", false, 0, 8, "figure.run"),
-            ("Great Play", "GP", "other", false, 0, 9, "star.fill"),
-        ]
+        ensureBasketballStatDefinitions(for: basketball, context: context)
+    }
 
-        for (index, def) in statDefinitions.enumerated() {
-            let statDef = StatDefinition(
-                name: def.0,
-                shortName: def.1,
-                category: def.2,
-                hasMadeAndMissed: def.3,
-                pointValue: def.4,
-                sortOrder: def.5,
-                iconName: def.6,
-                sport: basketball
-            )
-            context.insert(statDef)
+    private func ensureBasketballStatDefinitions(for basketball: Sport, context: ModelContext) {
+        let existingDefinitions = basketball.statDefinitions ?? []
 
-            if basketball.statDefinitions == nil {
-                basketball.statDefinitions = []
+        for def in basketballStatDefinitions {
+            if let existing = existingDefinitions.first(where: { $0.shortName == def.shortName }) {
+                existing.name = def.name
+                existing.category = def.category
+                existing.hasMadeAndMissed = def.hasMadeAndMissed
+                existing.pointValue = def.pointValue
+                existing.sortOrder = def.sortOrder
+                existing.iconName = def.iconName
+                existing.sport = basketball
+            } else {
+                let statDef = StatDefinition(
+                    name: def.name,
+                    shortName: def.shortName,
+                    category: def.category,
+                    hasMadeAndMissed: def.hasMadeAndMissed,
+                    pointValue: def.pointValue,
+                    sortOrder: def.sortOrder,
+                    iconName: def.iconName,
+                    sport: basketball
+                )
+                context.insert(statDef)
+
+                if basketball.statDefinitions == nil {
+                    basketball.statDefinitions = []
+                }
+                basketball.statDefinitions?.append(statDef)
             }
-            basketball.statDefinitions?.append(statDef)
         }
 
         do {
@@ -223,8 +255,12 @@ final class SeedDataService {
             let steals = Int(Double.random(in: 1...4) * improvementFactor)
             let assists = Int(Double.random(in: 3...8) * improvementFactor)
             let fouls = Int.random(in: 1...4)
-            let drives = Int.random(in: 2...6)
-            let greatPlays = Int.random(in: 0...3)
+            let missedDrives = Int.random(in: 1...4)
+            let successfulDrives = Int.random(in: 1...4)
+            let badPlayOffense = Int.random(in: 0...2)
+            let badPlayDefense = Int.random(in: 0...2)
+            let greatPlayOffense = Int.random(in: 0...3)
+            let greatPlayDefense = Int.random(in: 0...3)
 
             // Create stat objects
             let stats: [(String, Int, Int, Int, Int)] = [
@@ -237,8 +273,12 @@ final class SeedDataService {
                 ("STL", 0, 0, 0, steals),
                 ("AST", 0, 0, 0, assists),
                 ("PF", 0, 0, 0, fouls),
-                ("DRV", 0, 0, 0, drives),
-                ("GP", 0, 0, 0, greatPlays),
+                ("MD", 0, 0, 0, missedDrives),
+                ("SD", 0, 0, 0, successfulDrives),
+                ("BPO", 0, 0, 0, badPlayOffense),
+                ("BPD", 0, 0, 0, badPlayDefense),
+                ("GPO", 0, 0, 0, greatPlayOffense),
+                ("GPD", 0, 0, 0, greatPlayDefense),
             ]
 
             for (statName, pointValue, made, missed, count) in stats {

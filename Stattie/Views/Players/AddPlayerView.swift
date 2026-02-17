@@ -8,8 +8,6 @@ struct AddPersonView: View {
 
     @State private var firstName = ""
     @State private var lastName = ""
-    @State private var jerseyNumber = ""
-    @State private var positionAssignments = PositionAssignments()
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var photoData: Data?
 
@@ -21,8 +19,7 @@ struct AddPersonView: View {
 
     private var isValid: Bool {
         !firstName.trimmingCharacters(in: .whitespaces).isEmpty ||
-        !lastName.trimmingCharacters(in: .whitespaces).isEmpty ||
-        Int(jerseyNumber) != nil
+        !lastName.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
     var body: some View {
@@ -60,7 +57,7 @@ struct AddPersonView: View {
                     .listRowBackground(Color.clear)
                 }
 
-                Section("Player Info") {
+                Section {
                     TextField("First Name", text: $firstName)
                         .textContentType(.givenName)
                         .autocorrectionDisabled()
@@ -68,19 +65,10 @@ struct AddPersonView: View {
                     TextField("Last Name", text: $lastName)
                         .textContentType(.familyName)
                         .autocorrectionDisabled()
-
-                    HStack {
-                        Text("Jersey Number")
-                        Spacer()
-                        TextField("", text: $jerseyNumber)
-                            .keyboardType(.numberPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 60)
-                    }
-                }
-
-                Section("Position") {
-                    PositionPickerView(assignments: $positionAssignments)
+                } header: {
+                    Text("Player Info")
+                } footer: {
+                    Text("Jersey numbers are assigned per team.")
                 }
             }
             .navigationTitle("Add Player")
@@ -113,9 +101,7 @@ struct AddPersonView: View {
         let player = Person(
             firstName: firstName.trimmingCharacters(in: .whitespaces),
             lastName: lastName.trimmingCharacters(in: .whitespaces),
-            jerseyNumber: Int(jerseyNumber) ?? 0,
-            position: positionAssignments.displayText,
-            positionAssignments: positionAssignments,
+            jerseyNumber: 0,
             photoData: photoData,
             isActive: true,
             owner: currentUser

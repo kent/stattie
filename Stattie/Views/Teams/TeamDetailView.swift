@@ -213,9 +213,15 @@ struct TeamMemberRow: View {
                             .frame(width: 44, height: 44)
                             .clipShape(Circle())
                     } else {
-                        Text("#\(membership.jerseyNumber ?? person.jerseyNumber)")
-                            .font(.subheadline.bold())
-                            .foregroundStyle(.accent)
+                        if let jerseyNumber = membership.jerseyNumber, jerseyNumber > 0 {
+                            Text("#\(jerseyNumber)")
+                                .font(.subheadline.bold())
+                                .foregroundStyle(.accent)
+                        } else {
+                            Image(systemName: "person.fill")
+                                .font(.subheadline)
+                                .foregroundStyle(.accent)
+                        }
                     }
                 }
 
@@ -320,9 +326,15 @@ struct AddPlayerToTeamView: View {
                                     .fill(Color.accentColor.opacity(0.2))
                                     .frame(width: 40, height: 40)
 
-                                Text("#\(player.jerseyNumber)")
-                                    .font(.caption.bold())
-                                    .foregroundStyle(.accent)
+                                if player.jerseyNumber > 0 {
+                                    Text("#\(player.jerseyNumber)")
+                                        .font(.caption.bold())
+                                        .foregroundStyle(.accent)
+                                } else {
+                                    Image(systemName: "person.fill")
+                                        .font(.caption)
+                                        .foregroundStyle(.accent)
+                                }
                             }
 
                             VStack(alignment: .leading) {
@@ -367,7 +379,7 @@ struct AddPlayerToTeamView: View {
                     person: player,
                     team: team,
                     role: "player",
-                    jerseyNumber: player.jerseyNumber,
+                    jerseyNumber: player.jerseyNumber > 0 ? player.jerseyNumber : nil,
                     position: player.position,
                     positionAssignments: player.positionAssignments
                 )
@@ -418,9 +430,15 @@ struct EditMembershipView: View {
                                         .frame(width: 60, height: 60)
                                         .clipShape(Circle())
                                 } else {
-                                    Text("#\(membership.jerseyNumber ?? person.jerseyNumber)")
-                                        .font(.title2.bold())
-                                        .foregroundStyle(.accent)
+                                    if let jerseyNumber = membership.jerseyNumber, jerseyNumber > 0 {
+                                        Text("#\(jerseyNumber)")
+                                            .font(.title2.bold())
+                                            .foregroundStyle(.accent)
+                                    } else {
+                                        Image(systemName: "person.fill")
+                                            .font(.title2)
+                                            .foregroundStyle(.accent)
+                                    }
                                 }
                             }
 
@@ -465,7 +483,10 @@ struct EditMembershipView: View {
                 }
 
                 Section("Position on This Team") {
-                    PositionPickerView(assignments: $editingPositions)
+                    PositionPickerView(
+                        assignments: $editingPositions,
+                        sportName: membership.team?.sport?.name
+                    )
                 }
 
                 if editingPositions.assignments.count > 1 {

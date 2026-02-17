@@ -5,7 +5,13 @@ import SwiftUI
 /// If multiple are selected, they'll confirm which one when starting a shift
 struct PositionPickerView: View {
     @Binding var assignments: PositionAssignments
+    let sportName: String?
     @State private var showingPicker = false
+
+    init(assignments: Binding<PositionAssignments>, sportName: String? = nil) {
+        self._assignments = assignments
+        self.sportName = sportName
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -70,7 +76,7 @@ struct PositionPickerView: View {
             }
         }
         .sheet(isPresented: $showingPicker) {
-            SimplePositionSelectionSheet(assignments: $assignments)
+            SimplePositionSelectionSheet(assignments: $assignments, sportName: sportName)
         }
     }
 }
@@ -79,16 +85,28 @@ struct PositionPickerView: View {
 struct SimplePositionSelectionSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var assignments: PositionAssignments
+    let sportName: String?
 
     @State private var selectedPositions: Set<SoccerPosition> = []
+
+    private var supportedSport: SoccerPosition.SupportedSport {
+        SoccerPosition.supportedSport(for: sportName)
+    }
+
+    private var availableCategories: [SoccerPosition.PositionCategory] {
+        SoccerPosition.categories(for: supportedSport)
+    }
+
+    private var availablePositions: Set<SoccerPosition> {
+        Set(SoccerPosition.positions(for: supportedSport))
+    }
 
     var body: some View {
         NavigationStack {
             List {
-                ForEach(SoccerPosition.PositionCategory.allCases, id: \.self) { category in
-                    let categoryPositions = SoccerPosition.allCases.filter { $0.category == category }
+                ForEach(availableCategories) { category in
                     Section(category.rawValue) {
-                        ForEach(categoryPositions) { position in
+                        ForEach(category.positions) { position in
                             Button {
                                 togglePosition(position)
                             } label: {
@@ -150,7 +168,11 @@ struct SimplePositionSelectionSheet: View {
             }
             .onAppear {
                 // Load existing positions
-                selectedPositions = Set(assignments.assignments.map { $0.position })
+                selectedPositions = Set(
+                    assignments.assignments
+                        .map { $0.position }
+                        .filter { availablePositions.contains($0) }
+                )
             }
         }
     }
@@ -166,7 +188,7 @@ struct SimplePositionSelectionSheet: View {
     private func savePositions() {
         // Clear existing and add selected positions with equal distribution
         assignments = PositionAssignments()
-        let positions = Array(selectedPositions)
+        let positions = SoccerPosition.allCases.filter { selectedPositions.contains($0) && availablePositions.contains($0) }
 
         if positions.count == 1 {
             assignments.addPosition(positions[0], percentage: 100)
@@ -187,7 +209,13 @@ struct SimplePositionSelectionSheet: View {
 /// Compact inline position picker for forms
 struct InlinePositionPicker: View {
     @Binding var assignments: PositionAssignments
+    let sportName: String?
     @State private var showingPicker = false
+
+    init(assignments: Binding<PositionAssignments>, sportName: String? = nil) {
+        self._assignments = assignments
+        self.sportName = sportName
+    }
 
     var body: some View {
         Button {
@@ -211,7 +239,7 @@ struct InlinePositionPicker: View {
             }
         }
         .sheet(isPresented: $showingPicker) {
-            SimplePositionSelectionSheet(assignments: $assignments)
+            SimplePositionSelectionSheet(assignments: $assignments, sportName: sportName)
         }
     }
 }
