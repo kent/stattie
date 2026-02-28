@@ -20,10 +20,10 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://stattie.app'),
   title: {
     template: '%s - Stattie',
-    default: 'Stattie - Track Every Shot. Own Every Stat.',
+    default: 'Stattie - Track Every Game. Own Every Stat.',
   },
   description:
-    'Team-first basketball stat tracking for players, coaches, and families. Require team selection before games, track shifts live, and manage games with quick edit and delete actions.',
+    'Team-first basketball and soccer stat tracking for players, coaches, and families. Select sport and team before games, track shifts live, and manage games with quick edit/delete actions.',
   applicationName: 'Stattie',
   keywords: [
     'basketball stats',
@@ -31,6 +31,9 @@ export const metadata: Metadata = {
     'basketball statistics',
     'youth basketball',
     'basketball app',
+    'soccer stats',
+    'soccer app',
+    'multi sport tracker',
     'game tracker',
     'sports stats',
     'basketball scoring',
@@ -40,6 +43,7 @@ export const metadata: Metadata = {
     'live stats',
     'shift tracking',
     'team-based jersey tracking',
+    'sport-specific tracking',
     'game edit delete',
     'stat tracker',
     'basketball box score',
@@ -55,23 +59,23 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: 'https://stattie.app',
     siteName: 'Stattie',
-    title: 'Stattie - Track Every Shot. Own Every Stat.',
+    title: 'Stattie - Track Every Game. Own Every Stat.',
     description:
-      'Team-first basketball tracking with shift flow, team-aware jerseys, and fast game management.',
+      'Team-first basketball and soccer tracking with shift flow, sport-aware setup, and fast game management.',
     images: [
       {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Stattie - Basketball Stats Tracking App',
+        alt: 'Stattie - Sports Stats Tracking App',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Stattie - Track Every Shot. Own Every Stat.',
+    title: 'Stattie - Track Every Game. Own Every Stat.',
     description:
-      'Team-first basketball tracking with shift flow and fast game management.',
+      'Team-first basketball and soccer tracking with shift flow and fast game management.',
     images: ['/og-image.png'],
   },
   appleWebApp: {
@@ -105,7 +109,8 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
-      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/icon-192.png', type: 'image/png', sizes: '192x192' },
+      { url: '/icon-512.png', type: 'image/png', sizes: '512x512' },
     ],
     apple: [
       { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },

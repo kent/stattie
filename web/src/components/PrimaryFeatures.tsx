@@ -26,23 +26,23 @@ interface CustomAnimationProps {
 
 const features = [
   {
-    name: 'Team-First Game Setup',
+    name: 'Multi-Sport Team Setup',
     description:
-      'Games start with the right context. Select a team first, then keep jersey number and position tied to that team so every stat stays accurate.',
+      'Choose basketball or soccer, then select the right team before you start. Jerseys and positions stay tied to that team so every stat keeps the right context.',
     icon: DeviceShareIcon,
     screen: TeamGameSetupScreen,
   },
   {
-    name: 'Shift-Based Live Tracking',
+    name: 'Sport-Specific Live Tracking',
     description:
-      'Track every shift with fast basketball actions like Missed Drive, Bad Play Offense/Defense, and Great Play Offense/Defense. End a shift, review quickly, and start the next one.',
+      'Track fast with buttons built for each sport. Use basketball actions like Missed Drive and Great Play, or soccer actions like Goals, Saves, Passes, and Cards.',
     icon: DeviceChartIcon,
     screen: StatTrackingScreen,
   },
   {
-    name: 'Manage Games Fast',
+    name: 'Shift Recaps + Game Control',
     description:
-      'Create, edit, and delete games from one place. Active game rows show team and sport at a glance, and quick actions make cleanup painless.',
+      'End a shift for a quick recap, then keep momentum with Start New Shift. Manage active and recent games with fast edit/delete actions in one place.',
     icon: DeviceListIcon,
     screen: GameManagementScreen,
   },
@@ -355,7 +355,7 @@ export function PrimaryFeatures() {
   return (
     <section
       id="features"
-      aria-label="Features for tracking basketball stats"
+      aria-label="Features for tracking sports stats"
       className="bg-gray-900 py-20 sm:py-32"
     >
       <Container>
@@ -364,8 +364,9 @@ export function PrimaryFeatures() {
             Built for real game flow, not spreadsheets.
           </h2>
           <p className="mt-2 text-lg text-gray-400">
-            Start with team context, track by shift, and manage games cleanly.
-            Fast enough for parents on the sidelines, structured enough for coaches.
+            Start with sport + team context, track by shift, and manage games
+            cleanly. Fast enough for parents on the sidelines, structured
+            enough for coaches.
           </p>
         </div>
       </Container>

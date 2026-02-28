@@ -36,14 +36,14 @@ export function TeamGameSetupScreen(props: ScreenProps) {
         <MotionAppScreenHeader {...props.headerAnimation}>
           <AppScreen.Title>New Game</AppScreen.Title>
           <AppScreen.Subtitle>
-            Pick a team before <span className="text-white">Start Game</span>
+            Pick team + sport before <span className="text-white">Start Game</span>
           </AppScreen.Subtitle>
         </MotionAppScreenHeader>
       ) : (
         <AppScreen.Header>
           <AppScreen.Title>New Game</AppScreen.Title>
           <AppScreen.Subtitle>
-            Pick a team before <span className="text-white">Start Game</span>
+            Pick team + sport before <span className="text-white">Start Game</span>
           </AppScreen.Subtitle>
         </AppScreen.Header>
       )}
@@ -79,7 +79,8 @@ function TeamGameSetupContent() {
       </div>
 
       <div className="rounded-xl border border-gray-200 bg-white px-3 py-1">
-        <InfoRow label="Team (required)" value="Comets • Basketball" />
+        <InfoRow label="Team (required)" value="Comets" />
+        <InfoRow label="Sport (required)" value="Basketball or Soccer" />
         <InfoRow label="Jersey in Team" value="#0" />
         <InfoRow label="Position in Team" value="Point Guard" />
       </div>

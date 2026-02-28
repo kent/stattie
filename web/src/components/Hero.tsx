@@ -81,12 +81,13 @@ export function Hero() {
         <div className="lg:grid lg:grid-cols-12 lg:gap-x-8 lg:gap-y-20">
           <div className="relative z-10 mx-auto max-w-2xl lg:col-span-7 lg:max-w-none lg:pt-6 xl:col-span-6">
             <h1 className="text-4xl font-medium tracking-tight text-gray-900">
-              Track Every Shot. Own Every Stat.
+              Track Every Game. Own Every Stat.
             </h1>
             <p className="mt-6 text-lg text-gray-600">
-              Team-based basketball tracking for players, coaches, and families.
-              Pick a team before each game, keep jerseys and positions in team context,
-              track every shift live, and manage games with quick edit and delete actions.
+              Team-based stat tracking for basketball and soccer. Pick a team
+              and sport before each game, keep jerseys and positions in the
+              right context, track every shift live, and manage games with
+              quick edit and delete actions.
             </p>
             <div className="mt-8 flex flex-wrap gap-x-6 gap-y-4">
               <AppStoreLink />
@@ -102,7 +103,7 @@ export function Hero() {
           </div>
           <div className="relative -mt-4 lg:col-span-7 lg:mt-0 xl:col-span-6">
             <p className="text-center text-sm font-semibold text-gray-900 lg:text-left">
-              Built for basketball families
+              Built for families and coaches
             </p>
             <div className="mx-auto mt-8 flex max-w-xl flex-wrap justify-center gap-x-10 gap-y-6 lg:mx-0 lg:justify-start">
               <div className="flex items-center gap-2">
@@ -127,7 +128,7 @@ export function Hero() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                 </div>
-                <span className="text-sm text-gray-700">Team-first setup</span>
+                <span className="text-sm text-gray-700">Basketball + Soccer</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100">

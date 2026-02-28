@@ -4,7 +4,13 @@ import { Container } from '@/components/Container'
 
 const features = [
   {
-    name: 'Team-Based Player Info',
+    name: 'Basketball + Soccer',
+    description:
+      'Track games across both sports with sport-aware setup, stat definitions, and game details that adapt automatically.',
+    icon: DeviceTargetIcon,
+  },
+  {
+    name: 'Team-Based Player Context',
     description:
       'Jersey numbers and positions are tracked per team, so the same player can keep accurate context across different rosters.',
     icon: DeviceUserIcon,
@@ -16,27 +22,27 @@ const features = [
     icon: DeviceAlertIcon,
   },
   {
-    name: 'Game CRUD + Swipe Actions',
+    name: 'Sport-Specific Stat Presets',
+    description:
+      'Use basketball actions like Missed Drive and Great Play, or soccer actions like Goals, Saves, Passes, Corners, and Cards.',
+    icon: DeviceCalendarIcon,
+  },
+  {
+    name: 'Game Edit + Delete',
     description:
       'Create, edit, and delete games quickly. Swipe actions on game rows make cleanup and corrections fast on mobile.',
     icon: DeviceCalendarIcon,
   },
   {
-    name: 'Shift Quick Summary',
+    name: 'Shift Quick Summary + Plus/Minus',
     description:
-      'End a shift to get an instant recap, then start a new shift with one tap to keep your tracking flow uninterrupted.',
+      'End a shift to get an instant recap including on-court impact, then start a new shift with one tap to keep tracking flow uninterrupted.',
     icon: DeviceTapIcon,
   },
   {
-    name: 'Basketball Event Presets',
+    name: 'iCloud Sharing + Offline',
     description:
-      'Track custom actions including Missed Drive, Bad Play Offense, Bad Play Defense, Great Play Offense, and Great Play Defense.',
-    icon: DeviceTargetIcon,
-  },
-  {
-    name: 'Works Offline',
-    description:
-      'Track games in gyms with spotty wifi. Stats sync automatically when you\'re back online.',
+      'Track games in gyms with spotty wifi, then sync when you reconnect. Invite family and coaches so everyone can stay up to date.',
     icon: DeviceOfflineIcon,
   },
 ]
@@ -190,7 +196,7 @@ export function SecondaryFeatures() {
   return (
     <section
       id="secondary-features"
-      aria-label="Features for tracking basketball stats"
+      aria-label="Features for tracking sports stats"
       className="py-20 sm:py-32"
     >
       <Container>
@@ -200,7 +206,7 @@ export function SecondaryFeatures() {
           </h2>
           <p className="mt-2 text-lg text-gray-600">
             Every flow is optimized for fast taps, clean list actions, and
-            team-aware data from setup through game tracking.
+            team-aware data across basketball and soccer.
           </p>
         </div>
         <ul

@@ -3,6 +3,11 @@ import { Container } from '@/components/Container'
 const faqs = [
   [
     {
+      question: 'What sports can I track?',
+      answer:
+        'Stattie supports basketball and soccer. You can pick the sport for each game, and the stat buttons adapt automatically.',
+    },
+    {
       question: 'Can multiple people track the same game?',
       answer:
         'Yes! With iCloud sharing, you can invite coaches, parents, or anyone else to view and track stats for your team. Everyone sees updates in real-time.',
@@ -15,7 +20,7 @@ const faqs = [
     {
       question: 'What stats can I track?',
       answer:
-        'Core basketball stats plus custom impact actions like Missed Drive, Bad Play Offense/Defense, and Great Play Offense/Defense.',
+        'Basketball includes shooting, rebounds, assists, steals, and custom impact actions. Soccer includes goals, shots, assists, saves, passes, tackles, interceptions, corners, fouls, and cards.',
     },
   ],
   [

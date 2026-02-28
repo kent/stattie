@@ -125,6 +125,9 @@ function StatTrackingContent() {
       <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
         Basketball impact
       </div>
+      <div className="mb-2 text-[10px] text-gray-500">
+        Soccer mode swaps these for goals, saves, passes, corners, and cards.
+      </div>
       <div className="grid grid-cols-2 gap-2">
         <ImpactButton label="Missed Drive" color="bg-orange-500" />
         <ImpactButton label="Bad Play Offense" color="bg-red-500" />

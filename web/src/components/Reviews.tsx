@@ -282,7 +282,7 @@ export function Reviews() {
           id="reviews-title"
           className="text-3xl font-medium tracking-tight text-gray-900 sm:text-center"
         >
-          Trusted by basketball families everywhere.
+          Trusted by sports families everywhere.
         </h2>
         <p className="mt-2 text-lg text-gray-600 sm:text-center">
           Coaches, parents, and players are using Stattie to track their games.

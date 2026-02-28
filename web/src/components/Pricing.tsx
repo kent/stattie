@@ -25,8 +25,10 @@ function CheckIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
 
 const features = [
   'Unlimited players and games',
+  'Basketball + Soccer support',
   'Team-first game setup',
   'Shift-based live tracking',
+  'Sport-specific stat presets',
   'Game edit and delete tools',
   'iCloud sharing with team',
   'Detailed game and shift summaries',
@@ -58,7 +60,7 @@ export function Pricing() {
           <div className="flex flex-col overflow-hidden rounded-3xl bg-white p-8 shadow-lg shadow-gray-900/5">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <Logomark className="h-10 w-10 flex-none fill-orange-600 stroke-orange-600" />
+                <Logomark className="h-10 w-10 flex-none" />
                 <span className="ml-4 text-lg font-semibold text-gray-900">Stattie</span>
               </div>
               <div className="text-right">
@@ -68,8 +70,8 @@ export function Pricing() {
             </div>
 
             <p className="mt-6 text-gray-700">
-              Everything you need to track basketball stats for your players,
-              with all future updates included.
+              Everything you need to track basketball and soccer stats for your
+              players, with all future updates included.
             </p>
 
             <ul role="list" className="mt-8 space-y-3">

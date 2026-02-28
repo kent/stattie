@@ -21,8 +21,24 @@ type ScreenProps =
   | { animated?: false }
 
 const games = [
-  { id: 'g1', label: 'Game vs Tigers', team: 'Comets', sport: 'Basketball', date: 'Feb 17, 2026 • 1:16 AM', points: 12 },
-  { id: 'g2', label: 'Game vs Hawks', team: 'Comets', sport: 'Basketball', date: 'Feb 12, 2026 • Final', points: 18 },
+  {
+    id: 'g1',
+    label: 'Game vs Tigers',
+    team: 'Comets',
+    sport: 'Basketball',
+    date: 'Feb 17, 2026 • In Progress',
+    total: 12,
+    totalLabel: 'PTS',
+  },
+  {
+    id: 'g2',
+    label: 'Game vs North FC',
+    team: 'Bay City United',
+    sport: 'Soccer',
+    date: 'Feb 12, 2026 • Final',
+    total: 2,
+    totalLabel: 'GOL',
+  },
 ]
 
 function GameRow({
@@ -32,6 +48,11 @@ function GameRow({
   game: (typeof games)[number]
   showActions?: boolean
 }) {
+  const sportChipClass =
+    game.sport === 'Soccer'
+      ? 'bg-green-100 text-green-700'
+      : 'bg-blue-100 text-blue-700'
+
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-3">
       <div className="flex items-start justify-between gap-2">
@@ -42,14 +63,14 @@ function GameRow({
             <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-semibold text-orange-700">
               {game.team}
             </span>
-            <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+            <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${sportChipClass}`}>
               {game.sport}
             </span>
           </div>
         </div>
         <div className="text-right">
-          <div className="text-lg font-bold text-orange-600">{game.points}</div>
-          <div className="text-[10px] text-gray-500">PTS</div>
+          <div className="text-lg font-bold text-orange-600">{game.total}</div>
+          <div className="text-[10px] text-gray-500">{game.totalLabel}</div>
         </div>
       </div>
       {showActions && (
@@ -73,14 +94,14 @@ export function GameManagementScreen(props: ScreenProps) {
         <MotionAppScreenHeader {...props.headerAnimation}>
           <AppScreen.Title>Games</AppScreen.Title>
           <AppScreen.Subtitle>
-            Manage active games for <span className="text-white">Comets</span>
+            Manage games by <span className="text-white">team + sport</span>
           </AppScreen.Subtitle>
         </MotionAppScreenHeader>
       ) : (
         <AppScreen.Header>
           <AppScreen.Title>Games</AppScreen.Title>
           <AppScreen.Subtitle>
-            Manage active games for <span className="text-white">Comets</span>
+            Manage games by <span className="text-white">team + sport</span>
           </AppScreen.Subtitle>
         </AppScreen.Header>
       )}

@@ -17,8 +17,8 @@ export function CallToAction() {
             Start tracking today
           </h2>
           <p className="mt-4 text-lg text-gray-300">
-            Download Stattie, set up your team, and track your first shift in minutes.
-            No account required, no complicated setup.
+            Download Stattie, choose basketball or soccer, and track your first
+            shift in minutes. No account required, no complicated setup.
           </p>
           <div className="mt-8 flex justify-center">
             <AppStoreLink color="white" />
