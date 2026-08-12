@@ -47,6 +47,8 @@ struct ShootingStatButton: View {
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Record made \(definition.name)")
+                .accessibilityHint("Current count: \(made) made out of \(attempts) attempts")
 
                 Button {
                     onMissed()
@@ -63,6 +65,8 @@ struct ShootingStatButton: View {
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Record missed \(definition.name)")
+                .accessibilityHint("Current count: \(missed) missed out of \(attempts) attempts")
             }
 
             HStack {
@@ -108,6 +112,7 @@ struct CountStatButton: View {
             .clipShape(RoundedRectangle(cornerRadius: 16))
         }
         .buttonStyle(.plain)
+        .accessibleStatButton(name: definition.name, value: count)
     }
 }
 

@@ -3,6 +3,9 @@ import SwiftData
 import StoreKit
 
 struct SettingsView: View {
+    private let websiteBaseURL = URL(string: "https://www.stattie.com")!
+    private let appStoreURL = URL(string: "https://apps.apple.com/app/id6758022135")!
+
     @Environment(\.modelContext) private var modelContext
     @Environment(\.requestReview) private var requestReview
     @Query private var users: [User]
@@ -14,19 +17,21 @@ struct SettingsView: View {
     @State private var editedName = ""
 
     private var currentUser: User? {
-        users.first
+        users.resolvedCurrentUser
     }
 
     private var activePlayers: Int {
-        players.filter { $0.isActive }.count
+        players.filter { $0.isActive && $0.isOwned(by: currentUser) }.count
     }
 
     private var completedGames: Int {
-        games.filter { $0.isCompleted }.count
+        games.filter { $0.isCompleted && $0.isOwned(by: currentUser) }.count
     }
 
     private var totalPointsTracked: Int {
-        games.filter { $0.isCompleted }.reduce(0) { $0 + $1.totalPoints }
+        games
+            .filter { $0.isCompleted && $0.isOwned(by: currentUser) }
+            .reduce(0) { $0 + $1.totalPoints }
     }
 
     var body: some View {
@@ -71,16 +76,26 @@ struct SettingsView: View {
                         if syncManager.isCheckingStatus {
                             ProgressView()
                         } else {
-                            Text(syncManager.statusDescription)
+                            Text(syncManager.syncHealthDescription)
                                 .foregroundStyle(.secondary)
                         }
                     }
 
                     if syncManager.isSignedIntoiCloud {
+                        if let lastOperation = syncManager.lastSyncOperation {
+                            LabeledContent("Last Sync Operation") {
+                                Text(lastOperation)
+                            }
+                        }
                         if let lastSync = syncManager.lastSyncDate {
                             LabeledContent("Last Sync") {
                                 Text(lastSync, style: .relative)
                             }
+                        }
+                        if let syncErrorMessage = syncManager.lastSyncErrorMessage, !syncErrorMessage.isEmpty {
+                            Text(syncErrorMessage)
+                                .font(.caption)
+                                .foregroundStyle(.orange)
                         }
                     } else {
                         Text("Sign in to iCloud in Settings to sync data across devices")
@@ -174,9 +189,9 @@ struct SettingsView: View {
                 }
 
                 Section("About") {
-                    LabeledContent("Version", value: "1.0.0")
+                    LabeledContent("Version", value: appVersion)
 
-                    Link(destination: URL(string: "https://stattie.app/privacy")!) {
+                    Link(destination: websiteBaseURL.appending(path: "privacy")) {
                         HStack {
                             Text("Privacy Policy")
                             Spacer()
@@ -185,7 +200,7 @@ struct SettingsView: View {
                         }
                     }
 
-                    Link(destination: URL(string: "https://stattie.app/terms")!) {
+                    Link(destination: websiteBaseURL.appending(path: "terms")) {
                         HStack {
                             Text("Terms of Service")
                             Spacer()
@@ -195,12 +210,21 @@ struct SettingsView: View {
                     }
                 }
 
+                Section("Coaching") {
+                    Label("On-device coaching", systemImage: "iphone.and.arrow.forward")
+                        .foregroundStyle(.green)
+
+                    Text("Practice priorities are calculated from recorded stats directly on this device. Stattie does not send player or game data to an AI service.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
                 // Invite Friends
                 InviteFriendsSection()
 
                 Section {
-                    Link(destination: URL(string: "mailto:support@stattie.app")!) {
-                        Label("Contact Support", systemImage: "envelope")
+                    Link(destination: websiteBaseURL.appending(path: "support")) {
+                        Label("Contact Support", systemImage: "questionmark.circle")
                     }
 
                     Button {
@@ -217,6 +241,10 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
+            .onAppear {
+                CloudSyncedPreferences.bootstrapIfNeeded(force: true)
+                AppState.shared.synchronizeFromCloud()
+            }
             .task {
                 await syncManager.checkiCloudStatus()
             }
@@ -233,11 +261,16 @@ struct SettingsView: View {
         isEditingName = false
     }
 
+    private var appVersion: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "—"
+    }
+
     private func shareApp() {
         let text = "I'm using Stattie to track game stats for my players! Check it out:"
-        let url = URL(string: "https://apps.apple.com/app/stattie/id0")!
-
-        let activityVC = UIActivityViewController(activityItems: [text, url], applicationActivities: nil)
+        let activityVC = UIActivityViewController(
+            activityItems: [text, appStoreURL],
+            applicationActivities: nil
+        )
 
         if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
            let window = windowScene.windows.first,

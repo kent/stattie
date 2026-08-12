@@ -12,6 +12,7 @@ struct ShiftTrackingView: View {
     @State private var showingStartShiftSheet = false
     @State private var showingPositionConfirmation = false
     @State private var selectedShiftPosition: SoccerPosition?
+    @State private var persistenceError: String?
 
     // Score tracking
     @State private var teamScore: Int = 0
@@ -19,10 +20,12 @@ struct ShiftTrackingView: View {
 
     // Last known scores (to auto-populate for next shift)
     private var lastKnownTeamScore: Int {
-        personGameStats.completedShifts.last?.endingTeamScore ?? 0
+        guard let latest = personGameStats.completedShifts.last else { return 0 }
+        return latest.endingTeamScore ?? latest.startingTeamScore
     }
     private var lastKnownOpponentScore: Int {
-        personGameStats.completedShifts.last?.endingOpponentScore ?? 0
+        guard let latest = personGameStats.completedShifts.last else { return 0 }
+        return latest.endingOpponentScore ?? latest.startingOpponentScore
     }
 
     private var currentShift: Shift? {
@@ -81,6 +84,14 @@ struct ShiftTrackingView: View {
                     }
                 )
                 .presentationDetents([.medium])
+            }
+            .alert("Couldn’t Save", isPresented: Binding(
+                get: { persistenceError != nil },
+                set: { if !$0 { persistenceError = nil } }
+            )) {
+                Button("OK", role: .cancel) { persistenceError = nil }
+            } message: {
+                Text(persistenceError ?? "The change could not be saved.")
             }
             .sheet(isPresented: $showingPositionConfirmation) {
                 PositionConfirmationSheet(
@@ -201,7 +212,7 @@ struct ShiftTrackingView: View {
                 // Points display
                 HStack {
                     Text("\(currentShift?.totalPoints ?? 0)")
-                        .font(.system(size: 48, weight: .bold))
+                        .scaledFont(size: 48, weight: .bold, relativeTo: .largeTitle)
                         .foregroundStyle(.blue)
                     Text("PTS this shift")
                         .font(.subheadline)
@@ -237,18 +248,19 @@ struct ShiftTrackingView: View {
                 HStack(spacing: 10) {
                     ShiftStatButton(title: "ASSIST", subtitle: shiftCountString("AST"), color: .mint, action: { recordShiftCount("AST") }, undoAction: { undoShiftCount("AST") })
                     ShiftStatButton(title: "FOUL", subtitle: shiftCountString("PF"), color: .red, action: { recordShiftCount("PF") }, undoAction: { undoShiftCount("PF") })
-                    ShiftStatButton(title: "MISSED DRIVE", subtitle: shiftCountString("MD"), color: .orange, action: { recordShiftCount("MD") }, undoAction: { undoShiftCount("MD") })
+                    ShiftStatButton(title: "TURNOVER", subtitle: shiftCountString("TO"), color: .brown, action: { recordShiftCount("TO") }, undoAction: { undoShiftCount("TO") })
                 }
                 .padding(.horizontal)
 
                 HStack(spacing: 10) {
+                    ShiftStatButton(title: "MISSED DRIVE", subtitle: shiftCountString("MD"), color: .orange, action: { recordShiftCount("MD") }, undoAction: { undoShiftCount("MD") })
                     ShiftStatButton(title: "BAD OFF", subtitle: shiftCountString("BPO"), color: .red, action: { recordShiftCount("BPO") }, undoAction: { undoShiftCount("BPO") })
                     ShiftStatButton(title: "BAD DEF", subtitle: shiftCountString("BPD"), color: .pink, action: { recordShiftCount("BPD") }, undoAction: { undoShiftCount("BPD") })
-                    ShiftStatButton(title: "SUCCESS DRIVE", subtitle: shiftCountString("SD"), color: .green, action: { recordShiftCount("SD") }, undoAction: { undoShiftCount("SD") })
                 }
                 .padding(.horizontal)
 
                 HStack(spacing: 10) {
+                    ShiftStatButton(title: "SUCCESS DRIVE", subtitle: shiftCountString("SD"), color: .green, action: { recordShiftCount("SD") }, undoAction: { undoShiftCount("SD") })
                     ShiftStatButton(title: "GREAT OFF", subtitle: shiftCountString("GPO"), color: .yellow, action: { recordShiftCount("GPO") }, undoAction: { undoShiftCount("GPO") })
                     ShiftStatButton(title: "GREAT DEF", subtitle: shiftCountString("GPD"), color: .green, action: { recordShiftCount("GPD") }, undoAction: { undoShiftCount("GPD") })
                 }
@@ -304,7 +316,7 @@ struct ShiftTrackingView: View {
             opponentScore: opponentScore
         )
         modelContext.insert(shift)
-        try? modelContext.save()
+        saveOrSurfaceError()
     }
 
     private func endCurrentShift() {
@@ -312,78 +324,78 @@ struct ShiftTrackingView: View {
             teamScore: teamScore,
             opponentScore: opponentScore
         )
-        try? modelContext.save()
+        saveOrSurfaceError()
     }
 
     // MARK: - Shift Stat Recording
 
-    private func getOrCreateShiftStat(_ name: String, points: Int) -> ShiftStat {
-        guard let shift = currentShift else {
-            fatalError("No active shift")
-        }
-
-        if let existing = shift.statValue(forName: name) {
-            return existing
-        }
-
-        let stat = ShiftStat(statName: name, pointValue: points, shift: shift)
-        modelContext.insert(stat)
-
-        if shift.stats == nil { shift.stats = [] }
-        shift.stats?.append(stat)
-
-        return stat
-    }
-
     private func recordShiftMade(_ name: String, points: Int) {
-        guard currentShift != nil else { return }
-        let stat = getOrCreateShiftStat(name, points: points)
-        stat.made += 1
-        stat.timestamp = Date()
-        try? modelContext.save()
+        recordShiftStat(name, points: points, mutation: .made)
     }
 
     private func recordShiftMiss(_ name: String, points: Int) {
-        guard currentShift != nil else { return }
-        let stat = getOrCreateShiftStat(name, points: points)
-        stat.missed += 1
-        stat.timestamp = Date()
-        try? modelContext.save()
+        recordShiftStat(name, points: points, mutation: .missed)
     }
 
     private func recordShiftCount(_ name: String) {
-        guard currentShift != nil else { return }
-        let stat = getOrCreateShiftStat(name, points: 0)
-        stat.count += 1
-        stat.timestamp = Date()
-        try? modelContext.save()
+        recordShiftStat(name, points: 0, mutation: .count)
+    }
+
+    private func recordShiftStat(_ name: String, points: Int, mutation: StatMutation) {
+        guard let shift = currentShift,
+              let game = personGameStats.game else { return }
+        do {
+            try game.recordStat(
+                named: name,
+                pointValue: points,
+                mutation: mutation,
+                personGameStats: personGameStats,
+                shift: shift,
+                in: modelContext
+            )
+            try modelContext.save()
+        } catch {
+            modelContext.rollback()
+            persistenceError = error.localizedDescription
+        }
     }
 
     private func undoShiftMade(_ name: String) {
-        guard let shift = currentShift,
-              let stat = shift.statValue(forName: name),
-              stat.made > 0 else { return }
-        stat.made -= 1
-        stat.timestamp = Date()
-        try? modelContext.save()
+        undoShiftStat(name, mutation: .made)
     }
 
     private func undoShiftMiss(_ name: String) {
-        guard let shift = currentShift,
-              let stat = shift.statValue(forName: name),
-              stat.missed > 0 else { return }
-        stat.missed -= 1
-        stat.timestamp = Date()
-        try? modelContext.save()
+        undoShiftStat(name, mutation: .missed)
     }
 
     private func undoShiftCount(_ name: String) {
+        undoShiftStat(name, mutation: .count)
+    }
+
+    private func undoShiftStat(_ name: String, mutation: StatMutation) {
         guard let shift = currentShift,
-              let stat = shift.statValue(forName: name),
-              stat.count > 0 else { return }
-        stat.count -= 1
-        stat.timestamp = Date()
-        try? modelContext.save()
+              let game = personGameStats.game else { return }
+        do {
+            guard try game.undoStat(
+                named: name,
+                mutation: mutation,
+                personGameStats: personGameStats,
+                shift: shift
+            ) else { return }
+            try modelContext.save()
+        } catch {
+            modelContext.rollback()
+            persistenceError = error.localizedDescription
+        }
+    }
+
+    private func saveOrSurfaceError() {
+        do {
+            try modelContext.save()
+        } catch {
+            modelContext.rollback()
+            persistenceError = error.localizedDescription
+        }
     }
 
     // MARK: - Display Helpers
@@ -469,8 +481,10 @@ struct ShiftSummaryRow: View {
                 HStack(spacing: 8) {
                     Text(shift.formattedDuration)
                     if shift.plusMinus != nil {
+                        let endingTeam = shift.endingTeamScore ?? shift.startingTeamScore
+                        let endingOpponent = shift.endingOpponentScore ?? shift.startingOpponentScore
                         Text("•")
-                        Text("\(shift.startingTeamScore)-\(shift.startingOpponentScore) → \(shift.endingTeamScore ?? 0)-\(shift.endingOpponentScore ?? 0)")
+                        Text("\(shift.startingTeamScore)-\(shift.startingOpponentScore) → \(endingTeam)-\(endingOpponent)")
                     }
                 }
                 .font(.caption)
@@ -617,7 +631,7 @@ struct EndShiftScoreSheet: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Text(plusMinusText)
-                        .font(.system(size: 48, weight: .bold))
+                        .scaledFont(size: 48, weight: .bold, relativeTo: .largeTitle)
                         .foregroundStyle(plusMinusColor)
                 }
 
@@ -711,7 +725,7 @@ struct ScoreInputColumn: View {
                 TextField("0", value: $score, format: .number)
                     .keyboardType(.numberPad)
                     .multilineTextAlignment(.center)
-                    .font(.system(size: 44, weight: .bold, design: .rounded))
+                    .font(.system(.largeTitle, design: .rounded, weight: .bold))
                     .frame(minWidth: 64, idealWidth: 78, maxWidth: 96)
                     .padding(.vertical, 8)
                     .padding(.horizontal, 6)
@@ -888,7 +902,7 @@ struct PositionConfirmationSheet: View {
 
 #Preview {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: PersonGameStats.self, Shift.self, ShiftStat.self, configurations: config)
+    let container = try! ModelContainer(for: PersonGameStats.self, Game.self, Stat.self, Shift.self, ShiftStat.self, configurations: config)
 
     let pgs = PersonGameStats()
     container.mainContext.insert(pgs)

@@ -2,39 +2,72 @@ import SwiftUI
 import SwiftData
 
 struct PlayerComparisonView: View {
-    @Query(sort: \Person.jerseyNumber) private var allPlayers: [Person]
+    @Query private var users: [User]
+    @Query(sort: \Person.firstName) private var allPlayers: [Person]
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var player1: Person?
     @State private var player2: Person?
 
+    private var currentUser: User? {
+        users.resolvedCurrentUser
+    }
+
     private var activePlayers: [Person] {
-        allPlayers.filter { $0.isActive && $0.completedGamesCount > 0 }
+        allPlayers
+            .filter { $0.isActive && $0.completedGamesCount > 0 && $0.isOwned(by: currentUser) }
+            .sorted { lhs, rhs in
+                lhs.fullName.localizedCaseInsensitiveCompare(rhs.fullName) == .orderedAscending
+            }
+    }
+
+    @ViewBuilder
+    private var playerSelectors: some View {
+        if dynamicTypeSize.isAccessibilitySize {
+            VStack(spacing: 16) {
+                playerOneSelector
+                versusLabel
+                playerTwoSelector
+            }
+        } else {
+            HStack(spacing: 16) {
+                playerOneSelector
+                versusLabel
+                playerTwoSelector
+            }
+        }
+    }
+
+    private var playerOneSelector: some View {
+        PlayerSelector(
+            title: "Player 1",
+            selectedPlayer: $player1,
+            availablePlayers: activePlayers,
+            excludePlayer: player2
+        )
+    }
+
+    private var playerTwoSelector: some View {
+        PlayerSelector(
+            title: "Player 2",
+            selectedPlayer: $player2,
+            availablePlayers: activePlayers,
+            excludePlayer: player1
+        )
+    }
+
+    private var versusLabel: some View {
+        Text("vs")
+            .font(.headline)
+            .foregroundStyle(.secondary)
     }
 
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                // Player selectors
-                HStack(spacing: 16) {
-                    PlayerSelector(
-                        title: "Player 1",
-                        selectedPlayer: $player1,
-                        availablePlayers: activePlayers,
-                        excludePlayer: player2
-                    )
-
-                    Text("vs")
-                        .font(.headline)
-                        .foregroundStyle(.secondary)
-
-                    PlayerSelector(
-                        title: "Player 2",
-                        selectedPlayer: $player2,
-                        availablePlayers: activePlayers,
-                        excludePlayer: player1
-                    )
-                }
-                .padding()
+                // Player selectors stack vertically at accessibility sizes.
+                playerSelectors
+                    .padding()
 
                 if let p1 = player1, let p2 = player2 {
                     // Comparison stats
@@ -135,7 +168,6 @@ struct PlayerSelector: View {
                         selectedPlayer = player
                     } label: {
                         HStack {
-                            Text("#\(player.jerseyNumber)")
                             Text(player.fullName)
                             if selectedPlayer?.id == player.id {
                                 Image(systemName: "checkmark")
@@ -146,11 +178,9 @@ struct PlayerSelector: View {
             } label: {
                 VStack(spacing: 4) {
                     if let player = selectedPlayer {
-                        Text("#\(player.jerseyNumber)")
-                            .font(.title2.bold())
                         Text(player.firstName)
-                            .font(.caption)
-                            .lineLimit(1)
+                            .font(.body.weight(.semibold))
+                            .multilineTextAlignment(.center)
                     } else {
                         Image(systemName: "person.badge.plus")
                             .font(.title2)
@@ -158,7 +188,8 @@ struct PlayerSelector: View {
                             .font(.caption)
                     }
                 }
-                .frame(width: 80, height: 70)
+                .frame(minWidth: 80, minHeight: 70)
+                .padding(.horizontal, 8)
                 .background(Color(.tertiarySystemBackground))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             }
@@ -175,10 +206,8 @@ struct ComparisonHeader: View {
     var body: some View {
         HStack {
             VStack {
-                Text("#\(player1.jerseyNumber)")
-                    .font(.title.bold())
                 Text(player1.firstName)
-                    .font(.subheadline)
+                    .font(.title3.bold())
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity)
@@ -188,10 +217,8 @@ struct ComparisonHeader: View {
                 .foregroundStyle(.secondary)
 
             VStack {
-                Text("#\(player2.jerseyNumber)")
-                    .font(.title.bold())
                 Text(player2.firstName)
-                    .font(.subheadline)
+                    .font(.title3.bold())
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity)
@@ -246,21 +273,37 @@ struct ComparisonRow: View {
 
     var body: some View {
         HStack {
-            Text(displayValue1)
-                .font(.title3.bold())
-                .foregroundStyle(winner == 1 ? .green : .primary)
-                .frame(maxWidth: .infinity)
+            HStack(spacing: 4) {
+                Text(displayValue1)
+                if winner == 1 {
+                    Image(systemName: "arrow.up.circle.fill")
+                        .font(.caption)
+                        .accessibilityHidden(true)
+                }
+            }
+            .font(.title3.bold())
+            .foregroundStyle(winner == 1 ? .green : .primary)
+            .frame(maxWidth: .infinity)
+            .accessibilityLabel("\(displayValue1)\(winner == 1 ? ", higher" : "")")
 
             Text(label)
                 .font(.caption)
                 .foregroundStyle(.secondary)
-                .frame(width: 100)
+                .frame(minWidth: 80, maxWidth: 120)
                 .multilineTextAlignment(.center)
 
-            Text(displayValue2)
-                .font(.title3.bold())
-                .foregroundStyle(winner == 2 ? .green : .primary)
-                .frame(maxWidth: .infinity)
+            HStack(spacing: 4) {
+                Text(displayValue2)
+                if winner == 2 {
+                    Image(systemName: "arrow.up.circle.fill")
+                        .font(.caption)
+                        .accessibilityHidden(true)
+                }
+            }
+            .font(.title3.bold())
+            .foregroundStyle(winner == 2 ? .green : .primary)
+            .frame(maxWidth: .infinity)
+            .accessibilityLabel("\(displayValue2)\(winner == 2 ? ", higher" : "")")
         }
     }
 }

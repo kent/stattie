@@ -34,7 +34,7 @@ const reviews: Array<Review> = [
   },
   {
     title: 'The sharing feature is amazing',
-    body: 'Both grandparents live out of state. Now they can see their grandson\'s stats in real-time. They feel like they\'re at every game!',
+    body: 'Both grandparents live out of state. I send them a game summary as soon as the final whistle blows, and they love seeing every stat.',
     author: 'ProudMama',
     rating: 5,
   },
@@ -63,8 +63,8 @@ const reviews: Array<Review> = [
     rating: 5,
   },
   {
-    title: 'iCloud sharing is clutch',
-    body: 'My wife and I both track our daughter\'s games now. We take turns and everything stays in sync perfectly.',
+    title: 'Game summaries are clutch',
+    body: 'I can send my wife a clean summary after our daughter\'s games, so it is easy for both of us to follow her progress.',
     author: 'TeamworkParents',
     rating: 5,
   },

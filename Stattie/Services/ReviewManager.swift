@@ -97,9 +97,8 @@ class ReviewManager {
     // MARK: - Manual Review Link
 
     static func openAppStoreForReview() {
-        // Replace with actual App ID when published
-        let appId = "id0" // Placeholder
-        if let url = URL(string: "https://apps.apple.com/app/\(appId)?action=write-review") {
+        let appID = "6758022135"
+        if let url = URL(string: "https://apps.apple.com/app/id\(appID)?action=write-review") {
             UIApplication.shared.open(url)
         }
     }

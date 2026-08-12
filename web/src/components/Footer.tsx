@@ -29,7 +29,7 @@ export function Footer() {
             </div>
             <div className="ml-8 lg:w-64">
               <p className="text-base font-semibold text-gray-900">
-                <Link href="#">
+                <Link href="https://apps.apple.com/app/id6758022135">
                   <span className="absolute inset-0 sm:rounded-2xl" />
                   Download the app
                 </Link>
@@ -48,7 +48,7 @@ export function Footer() {
             <div className="flex gap-6 text-sm text-gray-600">
               <Link href="/privacy" className="hover:text-gray-900">Privacy Policy</Link>
               <Link href="/terms" className="hover:text-gray-900">Terms of Service</Link>
-              <Link href="mailto:support@stattie.app" className="hover:text-gray-900">Support</Link>
+              <Link href="/support" className="hover:text-gray-900">Support</Link>
             </div>
           </div>
           <p className="mt-6 text-sm text-gray-400">

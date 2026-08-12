@@ -326,7 +326,7 @@ struct ShareWithImageButton: View {
 
 #Preview("Stats Card") {
     ShareableStatsCard(
-        playerName: "Jack James",
+        playerName: "Jack Fenwick",
         jerseyNumber: 23,
         stat: "Points Per Game",
         value: "18.5",
@@ -337,7 +337,7 @@ struct ShareWithImageButton: View {
 
 #Preview("Game Highlight") {
     GameHighlightCard(
-        playerName: "Jack James",
+        playerName: "Jack Fenwick",
         jerseyNumber: 23,
         opponent: "Lakers",
         points: 24,
@@ -350,7 +350,7 @@ struct ShareWithImageButton: View {
 
 #Preview("Game Highlight Without +/-") {
     GameHighlightCard(
-        playerName: "Jack James",
+        playerName: "Jack Fenwick",
         jerseyNumber: 23,
         opponent: "Lakers",
         points: 24,
@@ -366,6 +366,6 @@ struct ShareWithImageButton: View {
         achievementDescription: "Score 20+ points in a single game",
         icon: "flame.fill",
         color: .orange,
-        playerName: "Jack James"
+        playerName: "Jack Fenwick"
     )
 }

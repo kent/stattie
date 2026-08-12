@@ -22,7 +22,7 @@ struct NewGameView: View {
     @State private var showingQuickAdd = false
 
     private var currentUser: User? {
-        users.first
+        users.resolvedCurrentUser
     }
 
     private var availableSports: [Sport] {
@@ -30,14 +30,16 @@ struct NewGameView: View {
     }
 
     private var activePersons: [Person] {
-        players.filter { $0.isActive }
+        players.filter { $0.isActive && $0.isOwned(by: currentUser) }
     }
 
     private var eligiblePersons: [Person] {
         activePersons
             .filter { person in
                 (person.teamMemberships ?? []).contains { membership in
-                    membership.isActive && membership.team?.isActive == true
+                    membership.isActive &&
+                    membership.team?.isActive == true &&
+                    membership.team?.isOwned(by: currentUser) == true
                 }
             }
             .sorted { $0.jerseyNumber < $1.jerseyNumber }
@@ -123,6 +125,9 @@ struct NewGameView: View {
                                 }
                             }
                             .buttonStyle(.plain)
+                            .accessibilityLabel(player.fullName)
+                            .accessibilityValue(selectedPersons.contains(player.id) ? "Selected" : "Not selected")
+                            .accessibilityHint("Double tap to toggle selection")
                         }
                     }
                 } header: {
@@ -148,7 +153,8 @@ struct NewGameView: View {
                         HStack(spacing: 12) {
                             TextField("#", text: $quickAddNumber)
                                 .keyboardType(.numberPad)
-                                .frame(width: 50)
+                                .frame(minWidth: 50)
+                                .accessibilityLabel("Jersey number")
                                 .textFieldStyle(.roundedBorder)
 
                             TextField("Player name", text: $quickAddName)
@@ -160,6 +166,9 @@ struct NewGameView: View {
                                 Image(systemName: "plus.circle.fill")
                                     .font(.title2)
                             }
+                            .minimumAccessibleTapTarget()
+                            .accessibilityLabel("Add player")
+                            .accessibilityHint("Adds the entered player to your player list")
                             .disabled(quickAddName.isEmpty && quickAddNumber.isEmpty)
                         }
                     }
@@ -169,7 +178,7 @@ struct NewGameView: View {
                     }
                 } footer: {
                     if showingQuickAdd || !activePersons.isEmpty {
-                        Text("Enter jersey # and/or name, then tap + to add")
+                        Text("Enter jersey number and/or name, then tap Add Player")
                     }
                 }
             }

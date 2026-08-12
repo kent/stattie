@@ -13,11 +13,6 @@ struct PersonDetailView: View {
 
     @State private var isEditing = false
     @State private var selectedPhoto: PhotosPickerItem?
-    @State private var showShareInvite = false
-    @State private var showManageSharing = false
-    @State private var isShared = false
-    @State private var isOwner = true
-    @State private var participantCount = 0
     @State private var showingNewGame = false
     @State private var activeGameStats: PersonGameStats?
     @State private var newGameTrackingLaunch: NewGameTrackingLaunch?
@@ -32,7 +27,7 @@ struct PersonDetailView: View {
         let selectedPersonStatsID: UUID
     }
 
-    private var currentUser: User? { users.first }
+    private var currentUser: User? { users.resolvedCurrentUser }
     private var basketball: Sport? { sports.first }
 
     // Get player's games sorted by date
@@ -83,6 +78,8 @@ struct PersonDetailView: View {
                             }
                         }
                     }
+                    .accessibilityLabel(player.photoData == nil ? "Add player photo" : "Change player photo")
+                    .accessibilityHint(isEditing ? "Opens the photo library" : "Enable editing to change the photo")
                     .disabled(!isEditing)
                     Spacer()
                 }
@@ -143,7 +140,7 @@ struct PersonDetailView: View {
                     // Career Highs Section
                     if player.completedGamesCount > 0 {
                         Section("Career Highs") {
-                            HStack(spacing: 16) {
+                            LazyVGrid(columns: [GridItem(.adaptive(minimum: 90), spacing: 16)], spacing: 16) {
                                 CareerHighCard(value: player.careerHighPoints, label: "Points", icon: "flame.fill", color: .orange)
                                 CareerHighCard(value: player.careerHighRebounds, label: "Rebounds", icon: "arrow.up.arrow.down", color: .green)
                                 CareerHighCard(value: player.careerHighAssists, label: "Assists", icon: "arrow.triangle.branch", color: .blue)
@@ -154,7 +151,7 @@ struct PersonDetailView: View {
                         // Plus/Minus Section (if any games have shift data)
                         if player.careerPlusMinus != 0 || player.averagePlusMinus != 0 {
                             Section("Plus/Minus") {
-                                HStack(spacing: 16) {
+                                LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: 16)], spacing: 16) {
                                     PlusMinusCard(
                                         value: player.formattedCareerPlusMinus,
                                         label: "Career",
@@ -170,47 +167,6 @@ struct PersonDetailView: View {
                             }
                         }
                     }
-                }
-
-                // Share Section - visible and prominent
-                Section {
-                    Button {
-                        if isShared {
-                            showManageSharing = true
-                        } else {
-                            showShareInvite = true
-                        }
-                    } label: {
-                        HStack {
-                            Image(systemName: isShared ? "person.2.fill" : "square.and.arrow.up")
-                                .font(.title3)
-                                .foregroundStyle(isShared ? .green : .accent)
-                                .frame(width: 32)
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                if isShared {
-                                    Text("Shared with \(participantCount) \(participantCount == 1 ? "person" : "people")")
-                                        .font(.body)
-                                    Text("Tap to manage sharing")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                } else {
-                                    Text("Share with Family & Coaches")
-                                        .font(.body)
-                                    Text("Let others view and record games")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-
-                            Spacer()
-
-                            Image(systemName: "chevron.right")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .buttonStyle(.plain)
                 }
 
                 // Active Games
@@ -287,7 +243,7 @@ struct PersonDetailView: View {
                 }
             }
         }
-        .navigationTitle(player.displayName)
+        .navigationTitle(player.fullName)
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(for: Game.self) { game in
             GameDetailView(game: game)
@@ -297,39 +253,13 @@ struct PersonDetailView: View {
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                HStack {
-                    Menu {
-                        if isShared {
-                            Button {
-                                showManageSharing = true
-                            } label: {
-                                Label("Manage Sharing...", systemImage: "person.2")
-                            }
-                        } else {
-                            Button {
-                                showShareInvite = true
-                            } label: {
-                                Label("Share Player...", systemImage: "square.and.arrow.up")
-                            }
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
+                Button(isEditing ? "Done" : "Edit") {
+                    if isEditing {
+                        try? modelContext.save()
                     }
-
-                    Button(isEditing ? "Done" : "Edit") {
-                        if isEditing {
-                            try? modelContext.save()
-                        }
-                        isEditing.toggle()
-                    }
+                    isEditing.toggle()
                 }
             }
-        }
-        .sheet(isPresented: $showShareInvite) {
-            ShareInviteView(player: player)
-        }
-        .sheet(isPresented: $showManageSharing) {
-            ShareManagementView(player: player)
         }
         .sheet(isPresented: $showingAddToTeam) {
             AddPersonToTeamView(person: player)
@@ -372,9 +302,6 @@ struct PersonDetailView: View {
                 Text("This cannot be undone.")
             }
         }
-        .task {
-            await loadShareStatus()
-        }
         .onChange(of: selectedPhoto) { _, newValue in
             Task {
                 if let data = try? await newValue?.loadTransferable(type: Data.self) {
@@ -382,14 +309,6 @@ struct PersonDetailView: View {
                     try? modelContext.save()
                 }
             }
-        }
-    }
-
-    private func loadShareStatus() async {
-        isShared = await player.checkIsShared()
-        if isShared {
-            isOwner = await player.checkIsOwner()
-            participantCount = await CloudKitShareManager.shared.getParticipantCount(for: player)
         }
     }
 
@@ -401,14 +320,6 @@ struct PersonDetailView: View {
 
     private func autoStartNewGameTracking(for personGameStats: PersonGameStats) {
         guard let game = personGameStats.game else { return }
-
-        if personGameStats.currentShift == nil {
-            let teamScore = personGameStats.completedShifts.last?.endingTeamScore ?? 0
-            let opponentScore = personGameStats.completedShifts.last?.endingOpponentScore ?? 0
-            let shift = personGameStats.startNewShift(teamScore: teamScore, opponentScore: opponentScore)
-            modelContext.insert(shift)
-            try? modelContext.save()
-        }
 
         newGameTrackingLaunch = NewGameTrackingLaunch(
             game: game,
@@ -566,6 +477,7 @@ struct AddPersonToTeamView: View {
 
     let person: Person
 
+    @Query private var users: [User]
     @Query(sort: \Team.name) private var allTeams: [Team]
 
     @State private var selectedTeam: Team?
@@ -573,17 +485,31 @@ struct AddPersonToTeamView: View {
     @State private var jerseyNumber: Int?
     @State private var showingCreateTeam = false
 
+    private var currentUser: User? {
+        users.resolvedCurrentUser
+    }
+
     private var availableTeams: [Team] {
         let currentTeamIDs = Set(
             (person.teamMemberships ?? [])
                 .filter { $0.isActive }
                 .compactMap { $0.team?.id }
         )
-        return allTeams.filter { $0.isActive && !currentTeamIDs.contains($0.id) }
+        return allTeams.filter {
+            $0.isActive &&
+            $0.isOwned(by: currentUser) &&
+            !currentTeamIDs.contains($0.id)
+        }
     }
 
     private var hasAnyActiveTeams: Bool {
-        allTeams.contains { $0.isActive }
+        allTeams.contains { $0.isActive && $0.isOwned(by: currentUser) }
+    }
+
+    private var personInitials: String {
+        let firstInitial = person.firstName.trimmingCharacters(in: .whitespaces).first.map(String.init) ?? ""
+        let lastInitial = person.lastName.trimmingCharacters(in: .whitespaces).first.map(String.init) ?? ""
+        return (firstInitial + lastInitial).uppercased()
     }
 
     var body: some View {
@@ -604,9 +530,9 @@ struct AddPersonToTeamView: View {
                                     .frame(width: 50, height: 50)
                                     .clipShape(Circle())
                             } else {
-                                if person.jerseyNumber > 0 {
-                                    Text("#\(person.jerseyNumber)")
-                                        .font(.headline)
+                                if !personInitials.isEmpty {
+                                    Text(personInitials)
+                                        .font(.headline.weight(.semibold))
                                         .foregroundStyle(.accent)
                                 } else {
                                     Image(systemName: "person.fill")
@@ -678,6 +604,9 @@ struct AddPersonToTeamView: View {
                                 .contentShape(Rectangle())
                             }
                             .buttonStyle(.plain)
+                            .accessibilityLabel(team.name)
+                            .accessibilityValue(selectedTeam?.id == team.id ? "Selected" : "Not selected")
+                            .accessibilityHint("Selects this team")
                         }
                     }
 
@@ -733,8 +662,8 @@ struct AddPersonToTeamView: View {
                 }
             }
             .onAppear {
-                // Default to person's jersey number only (positions are team-specific)
-                jerseyNumber = person.jerseyNumber > 0 ? person.jerseyNumber : nil
+                // Jersey numbers are team-specific, so don't prefill from a global value.
+                jerseyNumber = nil
             }
             .onChange(of: availableTeams.map(\.id)) { _, teamIDs in
                 guard let selectedTeam else { return }
@@ -809,6 +738,7 @@ struct PersonGameRow: View {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundStyle(.green)
                             .font(.caption)
+                            .accessibilityLabel("Completed")
                     }
                 }
 
@@ -982,7 +912,7 @@ struct PlayerGameOverviewView: View {
     }
 
     private var playerName: String {
-        personGameStats.person?.displayName ?? "Player"
+        personGameStats.person?.fullName ?? "Player"
     }
 
     private var isSoccer: Bool {
@@ -1040,6 +970,7 @@ struct PlayerGameOverviewView: View {
             OverviewMetric(id: "assists", title: "Assists", value: "\(personGameStats.aggregatedCount(forName: "AST"))"),
             OverviewMetric(id: "steals", title: "Steals", value: "\(personGameStats.aggregatedCount(forName: "STL"))"),
             OverviewMetric(id: "fouls", title: "Fouls", value: "\(personGameStats.aggregatedCount(forName: "PF"))"),
+            OverviewMetric(id: "turnovers", title: "Turnovers", value: "\(personGameStats.aggregatedCount(forName: "TO"))"),
             OverviewMetric(id: "missed_drive", title: "Missed Drive", value: "\(personGameStats.aggregatedCount(forName: "MD"))"),
             OverviewMetric(id: "successful_drive", title: "Successful Drive", value: "\(personGameStats.aggregatedCount(forName: "SD"))")
         ]
@@ -1255,20 +1186,7 @@ struct PlayerGameOverviewView: View {
     }
 
     private func openTracker() {
-        startShiftIfNeeded()
         showingTracking = true
-    }
-
-    private func startShiftIfNeeded() {
-        guard personGameStats.currentShift == nil else { return }
-
-        let lastCompleted = personGameStats.completedShifts.last
-        let teamScore = lastCompleted?.endingTeamScore ?? 0
-        let opponentScore = lastCompleted?.endingOpponentScore ?? 0
-        let shift = personGameStats.startNewShift(teamScore: teamScore, opponentScore: opponentScore)
-        modelContext.insert(shift)
-        normalizeShiftNumbers()
-        try? modelContext.save()
     }
 
     private func deletePendingShift() {

@@ -6,23 +6,32 @@ struct TeamDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Bindable var team: Team
 
+    @Query private var users: [User]
     @Query private var allPlayers: [Person]
     @State private var isEditing = false
     @State private var showingAddPlayer = false
-    @State private var showingNewGame = false
     @State private var selectedMembership: TeamMembership?
 
+    private var currentUser: User? {
+        users.resolvedCurrentUser
+    }
+
     private var activeMembers: [Person] {
-        team.members.filter { $0.isActive }
+        team.members.filter { $0.isActive && $0.isOwned(by: currentUser) }
     }
 
     private var availablePlayers: [Person] {
         let teamMemberIDs = Set(team.members.map { $0.id })
-        return allPlayers.filter { $0.isActive && !teamMemberIDs.contains($0.id) }
+        return allPlayers.filter {
+            $0.isActive &&
+            $0.isOwned(by: currentUser) &&
+            !teamMemberIDs.contains($0.id)
+        }
     }
 
     private var teamGames: [Game] {
         (team.games ?? [])
+            .filter { $0.isOwned(by: currentUser) }
             .sorted { $0.gameDate > $1.gameDate }
     }
 
@@ -72,25 +81,6 @@ struct TeamDetailView: View {
                 }
                 .padding(.vertical, 8)
                 .listRowBackground(Color.clear)
-            }
-
-            // Quick Actions
-            if !isEditing {
-                Section {
-                    Button {
-                        showingNewGame = true
-                    } label: {
-                        HStack {
-                            Spacer()
-                            Label("Start Game", systemImage: "play.circle.fill")
-                                .font(.headline)
-                            Spacer()
-                        }
-                        .padding(.vertical, 12)
-                    }
-                    .listRowBackground(Color.accentColor)
-                    .foregroundStyle(.white)
-                }
             }
 
             // Roster Section
@@ -173,9 +163,6 @@ struct TeamDetailView: View {
         .sheet(item: $selectedMembership) { membership in
             EditMembershipView(membership: membership)
         }
-        .sheet(isPresented: $showingNewGame) {
-            NewTeamGameView(team: team)
-        }
     }
 
     private func removeMember(at offsets: IndexSet) {
@@ -251,6 +238,7 @@ struct TeamMemberRow: View {
             }
         }
         .buttonStyle(.plain)
+        .accessibilityHint("Opens team membership details")
     }
 }
 
@@ -270,6 +258,7 @@ struct TeamGameRow: View {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundStyle(.green)
                             .font(.caption)
+                            .accessibilityLabel("Completed")
                     }
                 }
 
@@ -521,27 +510,6 @@ struct EditMembershipView: View {
             .onAppear {
                 editingPositions = membership.positionAssignments
             }
-        }
-    }
-}
-
-// MARK: - New Team Game View (placeholder)
-
-struct NewTeamGameView: View {
-    @Environment(\.dismiss) private var dismiss
-    let team: Team
-
-    var body: some View {
-        NavigationStack {
-            Text("Create a new game for \(team.name)")
-                .navigationTitle("New Game")
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel") {
-                            dismiss()
-                        }
-                    }
-                }
         }
     }
 }

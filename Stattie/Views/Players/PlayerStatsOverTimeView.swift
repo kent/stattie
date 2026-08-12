@@ -17,6 +17,7 @@ struct PersonStatsOverTimeView: View {
         case assists = "Assists"
         case steals = "Steals"
         case fouls = "Fouls"
+        case turnovers = "Turnovers"
         case missedDrives = "Missed Drives"
         case badPlaysOffense = "Bad Plays Offense"
         case badPlaysDefense = "Bad Plays Defense"
@@ -36,6 +37,7 @@ struct PersonStatsOverTimeView: View {
             case .assists: return .mint
             case .steals: return .indigo
             case .fouls: return .red
+            case .turnovers: return .brown
             case .missedDrives: return .orange
             case .badPlaysOffense: return .red
             case .badPlaysDefense: return .pink
@@ -57,6 +59,7 @@ struct PersonStatsOverTimeView: View {
             case .assists: return "AST"
             case .steals: return "STL"
             case .fouls: return "PF"
+            case .turnovers: return "TO"
             case .missedDrives: return "MD"
             case .badPlaysOffense: return "BPO"
             case .badPlaysDefense: return "BPD"
@@ -123,16 +126,17 @@ struct PersonStatsOverTimeView: View {
         case .assists: return pgs.totalAssists
         case .steals: return pgs.totalSteals
         case .fouls: return pgs.totalFouls
-        case .missedDrives: return pgs.stat(forName: "MD")?.count ?? 0
-        case .badPlaysOffense: return pgs.stat(forName: "BPO")?.count ?? 0
-        case .badPlaysDefense: return pgs.stat(forName: "BPD")?.count ?? 0
-        case .greatPlaysOffense: return pgs.stat(forName: "GPO")?.count ?? 0
-        case .greatPlaysDefense: return pgs.stat(forName: "GPD")?.count ?? 0
-        case .twoPointers: return pgs.stat(forName: "2PT")?.made ?? 0
-        case .threePointers: return pgs.stat(forName: "3PT")?.made ?? 0
-        case .freeThrows: return pgs.stat(forName: "FT")?.made ?? 0
-        case .offensiveRebounds: return pgs.stat(forName: "OREB")?.count ?? 0
-        case .defensiveRebounds: return pgs.stat(forName: "DREB")?.count ?? 0
+        case .turnovers: return pgs.aggregatedCount(forName: "TO")
+        case .missedDrives: return pgs.aggregatedCount(forName: "MD")
+        case .badPlaysOffense: return pgs.aggregatedCount(forName: "BPO")
+        case .badPlaysDefense: return pgs.aggregatedCount(forName: "BPD")
+        case .greatPlaysOffense: return pgs.aggregatedCount(forName: "GPO")
+        case .greatPlaysDefense: return pgs.aggregatedCount(forName: "GPD")
+        case .twoPointers: return pgs.aggregatedMade(forName: "2PT")
+        case .threePointers: return pgs.aggregatedMade(forName: "3PT")
+        case .freeThrows: return pgs.aggregatedMade(forName: "FT")
+        case .offensiveRebounds: return pgs.aggregatedCount(forName: "OREB")
+        case .defensiveRebounds: return pgs.aggregatedCount(forName: "DREB")
         }
     }
 
@@ -255,7 +259,7 @@ struct PersonStatsOverTimeView: View {
                             .font(.headline)
                             .frame(maxWidth: .infinity, alignment: .leading)
 
-                        HStack(spacing: 16) {
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 90), spacing: 16)], spacing: 16) {
                             StatSummaryCard(
                                 title: "Average",
                                 value: String(format: "%.1f", averageValue),
@@ -311,6 +315,7 @@ struct PersonStatsOverTimeView: View {
                 } label: {
                     Image(systemName: "square.and.arrow.up")
                 }
+                .accessibilityLabel("Share stats")
             }
         }
         .sheet(isPresented: $showingShareSheet) {
@@ -355,16 +360,17 @@ struct GameStatRow: View {
         case .assists: return playerStats.totalAssists
         case .steals: return playerStats.totalSteals
         case .fouls: return playerStats.totalFouls
-        case .missedDrives: return playerStats.stat(forName: "MD")?.count ?? 0
-        case .badPlaysOffense: return playerStats.stat(forName: "BPO")?.count ?? 0
-        case .badPlaysDefense: return playerStats.stat(forName: "BPD")?.count ?? 0
-        case .greatPlaysOffense: return playerStats.stat(forName: "GPO")?.count ?? 0
-        case .greatPlaysDefense: return playerStats.stat(forName: "GPD")?.count ?? 0
-        case .twoPointers: return playerStats.stat(forName: "2PT")?.made ?? 0
-        case .threePointers: return playerStats.stat(forName: "3PT")?.made ?? 0
-        case .freeThrows: return playerStats.stat(forName: "FT")?.made ?? 0
-        case .offensiveRebounds: return playerStats.stat(forName: "OREB")?.count ?? 0
-        case .defensiveRebounds: return playerStats.stat(forName: "DREB")?.count ?? 0
+        case .turnovers: return playerStats.aggregatedCount(forName: "TO")
+        case .missedDrives: return playerStats.aggregatedCount(forName: "MD")
+        case .badPlaysOffense: return playerStats.aggregatedCount(forName: "BPO")
+        case .badPlaysDefense: return playerStats.aggregatedCount(forName: "BPD")
+        case .greatPlaysOffense: return playerStats.aggregatedCount(forName: "GPO")
+        case .greatPlaysDefense: return playerStats.aggregatedCount(forName: "GPD")
+        case .twoPointers: return playerStats.aggregatedMade(forName: "2PT")
+        case .threePointers: return playerStats.aggregatedMade(forName: "3PT")
+        case .freeThrows: return playerStats.aggregatedMade(forName: "FT")
+        case .offensiveRebounds: return playerStats.aggregatedCount(forName: "OREB")
+        case .defensiveRebounds: return playerStats.aggregatedCount(forName: "DREB")
         }
     }
 
@@ -422,7 +428,7 @@ struct StatPill: View {
                 .font(.subheadline.bold())
                 .foregroundStyle(isHighlighted ? color : .primary)
             Text(label)
-                .font(.system(size: 9))
+                .font(.caption2)
                 .foregroundStyle(.secondary)
         }
         .frame(width: 36)
@@ -464,9 +470,6 @@ struct ShareStatsSheet: View {
                         VStack(alignment: .leading) {
                             Text(player.fullName)
                                 .font(.title2.bold())
-                            Text("#\(player.jerseyNumber)")
-                                .font(.headline)
-                                .foregroundStyle(.secondary)
                         }
                         Spacer()
                         Image(systemName: "chart.line.uptrend.xyaxis")
@@ -476,10 +479,10 @@ struct ShareStatsSheet: View {
 
                     Divider()
 
-                    HStack(spacing: 24) {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 90), spacing: 24)], spacing: 16) {
                         VStack {
                             Text(String(format: "%.1f", averageValue))
-                                .font(.system(size: 36, weight: .bold))
+                                .scaledFont(size: 36, weight: .bold, relativeTo: .title1)
                                 .foregroundStyle(selectedStat.color)
                             Text("Avg \(selectedStat.shortName)")
                                 .font(.caption)
@@ -488,7 +491,7 @@ struct ShareStatsSheet: View {
 
                         VStack {
                             Text("\(stats.map { $0.value }.max() ?? 0)")
-                                .font(.system(size: 36, weight: .bold))
+                                .scaledFont(size: 36, weight: .bold, relativeTo: .title1)
                                 .foregroundStyle(.green)
                             Text("High")
                                 .font(.caption)
@@ -497,7 +500,7 @@ struct ShareStatsSheet: View {
 
                         VStack {
                             Text("\(stats.count)")
-                                .font(.system(size: 36, weight: .bold))
+                                .scaledFont(size: 36, weight: .bold, relativeTo: .title1)
                             Text("Games")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
@@ -560,7 +563,7 @@ struct ActivityView: UIViewControllerRepresentable {
 
 #Preview {
     NavigationStack {
-        PersonStatsOverTimeView(player: Person(firstName: "Jack", lastName: "James", jerseyNumber: 23, position: "Guard"))
+        PersonStatsOverTimeView(player: Person(firstName: "Jack", lastName: "Fenwick", jerseyNumber: 23, position: "Guard"))
     }
     .modelContainer(for: [Person.self, PersonGameStats.self, Game.self, Stat.self], inMemory: true)
 }

@@ -4,21 +4,34 @@ import UIKit
 
 struct PersonListView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \Person.jerseyNumber) private var players: [Person]
+    @Query(sort: \Person.firstName) private var players: [Person]
+    @Query private var users: [User]
     @State private var showingAddPerson = false
-    @State private var showingTeamInvite = false
     @State private var searchText = ""
 
+    private var currentUser: User? {
+        users.resolvedCurrentUser
+    }
+
+    private var ownedActivePlayers: [Person] {
+        players.filter { $0.isActive && $0.isOwned(by: currentUser) }
+    }
+
     var filteredPersons: [Person] {
+        let filtered: [Person]
         if searchText.isEmpty {
-            return players.filter { $0.isActive }
+            filtered = ownedActivePlayers
+        } else {
+            filtered = ownedActivePlayers.filter { player in
+                (
+                    player.firstName.localizedCaseInsensitiveContains(searchText) ||
+                    player.lastName.localizedCaseInsensitiveContains(searchText)
+                )
+            }
         }
-        return players.filter { player in
-            player.isActive && (
-                player.firstName.localizedCaseInsensitiveContains(searchText) ||
-                player.lastName.localizedCaseInsensitiveContains(searchText) ||
-                "\(player.jerseyNumber)".contains(searchText)
-            )
+
+        return filtered.sorted { lhs, rhs in
+            lhs.fullName.localizedCaseInsensitiveCompare(rhs.fullName) == .orderedAscending
         }
     }
 
@@ -57,26 +70,15 @@ struct PersonListView: View {
                             )
 
                             TipCard(
-                                icon: "person.2",
-                                title: "Share with family",
-                                description: "Coaches and parents can track games together"
+                                icon: "chart.line.uptrend.xyaxis",
+                                title: "Review progress",
+                                description: "Open a player to see stats and trends over time"
                             )
                         }
                         .padding(.horizontal)
                     }
                 } else {
                     List {
-                        // Team invite banner (shown when 2+ players)
-                        if filteredPersons.count >= 2 {
-                            Section {
-                                TeamInviteBanner {
-                                    showingTeamInvite = true
-                                }
-                            }
-                            .listRowInsets(EdgeInsets())
-                            .listRowBackground(Color.clear)
-                        }
-
                         ForEach(filteredPersons) { player in
                             NavigationLink(value: player) {
                                 PersonRowView(player: player)
@@ -100,6 +102,7 @@ struct PersonListView: View {
                             } label: {
                                 Image(systemName: "arrow.left.arrow.right")
                             }
+                            .accessibilityLabel("Compare players")
                         }
 
                         Button {
@@ -107,14 +110,12 @@ struct PersonListView: View {
                         } label: {
                             Image(systemName: "plus")
                         }
+                        .accessibilityLabel("Add player")
                     }
                 }
             }
             .sheet(isPresented: $showingAddPerson) {
                 AddPersonView()
-            }
-            .sheet(isPresented: $showingTeamInvite) {
-                TeamInviteView(team: nil, players: filteredPersons)
             }
         }
     }
@@ -131,6 +132,12 @@ struct PersonListView: View {
 struct PersonRowView: View {
     let player: Person
 
+    private var initials: String {
+        let firstInitial = player.firstName.trimmingCharacters(in: .whitespaces).first.map(String.init) ?? ""
+        let lastInitial = player.lastName.trimmingCharacters(in: .whitespaces).first.map(String.init) ?? ""
+        return (firstInitial + lastInitial).uppercased()
+    }
+
     var body: some View {
         HStack(spacing: 12) {
             ZStack {
@@ -146,9 +153,9 @@ struct PersonRowView: View {
                         .frame(width: 50, height: 50)
                         .clipShape(Circle())
                 } else {
-                    if player.jerseyNumber > 0 {
-                        Text("#\(player.jerseyNumber)")
-                            .font(.headline)
+                    if !initials.isEmpty {
+                        Text(initials)
+                            .font(.headline.weight(.semibold))
                             .foregroundStyle(.accent)
                     } else {
                         Image(systemName: "person.fill")
@@ -171,7 +178,6 @@ struct PersonRowView: View {
                 HStack(spacing: 6) {
                     Text(player.fullName)
                         .font(.headline)
-                    AsyncSharedPersonBadge(player: player)
                 }
 
                 HStack(spacing: 8) {
@@ -206,6 +212,13 @@ struct PersonRowView: View {
             }
         }
         .padding(.vertical, 4)
+        .accessiblePlayerRow(
+            name: player.fullName,
+            jerseyNumber: player.jerseyNumber,
+            gamesCount: player.completedGamesCount,
+            ppg: player.averagePointsPerGame,
+            hasActiveGame: player.hasActiveGame
+        )
     }
 }
 
@@ -234,76 +247,6 @@ struct TipCard: View {
         .padding()
         .background(Color(.secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12))
-    }
-}
-
-// MARK: - Team Invite Banner
-
-struct TeamInviteBanner: View {
-    let action: () -> Void
-    @AppStorage("teamInviteBannerDismissed") private var isDismissed = false
-
-    var body: some View {
-        if !isDismissed {
-            Button(action: action) {
-                HStack(spacing: 12) {
-                    ZStack {
-                        Circle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [.blue, .purple],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .frame(width: 44, height: 44)
-
-                        Image(systemName: "person.3.fill")
-                            .font(.title3)
-                            .foregroundStyle(.white)
-                    }
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Invite Your Team")
-                            .font(.subheadline.bold())
-                            .foregroundStyle(.primary)
-
-                        Text("Let parents & coaches track stats together")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    Spacer()
-
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                .padding()
-                .background(
-                    LinearGradient(
-                        colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                )
-                .clipShape(RoundedRectangle(cornerRadius: 14))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14)
-                        .stroke(
-                            LinearGradient(
-                                colors: [.blue.opacity(0.3), .purple.opacity(0.3)],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            ),
-                            lineWidth: 1
-                        )
-                )
-            }
-            .buttonStyle(.plain)
-            .padding(.horizontal)
-            .padding(.vertical, 8)
-        }
     }
 }
 

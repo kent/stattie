@@ -2,4 +2,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://stattie.app/sitemap.xml
+Sitemap: https://www.stattie.com/sitemap.xml

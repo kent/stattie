@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import SwiftData
 
 // MARK: - Achievement Definitions
 
@@ -29,8 +30,6 @@ enum AchievementType: String, CaseIterable, Codable {
     // Social achievements
     case firstShare = "first_share"
     case sharedPlayer = "shared_player"
-    case teamBuilder = "team_builder"      // Invited 5+ people
-    case viralChampion = "viral_champion"  // 3+ people joined from invites
 
     var title: String {
         switch self {
@@ -50,8 +49,6 @@ enum AchievementType: String, CaseIterable, Codable {
         case .cleanSheet: return "Brick Wall"
         case .firstShare: return "Team Player"
         case .sharedPlayer: return "Coach's Assistant"
-        case .teamBuilder: return "Team Builder"
-        case .viralChampion: return "Viral Champion"
         }
     }
 
@@ -72,9 +69,7 @@ enum AchievementType: String, CaseIterable, Codable {
         case .hatTrick: return "Score 3 goals in a game"
         case .cleanSheet: return "Record a clean sheet (goalkeeper)"
         case .firstShare: return "Share your first game stats"
-        case .sharedPlayer: return "Share a player with someone"
-        case .teamBuilder: return "Invite 5+ team members"
-        case .viralChampion: return "3+ people joined from your invites"
+        case .sharedPlayer: return "Share Stattie with someone"
         }
     }
 
@@ -96,8 +91,6 @@ enum AchievementType: String, CaseIterable, Codable {
         case .cleanSheet: return "hand.raised.fill"
         case .firstShare: return "square.and.arrow.up"
         case .sharedPlayer: return "person.2.fill"
-        case .teamBuilder: return "person.3.fill"
-        case .viralChampion: return "sparkles"
         }
     }
 
@@ -119,8 +112,6 @@ enum AchievementType: String, CaseIterable, Codable {
         case .cleanSheet: return .blue
         case .firstShare: return .teal
         case .sharedPlayer: return .green
-        case .teamBuilder: return .purple
-        case .viralChampion: return .yellow
         }
     }
 
@@ -142,8 +133,6 @@ enum AchievementType: String, CaseIterable, Codable {
         case .cleanSheet: return 50
         case .firstShare: return 25
         case .sharedPlayer: return 50
-        case .teamBuilder: return 100
-        case .viralChampion: return 200
         }
     }
 }
@@ -155,9 +144,11 @@ class AchievementManager {
 
     private let unlockedKey = "unlockedAchievements"
     private let totalPointsKey = "achievementPoints"
+    private let localUpdatedAtPrefix = "achievementLocalUpdatedAt"
 
     var unlockedAchievements: Set<AchievementType> {
         get {
+            synchronizeFromCloud()
             guard let data = UserDefaults.standard.data(forKey: unlockedKey),
                   let decoded = try? JSONDecoder().decode(Set<String>.self, from: data) else {
                 return []
@@ -169,12 +160,19 @@ class AchievementManager {
             if let data = try? JSONEncoder().encode(strings) {
                 UserDefaults.standard.set(data, forKey: unlockedKey)
             }
+            markLocalMutationAndPush()
         }
     }
 
     var totalPoints: Int {
-        get { UserDefaults.standard.integer(forKey: totalPointsKey) }
-        set { UserDefaults.standard.set(newValue, forKey: totalPointsKey) }
+        get {
+            synchronizeFromCloud()
+            return UserDefaults.standard.integer(forKey: totalPointsKey)
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: totalPointsKey)
+            markLocalMutationAndPush()
+        }
     }
 
     func unlock(_ achievement: AchievementType) -> Bool {
@@ -186,6 +184,24 @@ class AchievementManager {
         totalPoints += achievement.points
 
         return true
+    }
+
+    func synchronizeFromCloud(force: Bool = false) {
+        guard let context = SharedModelContainer.makeContext() else { return }
+
+        let ownerUserID = AppState.shared.currentUserID
+        let state = fetchOrCreateState(ownerUserID: ownerUserID, context: context)
+
+        let localUpdatedAt = UserDefaults.standard.double(forKey: localUpdatedAtKey(for: ownerUserID))
+        let remoteUpdatedAt = state.updatedAt.timeIntervalSince1970
+
+        if remoteUpdatedAt > localUpdatedAt || force {
+            applyRemoteStateToDefaults(state)
+            UserDefaults.standard.set(remoteUpdatedAt, forKey: localUpdatedAtKey(for: ownerUserID))
+            return
+        }
+
+        pushLocalStateToCloud(ownerUserID: ownerUserID, context: context)
     }
 
     func isUnlocked(_ achievement: AchievementType) -> Bool {
@@ -230,5 +246,68 @@ class AchievementManager {
         if currentStreak >= 30 && unlock(.thirtyDayStreak) { newAchievements.append(.thirtyDayStreak) }
 
         return newAchievements
+    }
+
+    // MARK: - Cloud Sync
+
+    private func markLocalMutationAndPush() {
+        let ownerUserID = AppState.shared.currentUserID
+        UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: localUpdatedAtKey(for: ownerUserID))
+
+        guard let context = SharedModelContainer.makeContext() else { return }
+        pushLocalStateToCloud(ownerUserID: ownerUserID, context: context)
+    }
+
+    private func localUpdatedAtKey(for ownerUserID: UUID?) -> String {
+        "\(localUpdatedAtPrefix).\(ownerUserID?.uuidString ?? "global")"
+    }
+
+    private func fetchOrCreateState(ownerUserID: UUID?, context: ModelContext) -> SyncedAchievementState {
+        let descriptor = FetchDescriptor<SyncedAchievementState>()
+        if let states = try? context.fetch(descriptor),
+           let existing = states.first(where: { $0.ownerUserID == ownerUserID }) {
+            return existing
+        }
+
+        let created = SyncedAchievementState(ownerUserID: ownerUserID)
+        context.insert(created)
+        save(context: context)
+        return created
+    }
+
+    private func pushLocalStateToCloud(ownerUserID: UUID?, context: ModelContext) {
+        let state = fetchOrCreateState(ownerUserID: ownerUserID, context: context)
+
+        let unlockedData = UserDefaults.standard.data(forKey: unlockedKey)
+        let unlockedIDs = (try? JSONDecoder().decode(Set<String>.self, from: unlockedData ?? Data())) ?? []
+        state.unlockedAchievementIDsJSON = (try? String(data: JSONEncoder().encode(Array(unlockedIDs)), encoding: .utf8)) ?? "[]"
+        state.totalPoints = UserDefaults.standard.integer(forKey: totalPointsKey)
+
+        let localUpdatedAt = UserDefaults.standard.double(forKey: localUpdatedAtKey(for: ownerUserID))
+        if localUpdatedAt > 0 {
+            state.updatedAt = Date(timeIntervalSince1970: localUpdatedAt)
+        } else {
+            state.updatedAt = Date()
+        }
+
+        save(context: context)
+    }
+
+    private func applyRemoteStateToDefaults(_ state: SyncedAchievementState) {
+        let unlockedIDs = ((try? JSONDecoder().decode([String].self, from: Data(state.unlockedAchievementIDsJSON.utf8))) ?? [])
+        let unique = Set(unlockedIDs)
+
+        if let data = try? JSONEncoder().encode(unique) {
+            UserDefaults.standard.set(data, forKey: unlockedKey)
+        }
+        UserDefaults.standard.set(state.totalPoints, forKey: totalPointsKey)
+    }
+
+    private func save(context: ModelContext) {
+        do {
+            try context.save()
+        } catch {
+            // Keep local progress if cloud write fails.
+        }
     }
 }

@@ -1,18 +1,20 @@
 import Foundation
 import SwiftData
 
+/// Legacy persistence shape retained solely as a read-only migration source.
+/// New application writes must create `Stat` records through `Game.recordStat`.
 @Model
 final class ShiftStat {
-    var id: UUID = UUID()
-    var statName: String = ""
-    var pointValue: Int = 0
-    var made: Int = 0
-    var missed: Int = 0
-    var count: Int = 0
-    var timestamp: Date = Date()
+    private(set) var id: UUID = UUID()
+    private(set) var statName: String = ""
+    private(set) var pointValue: Int = 0
+    private(set) var made: Int = 0
+    private(set) var missed: Int = 0
+    private(set) var count: Int = 0
+    private(set) var timestamp: Date = Date()
 
-    var shift: Shift?
-    var definition: StatDefinition?
+    private(set) var shift: Shift?
+    private(set) var definition: StatDefinition?
 
     var total: Int {
         if made > 0 || missed > 0 {

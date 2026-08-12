@@ -8,9 +8,9 @@ const faqs = [
         'Stattie supports basketball and soccer. You can pick the sport for each game, and the stat buttons adapt automatically.',
     },
     {
-      question: 'Can multiple people track the same game?',
+      question: 'Can I share a game with family or coaches?',
       answer:
-        'Yes! With iCloud sharing, you can invite coaches, parents, or anyone else to view and track stats for your team. Everyone sees updates in real-time.',
+        'Yes. You can share a text game summary using the standard iOS share sheet.',
     },
     {
       question: 'Can I start a game without assigning a team?',
@@ -37,7 +37,7 @@ const faqs = [
     {
       question: 'Can I export my data?',
       answer:
-        'Yes, you can share game summaries as images or export detailed stats. Your data is always accessible.',
+        'You can share a text game summary through the standard iOS share sheet. Your records remain available in the app.',
     },
   ],
   [
@@ -77,7 +77,7 @@ export function Faqs() {
           <p className="mt-2 text-lg text-gray-600">
             If you have anything else you want to ask,{' '}
             <a
-              href="mailto:support@stattie.app"
+              href="/support"
               className="text-orange-600 underline"
             >
               reach out to us

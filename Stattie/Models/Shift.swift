@@ -17,8 +17,13 @@ final class Shift {
 
     var personGameStats: PersonGameStats?
 
+    // Legacy storage retained only so existing stores can be migrated. New writes use
+    // `statRecords`, making Stat the single canonical attribution model.
     @Relationship(deleteRule: .cascade, inverse: \ShiftStat.shift)
     var stats: [ShiftStat]? = []
+
+    @Relationship(deleteRule: .cascade, inverse: \Stat.shift)
+    var statRecords: [Stat]? = []
 
     var isActive: Bool {
         endTime == nil
@@ -67,23 +72,41 @@ final class Shift {
     // MARK: - Stat Aggregation
 
     var totalPoints: Int {
-        (stats ?? []).reduce(0) { $0 + $1.points }
+        canonicalStats.reduce(0) { $0 + $1.points }
     }
 
-    func statValue(forName name: String) -> ShiftStat? {
+    var canonicalStats: [Stat] {
+        var seen = Set<UUID>()
+        return (statRecords ?? []).filter {
+            $0.shift?.id == id &&
+            $0.personGameStats?.id == personGameStats?.id &&
+            $0.game?.id == personGameStats?.game?.id &&
+            seen.insert($0.id).inserted
+        }
+    }
+
+    func statValue(forName name: String) -> Stat? {
+        canonicalStats.first { $0.statName == name }
+    }
+
+    func statRecords(forName name: String) -> [Stat] {
+        canonicalStats.filter { $0.statName == name }
+    }
+
+    func legacyStatValue(forName name: String) -> ShiftStat? {
         (stats ?? []).first { $0.statName == name }
     }
 
     func totalMade(forName name: String) -> Int {
-        statValue(forName: name)?.made ?? 0
+        statRecords(forName: name).reduce(0) { $0 + $1.made }
     }
 
     func totalMissed(forName name: String) -> Int {
-        statValue(forName: name)?.missed ?? 0
+        statRecords(forName: name).reduce(0) { $0 + $1.missed }
     }
 
     func totalCount(forName name: String) -> Int {
-        statValue(forName: name)?.count ?? 0
+        statRecords(forName: name).reduce(0) { $0 + $1.count }
     }
 
     init(
@@ -102,15 +125,15 @@ final class Shift {
         self.startingOpponentScore = opponentScore
     }
 
-    func endShift(teamScore: Int? = nil, opponentScore: Int? = nil) {
+    func endShift(
+        teamScore: Int? = nil,
+        opponentScore: Int? = nil,
+        at date: Date = Date()
+    ) {
         if endTime == nil {
-            endTime = Date()
-            if let team = teamScore {
-                endingTeamScore = team
-            }
-            if let opp = opponentScore {
-                endingOpponentScore = opp
-            }
+            endTime = date
+            endingTeamScore = teamScore ?? startingTeamScore
+            endingOpponentScore = opponentScore ?? startingOpponentScore
         }
     }
 }

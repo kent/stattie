@@ -13,6 +13,20 @@ enum UndoActionType {
 struct UndoAction {
     let type: UndoActionType
     let timestamp: Date
+    let personGameStatsID: UUID?
+    let shiftID: UUID?
+
+    init(
+        type: UndoActionType,
+        timestamp: Date,
+        personGameStatsID: UUID? = nil,
+        shiftID: UUID? = nil
+    ) {
+        self.type = type
+        self.timestamp = timestamp
+        self.personGameStatsID = personGameStatsID
+        self.shiftID = shiftID
+    }
 
     var description: String {
         switch type {
@@ -31,6 +45,7 @@ struct GameTrackingView: View {
     let initialSelectedPersonStatsID: UUID?
     @State private var showingEndGameAlert = false
     @State private var showingSummary = false
+    @State private var persistenceError: String?
     @State private var showMilestoneAnimation = false
     @State private var milestoneText = ""
     @State private var previousDoubleDigits = 0
@@ -45,11 +60,11 @@ struct GameTrackingView: View {
     @State private var showingUndoToast = false
 
     // Shift tracking flow
+    @State private var showingStartShiftSheet = false
     @State private var showingEndShiftSheet = false
     @State private var showingShiftHistorySheet = false
     @State private var showingPostShiftOverviewSheet = false
     @State private var selectedShiftPersonStatsID: UUID?
-    @State private var didBootstrapInitialShift = false
     @State private var shiftTeamScore: Int = 0
     @State private var shiftOpponentScore: Int = 0
 
@@ -104,11 +119,25 @@ struct GameTrackingView: View {
     }
 
     private var lastKnownShiftTeamScore: Int {
-        selectedShiftPersonStats?.completedShifts.last?.endingTeamScore ?? 0
+        guard let latest = selectedShiftPersonStats?.completedShifts.last else { return 0 }
+        return latest.endingTeamScore ?? latest.startingTeamScore
     }
 
     private var lastKnownShiftOpponentScore: Int {
-        selectedShiftPersonStats?.completedShifts.last?.endingOpponentScore ?? 0
+        guard let latest = selectedShiftPersonStats?.completedShifts.last else { return 0 }
+        return latest.endingOpponentScore ?? latest.startingOpponentScore
+    }
+
+    private var shouldShowActiveShiftStats: Bool {
+        activeShift != nil
+    }
+
+    private var displayedBasketballPoints: Int {
+        shouldShowActiveShiftStats ? (activeShift?.totalPoints ?? 0) : totalPoints
+    }
+
+    private var displayedSoccerGoals: Int {
+        shouldShowActiveShiftStats ? (activeShift?.totalCount(forName: "GOL") ?? 0) : totalGoals
     }
 
     var totalPoints: Int {
@@ -117,24 +146,24 @@ struct GameTrackingView: View {
 
     // Basketball stats
     var totalRebounds: Int {
-        (game.stat(named: "DREB")?.count ?? 0) + (game.stat(named: "OREB")?.count ?? 0)
+        game.totalCount(forName: "DREB") + game.totalCount(forName: "OREB")
     }
 
     var totalAssists: Int {
-        game.stat(named: "AST")?.count ?? 0
+        game.totalCount(forName: "AST")
     }
 
     var totalSteals: Int {
-        game.stat(named: "STL")?.count ?? 0
+        game.totalCount(forName: "STL")
     }
 
     // Soccer stats
     var totalGoals: Int {
-        game.stat(named: "GOL")?.count ?? 0
+        game.totalCount(forName: "GOL")
     }
 
     var totalSaves: Int {
-        game.stat(named: "SAV")?.count ?? 0
+        game.totalCount(forName: "SAV")
     }
 
     private var doubleDigitCategories: Int {
@@ -233,15 +262,30 @@ struct GameTrackingView: View {
             .alert("End Game?", isPresented: $showingEndGameAlert) {
                 Button("Cancel", role: .cancel) { }
                 Button("End Game", role: .destructive) {
-                    game.isCompleted = true
-                    try? modelContext.save()
-                    showingSummary = true
+                    finalizeGame()
                 }
             } message: {
                 Text("This will mark the game as completed.")
             }
+            .alert("Couldn’t Save", isPresented: Binding(
+                get: { persistenceError != nil },
+                set: { if !$0 { persistenceError = nil } }
+            )) {
+                Button("OK", role: .cancel) { persistenceError = nil }
+            } message: {
+                Text(persistenceError ?? "The change could not be saved.")
+            }
             .sheet(isPresented: $showingSummary, onDismiss: { dismiss() }) {
                 GameSummaryView(game: game)
+            }
+            .fullScreenCover(isPresented: $showingStartShiftSheet) {
+                StartShiftScoreSheet(
+                    teamScore: $shiftTeamScore,
+                    opponentScore: $shiftOpponentScore,
+                    onStart: {
+                        startNewShift()
+                    }
+                )
             }
             .fullScreenCover(isPresented: $showingEndShiftSheet) {
                 EndShiftScoreSheet(
@@ -292,6 +336,11 @@ struct GameTrackingView: View {
                 }
             }
             .onAppear {
+                do {
+                    _ = try StatAttributionMigration.migrateLegacyShiftStats(in: modelContext)
+                } catch {
+                    persistenceError = error.localizedDescription
+                }
                 if selectedShiftPersonStatsID == nil {
                     selectedShiftPersonStatsID = preferredSelectedPersonStatsID(from: shiftTrackablePersonStats.map(\.id))
                 }
@@ -418,10 +467,10 @@ struct GameTrackingView: View {
         VStack(spacing: 10) {
             // Score display
             HStack {
-                Text("\(totalPoints)")
-                    .font(.system(size: 56, weight: .bold))
+                Text("\(displayedBasketballPoints)")
+                    .scaledFont(size: 56, weight: .bold, relativeTo: .largeTitle)
                     .foregroundStyle(.blue)
-                Text("PTS")
+                Text(shouldShowActiveShiftStats ? "SHIFT PTS" : "PTS")
                     .font(.title2.bold())
                     .foregroundStyle(.secondary)
 
@@ -444,21 +493,21 @@ struct GameTrackingView: View {
             HStack(spacing: 10) {
                 FlexStatButton(
                     title: "2 PTS",
-                    subtitle: madeString("2PT"),
+                    subtitle: displayMadeString("2PT"),
                     color: .blue,
                     action: { recordMade("2PT", points: 2) },
                     undoAction: { undoMade("2PT") }
                 )
                 FlexStatButton(
                     title: "3 PTS",
-                    subtitle: madeString("3PT"),
+                    subtitle: displayMadeString("3PT"),
                     color: .purple,
                     action: { recordMade("3PT", points: 3) },
                     undoAction: { undoMade("3PT") }
                 )
                 FlexStatButton(
                     title: "FT",
-                    subtitle: madeString("FT"),
+                    subtitle: displayMadeString("FT"),
                     color: .orange,
                     action: { recordMade("FT", points: 1) },
                     undoAction: { undoMade("FT") }
@@ -486,31 +535,32 @@ struct GameTrackingView: View {
             }
             .padding(.horizontal)
 
-            // Other stats - 3 columns, 2 rows
+            // Other stats - 3 columns
             HStack(spacing: 10) {
-                FlexStatButton(title: "D-REB", subtitle: countString("DREB"), color: .green, action: { recordCount("DREB") }, undoAction: { undoCount("DREB") })
-                FlexStatButton(title: "O-REB", subtitle: countString("OREB"), color: .teal, action: { recordCount("OREB") }, undoAction: { undoCount("OREB") })
-                FlexStatButton(title: "STEAL", subtitle: countString("STL"), color: .indigo, action: { recordCount("STL") }, undoAction: { undoCount("STL") })
+                FlexStatButton(title: "D-REB", subtitle: displayCountString("DREB"), color: .green, action: { recordCount("DREB") }, undoAction: { undoCount("DREB") })
+                FlexStatButton(title: "O-REB", subtitle: displayCountString("OREB"), color: .teal, action: { recordCount("OREB") }, undoAction: { undoCount("OREB") })
+                FlexStatButton(title: "STEAL", subtitle: displayCountString("STL"), color: .indigo, action: { recordCount("STL") }, undoAction: { undoCount("STL") })
             }
             .padding(.horizontal)
 
             HStack(spacing: 10) {
-                FlexStatButton(title: "ASSIST", subtitle: countString("AST"), color: .mint, action: { recordCount("AST") }, undoAction: { undoCount("AST") })
-                FlexStatButton(title: "FOUL", subtitle: countString("PF"), color: .red, action: { recordCount("PF") }, undoAction: { undoCount("PF") })
-                FlexStatButton(title: "MISSED DRIVE", subtitle: countString("MD"), color: .orange, action: { recordCount("MD") }, undoAction: { undoCount("MD") })
+                FlexStatButton(title: "ASSIST", subtitle: displayCountString("AST"), color: .mint, action: { recordCount("AST") }, undoAction: { undoCount("AST") })
+                FlexStatButton(title: "FOUL", subtitle: displayCountString("PF"), color: .red, action: { recordCount("PF") }, undoAction: { undoCount("PF") })
+                FlexStatButton(title: "TURNOVER", subtitle: displayCountString("TO"), color: .brown, action: { recordCount("TO") }, undoAction: { undoCount("TO") })
             }
             .padding(.horizontal)
 
             HStack(spacing: 10) {
-                FlexStatButton(title: "BAD OFF", subtitle: countString("BPO"), color: .red, action: { recordCount("BPO") }, undoAction: { undoCount("BPO") })
-                FlexStatButton(title: "BAD DEF", subtitle: countString("BPD"), color: .pink, action: { recordCount("BPD") }, undoAction: { undoCount("BPD") })
-                FlexStatButton(title: "SUCCESS DRIVE", subtitle: countString("SD"), color: .green, action: { recordCount("SD") }, undoAction: { undoCount("SD") })
+                FlexStatButton(title: "MISSED DRIVE", subtitle: displayCountString("MD"), color: .orange, action: { recordCount("MD") }, undoAction: { undoCount("MD") })
+                FlexStatButton(title: "BAD OFF", subtitle: displayCountString("BPO"), color: .red, action: { recordCount("BPO") }, undoAction: { undoCount("BPO") })
+                FlexStatButton(title: "BAD DEF", subtitle: displayCountString("BPD"), color: .pink, action: { recordCount("BPD") }, undoAction: { undoCount("BPD") })
             }
             .padding(.horizontal)
 
             HStack(spacing: 10) {
-                FlexStatButton(title: "GREAT OFF", subtitle: countString("GPO"), color: .yellow, action: { recordCount("GPO") }, undoAction: { undoCount("GPO") })
-                FlexStatButton(title: "GREAT DEF", subtitle: countString("GPD"), color: .green, action: { recordCount("GPD") }, undoAction: { undoCount("GPD") })
+                FlexStatButton(title: "SUCCESS DRIVE", subtitle: displayCountString("SD"), color: .green, action: { recordCount("SD") }, undoAction: { undoCount("SD") })
+                FlexStatButton(title: "GREAT OFF", subtitle: displayCountString("GPO"), color: .yellow, action: { recordCount("GPO") }, undoAction: { undoCount("GPO") })
+                FlexStatButton(title: "GREAT DEF", subtitle: displayCountString("GPD"), color: .green, action: { recordCount("GPD") }, undoAction: { undoCount("GPD") })
             }
             .padding(.horizontal)
             .padding(.bottom, 8)
@@ -523,10 +573,10 @@ struct GameTrackingView: View {
         VStack(spacing: 10) {
             // Goal display
             HStack {
-                Text("\(totalGoals)")
-                    .font(.system(size: 56, weight: .bold))
+                Text("\(displayedSoccerGoals)")
+                    .scaledFont(size: 56, weight: .bold, relativeTo: .largeTitle)
                     .foregroundStyle(.green)
-                Text("GOALS")
+                Text(shouldShowActiveShiftStats ? "SHIFT GOALS" : "GOALS")
                     .font(.title2.bold())
                     .foregroundStyle(.secondary)
 
@@ -547,9 +597,9 @@ struct GameTrackingView: View {
 
             // Scoring stats
             HStack(spacing: 10) {
-                FlexStatButton(title: "GOAL", subtitle: countString("GOL"), color: .green, action: { recordCount("GOL") }, undoAction: { undoCount("GOL") })
-                FlexStatButton(title: "SHOT", subtitle: madeString("SOT"), color: .teal, action: { recordMade("SOT", points: 0) }, undoAction: { undoMade("SOT") })
-                FlexStatButton(title: "ASSIST", subtitle: countString("AST"), color: .mint, action: { recordCount("AST") }, undoAction: { undoCount("AST") })
+                FlexStatButton(title: "GOAL", subtitle: displayCountString("GOL"), color: .green, action: { recordCount("GOL") }, undoAction: { undoCount("GOL") })
+                FlexStatButton(title: "SHOT", subtitle: displayMadeString("SOT"), color: .teal, action: { recordMade("SOT", points: 0) }, undoAction: { undoMade("SOT") })
+                FlexStatButton(title: "ASSIST", subtitle: displayCountString("AST"), color: .mint, action: { recordCount("AST") }, undoAction: { undoCount("AST") })
             }
             .padding(.horizontal)
 
@@ -565,24 +615,24 @@ struct GameTrackingView: View {
 
             // Defense stats
             HStack(spacing: 10) {
-                FlexStatButton(title: "SAVE", subtitle: countString("SAV"), color: .blue, action: { recordCount("SAV") }, undoAction: { undoCount("SAV") })
-                FlexStatButton(title: "TACKLE", subtitle: countString("TKL"), color: .indigo, action: { recordCount("TKL") }, undoAction: { undoCount("TKL") })
-                FlexStatButton(title: "INT", subtitle: countString("INT"), color: .purple, action: { recordCount("INT") }, undoAction: { undoCount("INT") })
+                FlexStatButton(title: "SAVE", subtitle: displayCountString("SAV"), color: .blue, action: { recordCount("SAV") }, undoAction: { undoCount("SAV") })
+                FlexStatButton(title: "TACKLE", subtitle: displayCountString("TKL"), color: .indigo, action: { recordCount("TKL") }, undoAction: { undoCount("TKL") })
+                FlexStatButton(title: "INT", subtitle: displayCountString("INT"), color: .purple, action: { recordCount("INT") }, undoAction: { undoCount("INT") })
             }
             .padding(.horizontal)
 
             // Possession and other stats
             HStack(spacing: 10) {
-                FlexStatButton(title: "PASS", subtitle: countString("PAS"), color: .cyan, action: { recordCount("PAS") }, undoAction: { undoCount("PAS") })
-                FlexStatButton(title: "CORNER", subtitle: countString("CRN"), color: .orange, action: { recordCount("CRN") }, undoAction: { undoCount("CRN") })
-                FlexStatButton(title: "FOUL", subtitle: countString("FLS"), color: .red, action: { recordCount("FLS") }, undoAction: { undoCount("FLS") })
+                FlexStatButton(title: "PASS", subtitle: displayCountString("PAS"), color: .cyan, action: { recordCount("PAS") }, undoAction: { undoCount("PAS") })
+                FlexStatButton(title: "CORNER", subtitle: displayCountString("CRN"), color: .orange, action: { recordCount("CRN") }, undoAction: { undoCount("CRN") })
+                FlexStatButton(title: "FOUL", subtitle: displayCountString("FLS"), color: .red, action: { recordCount("FLS") }, undoAction: { undoCount("FLS") })
             }
             .padding(.horizontal)
 
             // Cards
             HStack(spacing: 10) {
-                FlexStatButton(title: "YELLOW", subtitle: countString("YC"), color: .yellow, action: { recordCount("YC") }, undoAction: { undoCount("YC") })
-                FlexStatButton(title: "RED", subtitle: countString("RC"), color: .red, action: { recordCount("RC") }, undoAction: { undoCount("RC") })
+                FlexStatButton(title: "YELLOW", subtitle: displayCountString("YC"), color: .yellow, action: { recordCount("YC") }, undoAction: { undoCount("YC") })
+                FlexStatButton(title: "RED", subtitle: displayCountString("RC"), color: .red, action: { recordCount("RC") }, undoAction: { undoCount("RC") })
             }
             .padding(.horizontal)
             .padding(.bottom, 8)
@@ -617,49 +667,46 @@ struct GameTrackingView: View {
 
     private func performUndo() {
         guard let action = lastAction else { return }
+        let personGameStats = (game.personStats ?? []).first { $0.id == action.personGameStatsID }
+        let shift = (personGameStats?.shifts ?? []).first { $0.id == action.shiftID }
+        guard action.personGameStatsID == nil || personGameStats != nil,
+              action.shiftID == nil || shift != nil else {
+            lastAction = nil
+            persistenceError = "The original player or shift no longer exists, so this action can’t be undone safely."
+            return
+        }
 
-        impactMedium.impactOccurred()
-
+        let mutation: StatMutation
+        let statName: String
         switch action.type {
         case .made(let name, _):
-            if let stat = game.stat(named: name), stat.made > 0 {
-                stat.made -= 1
-                if let shiftStat = activeShift?.statValue(forName: name), shiftStat.made > 0 {
-                    shiftStat.made -= 1
-                    shiftStat.timestamp = Date()
-                }
-                try? modelContext.save()
-            }
+            mutation = .made
+            statName = name
         case .missed(let name, _):
-            if let stat = game.stat(named: name), stat.missed > 0 {
-                stat.missed -= 1
-                if let shiftStat = activeShift?.statValue(forName: name), shiftStat.missed > 0 {
-                    shiftStat.missed -= 1
-                    shiftStat.timestamp = Date()
-                }
-                try? modelContext.save()
-            }
+            mutation = .missed
+            statName = name
         case .count(let name):
-            if let stat = game.stat(named: name), stat.count > 0 {
-                stat.count -= 1
-                if let shiftStat = activeShift?.statValue(forName: name), shiftStat.count > 0 {
-                    shiftStat.count -= 1
-                    shiftStat.timestamp = Date()
-                }
-                try? modelContext.save()
-            }
+            mutation = .count
+            statName = name
         }
 
-        lastAction = nil
-
-        // Show undo confirmation
-        withAnimation {
-            showingUndoToast = true
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            withAnimation {
-                showingUndoToast = false
+        do {
+            guard try game.undoStat(
+                named: statName,
+                mutation: mutation,
+                personGameStats: personGameStats,
+                shift: shift
+            ) else { return }
+            try modelContext.save()
+            impactMedium.impactOccurred()
+            lastAction = nil
+            withAnimation { showingUndoToast = true }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                withAnimation { showingUndoToast = false }
             }
+        } catch {
+            modelContext.rollback()
+            persistenceError = error.localizedDescription
         }
     }
 
@@ -676,31 +723,25 @@ struct GameTrackingView: View {
         } else {
             shiftTeamScore = lastKnownShiftTeamScore
             shiftOpponentScore = lastKnownShiftOpponentScore
-            startNewShift()
+            showingStartShiftSheet = true
         }
     }
 
     private func bootstrapInitialShiftIfNeeded() {
         guard hasShiftTracking else { return }
-        guard !didBootstrapInitialShift else { return }
-        guard let selectedShiftPersonStats else { return }
+        guard selectedShiftPersonStats != nil else { return }
 
-        let existingShifts = selectedShiftPersonStats.shifts ?? []
-        guard existingShifts.isEmpty else {
-            didBootstrapInitialShift = true
-            return
-        }
-
-        shiftTeamScore = 0
-        shiftOpponentScore = 0
-        startNewShift()
-        didBootstrapInitialShift = true
+        shiftTeamScore = lastKnownShiftTeamScore
+        shiftOpponentScore = lastKnownShiftOpponentScore
     }
 
     private func startNewShift() {
         guard let selectedShiftPersonStats else { return }
         guard selectedShiftPersonStats.currentShift == nil else { return }
 
+        let previousShifts = selectedShiftPersonStats.shifts
+        let wasTimerRunning = timerRunning
+        let previousGameStartTime = gameStartTime
         startClockIfNeeded()
 
         let shift = selectedShiftPersonStats.startNewShift(
@@ -708,21 +749,39 @@ struct GameTrackingView: View {
             opponentScore: shiftOpponentScore
         )
         modelContext.insert(shift)
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            modelContext.rollback()
+            selectedShiftPersonStats.shifts = previousShifts
+            timerRunning = wasTimerRunning
+            gameStartTime = previousGameStartTime
+            persistenceError = error.localizedDescription
+        }
     }
 
     private func endCurrentShift() {
-        guard let selectedShiftPersonStats else { return }
-        guard selectedShiftPersonStats.currentShift != nil else { return }
+        guard let selectedShiftPersonStats,
+              let shift = selectedShiftPersonStats.currentShift else { return }
 
+        let endTime = shift.endTime
+        let endingTeamScore = shift.endingTeamScore
+        let endingOpponentScore = shift.endingOpponentScore
         selectedShiftPersonStats.endCurrentShift(
             teamScore: shiftTeamScore,
             opponentScore: shiftOpponentScore
         )
-        try? modelContext.save()
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-            showingPostShiftOverviewSheet = true
+        do {
+            try modelContext.save()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                showingPostShiftOverviewSheet = true
+            }
+        } catch {
+            modelContext.rollback()
+            shift.endTime = endTime
+            shift.endingTeamScore = endingTeamScore
+            shift.endingOpponentScore = endingOpponentScore
+            persistenceError = error.localizedDescription
         }
     }
 
@@ -732,7 +791,7 @@ struct GameTrackingView: View {
         shiftOpponentScore = lastKnownShiftOpponentScore
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            startNewShift()
+            showingStartShiftSheet = true
         }
     }
 
@@ -741,7 +800,7 @@ struct GameTrackingView: View {
         shiftOpponentScore = lastKnownShiftOpponentScore
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            startNewShift()
+            showingStartShiftSheet = true
         }
     }
 
@@ -751,139 +810,114 @@ struct GameTrackingView: View {
         }
     }
 
-    private func getOrCreateStat(_ name: String, points: Int) -> Stat {
-        if let existing = game.stat(named: name) {
-            return existing
-        }
-
-        let stat = Stat(statName: name, pointValue: points)
-        stat.game = game
-        modelContext.insert(stat)
-
-        if game.stats == nil { game.stats = [] }
-        game.stats?.append(stat)
-
-        return stat
-    }
-
-    private func getOrCreateActiveShiftStat(_ name: String, points: Int) -> ShiftStat? {
-        guard let shift = activeShift else { return nil }
-
-        if let existing = shift.statValue(forName: name) {
-            return existing
-        }
-
-        let shiftStat = ShiftStat(statName: name, pointValue: points, shift: shift)
-        modelContext.insert(shiftStat)
-
-        if shift.stats == nil { shift.stats = [] }
-        shift.stats?.append(shiftStat)
-
-        return shiftStat
+    private var currentStatPersonAttribution: PersonGameStats? {
+        selectedShiftPersonStats
     }
 
     private func recordMade(_ name: String, points: Int) {
         impactMedium.impactOccurred()
         let oldDoubleDigits = doubleDigitCategories
-        let stat = getOrCreateStat(name, points: points)
-        stat.made += 1
-        stat.timestamp = Date()
-
-        if let shiftStat = getOrCreateActiveShiftStat(name, points: points) {
-            shiftStat.made += 1
-            shiftStat.timestamp = Date()
+        do {
+            try game.recordStat(
+                named: name,
+                pointValue: points,
+                mutation: .made,
+                personGameStats: currentStatPersonAttribution,
+                shift: activeShift,
+                in: modelContext
+            )
+            try modelContext.save()
+            lastAction = UndoAction(type: .made(statName: name, points: points), timestamp: Date(), personGameStatsID: currentStatPersonAttribution?.id, shiftID: activeShift?.id)
+            checkMilestones(oldDoubleDigits: oldDoubleDigits)
+        } catch {
+            modelContext.rollback()
+            persistenceError = error.localizedDescription
         }
-
-        try? modelContext.save()
-
-        // Save for undo
-        lastAction = UndoAction(type: .made(statName: name, points: points), timestamp: Date())
-
-        checkMilestones(oldDoubleDigits: oldDoubleDigits)
     }
 
     private func recordMiss(_ name: String, points: Int) {
         impactLight.impactOccurred()
-        let stat = getOrCreateStat(name, points: points)
-        stat.missed += 1
-        stat.timestamp = Date()
-
-        if let shiftStat = getOrCreateActiveShiftStat(name, points: points) {
-            shiftStat.missed += 1
-            shiftStat.timestamp = Date()
+        do {
+            try game.recordStat(
+                named: name,
+                pointValue: points,
+                mutation: .missed,
+                personGameStats: currentStatPersonAttribution,
+                shift: activeShift,
+                in: modelContext
+            )
+            try modelContext.save()
+            lastAction = UndoAction(type: .missed(statName: name, points: points), timestamp: Date(), personGameStatsID: currentStatPersonAttribution?.id, shiftID: activeShift?.id)
+        } catch {
+            modelContext.rollback()
+            persistenceError = error.localizedDescription
         }
-
-        try? modelContext.save()
-
-        // Save for undo
-        lastAction = UndoAction(type: .missed(statName: name, points: points), timestamp: Date())
     }
 
     private func recordCount(_ name: String) {
         impactMedium.impactOccurred()
         let oldDoubleDigits = doubleDigitCategories
         let oldGoals = totalGoals
-        let stat = getOrCreateStat(name, points: 0)
-        stat.count += 1
-        stat.timestamp = Date()
-
-        if let shiftStat = getOrCreateActiveShiftStat(name, points: 0) {
-            shiftStat.count += 1
-            shiftStat.timestamp = Date()
+        do {
+            try game.recordStat(
+                named: name,
+                pointValue: 0,
+                mutation: .count,
+                personGameStats: currentStatPersonAttribution,
+                shift: activeShift,
+                in: modelContext
+            )
+            try modelContext.save()
+            lastAction = UndoAction(type: .count(statName: name), timestamp: Date(), personGameStatsID: currentStatPersonAttribution?.id, shiftID: activeShift?.id)
+            checkMilestones(oldDoubleDigits: oldDoubleDigits)
+            checkSoccerMilestones(oldGoals: oldGoals, statName: name)
+        } catch {
+            modelContext.rollback()
+            persistenceError = error.localizedDescription
         }
-
-        try? modelContext.save()
-
-        // Save for undo
-        lastAction = UndoAction(type: .count(statName: name), timestamp: Date())
-
-        checkMilestones(oldDoubleDigits: oldDoubleDigits)
-        checkSoccerMilestones(oldGoals: oldGoals, statName: name)
     }
 
     private func undoMade(_ name: String) {
-        guard let stat = game.stat(named: name), stat.made > 0 else { return }
-        impactLight.impactOccurred()
-        stat.made -= 1
-        stat.timestamp = Date()
-
-        if let shiftStat = activeShift?.statValue(forName: name), shiftStat.made > 0 {
-            shiftStat.made -= 1
-            shiftStat.timestamp = Date()
-        }
-
-        try? modelContext.save()
-        lastAction = nil
+        undoStat(name, mutation: .made)
     }
 
     private func undoMiss(_ name: String) {
-        guard let stat = game.stat(named: name), stat.missed > 0 else { return }
-        impactLight.impactOccurred()
-        stat.missed -= 1
-        stat.timestamp = Date()
-
-        if let shiftStat = activeShift?.statValue(forName: name), shiftStat.missed > 0 {
-            shiftStat.missed -= 1
-            shiftStat.timestamp = Date()
-        }
-
-        try? modelContext.save()
-        lastAction = nil
+        undoStat(name, mutation: .missed)
     }
 
     private func undoCount(_ name: String) {
-        guard let stat = game.stat(named: name), stat.count > 0 else { return }
-        impactLight.impactOccurred()
-        stat.count -= 1
-        stat.timestamp = Date()
+        undoStat(name, mutation: .count)
+    }
 
-        if let shiftStat = activeShift?.statValue(forName: name), shiftStat.count > 0 {
-            shiftStat.count -= 1
-            shiftStat.timestamp = Date()
+    private func undoStat(_ name: String, mutation: StatMutation) {
+        do {
+            guard try game.undoStat(
+                named: name,
+                mutation: mutation,
+                personGameStats: currentStatPersonAttribution,
+                shift: activeShift
+            ) else { return }
+            try modelContext.save()
+            impactLight.impactOccurred()
+            lastAction = nil
+        } catch {
+            modelContext.rollback()
+            persistenceError = error.localizedDescription
         }
+    }
 
-        try? modelContext.save()
-        lastAction = nil
+    private func finalizeGame() {
+        do {
+            _ = try game.finalize(
+                in: modelContext,
+                teamScore: shiftTeamScore,
+                opponentScore: shiftOpponentScore
+            )
+            LocalCoachingService.shared.refreshPostGameInsightsInBackground(for: game)
+            showingSummary = true
+        } catch {
+            persistenceError = error.localizedDescription
+        }
     }
 
     private func checkMilestones(oldDoubleDigits: Int) {
@@ -927,17 +961,36 @@ struct GameTrackingView: View {
     // MARK: - Display Helpers
 
     private func madeString(_ name: String) -> String {
-        if let stat = game.stat(named: name) {
-            return "\(stat.made)/\(stat.made + stat.missed)"
-        }
-        return "0/0"
+        let made = game.totalMade(forName: name)
+        return "\(made)/\(made + game.totalMissed(forName: name))"
     }
 
     private func countString(_ name: String) -> String {
-        if let stat = game.stat(named: name) {
-            return "\(stat.count)"
+        "\(game.totalCount(forName: name))"
+    }
+
+    private func activeShiftMadeString(_ name: String) -> String {
+        guard let shift = activeShift,
+              let stat = shift.statValue(forName: name) else {
+            return "0/0"
         }
-        return "0"
+        return "\(stat.made)/\(stat.made + stat.missed)"
+    }
+
+    private func activeShiftCountString(_ name: String) -> String {
+        guard let shift = activeShift,
+              let stat = shift.statValue(forName: name) else {
+            return "0"
+        }
+        return "\(stat.count)"
+    }
+
+    private func displayMadeString(_ name: String) -> String {
+        shouldShowActiveShiftStats ? activeShiftMadeString(name) : madeString(name)
+    }
+
+    private func displayCountString(_ name: String) -> String {
+        shouldShowActiveShiftStats ? activeShiftCountString(name) : countString(name)
     }
 }
 
@@ -1003,21 +1056,23 @@ struct MissButton: View {
     }
 
     var body: some View {
-        Text(title)
-            .font(.caption.bold())
-            .foregroundStyle(.gray)
-            .frame(maxWidth: .infinity)
-            .frame(height: 36)
-            .background(Color.gray.opacity(0.2))
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-            .contentShape(RoundedRectangle(cornerRadius: 8))
-            .onTapGesture(perform: action)
-            .onLongPressGesture(minimumDuration: 0.45) {
-                undoAction?()
+        Button(action: action) {
+            Text(title)
+                .font(.caption.bold())
+                .foregroundStyle(.gray)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .background(Color.gray.opacity(0.2))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .contentShape(RoundedRectangle(cornerRadius: 8))
+        }
+        .buttonStyle(.plain)
+        .contextMenu {
+            if let undoAction {
+                Button("Undo \(title)", systemImage: "arrow.uturn.backward", action: undoAction)
             }
+        }
         .accessibilityLabel("Record \(title)")
-        .accessibilityHint(undoAction == nil ? "Double tap to record a miss" : "Double tap to record. Long press to undo one.")
-        .accessibilityAddTraits(.isButton)
+        .accessibilityHint(undoAction == nil ? "Double tap to record a miss" : "Double tap to record. Use the context menu to undo one.")
     }
 }
 
@@ -1079,6 +1134,7 @@ struct ShiftGameOverviewSheet: View {
             SummaryMetric(title: "Assists", value: "\(shift.totalCount(forName: "AST"))", icon: "arrow.triangle.branch", tint: .mint),
             SummaryMetric(title: "Steals", value: "\(shift.totalCount(forName: "STL"))", icon: "hand.raised.fill", tint: .indigo),
             SummaryMetric(title: "Fouls", value: "\(shift.totalCount(forName: "PF"))", icon: "exclamationmark.triangle.fill", tint: .red),
+            SummaryMetric(title: "Turnovers", value: "\(shift.totalCount(forName: "TO"))", icon: "arrow.uturn.backward.circle.fill", tint: .brown),
             SummaryMetric(title: "Missed Drive", value: "\(shift.totalCount(forName: "MD"))", icon: "xmark.circle.fill", tint: .orange),
             SummaryMetric(title: "Successful Drive", value: "\(shift.totalCount(forName: "SD"))", icon: "checkmark.circle.fill", tint: .green),
         ]
@@ -1390,6 +1446,7 @@ struct ShiftEditView: View {
     @Bindable var shift: Shift
     let playerName: String
     @State private var editableDurationSeconds: Int = 0
+    @State private var persistenceError: String?
 
     private struct ShootingStatConfig {
         let name: String
@@ -1414,6 +1471,7 @@ struct ShiftEditView: View {
         CountStatConfig(name: "AST", title: "Assists"),
         CountStatConfig(name: "STL", title: "Steals"),
         CountStatConfig(name: "PF", title: "Fouls"),
+        CountStatConfig(name: "TO", title: "Turnovers"),
         CountStatConfig(name: "MD", title: "Missed Drive"),
         CountStatConfig(name: "SD", title: "Successful Drive"),
         CountStatConfig(name: "BPO", title: "Bad Play Offense"),
@@ -1523,13 +1581,25 @@ struct ShiftEditView: View {
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Done") {
-                    save()
-                    dismiss()
+                    if save() {
+                        dismiss()
+                    }
                 }
             }
         }
         .onAppear {
             editableDurationSeconds = max(0, Int(shift.duration.rounded()))
+        }
+        .alert(
+            "Couldn’t Save Changes",
+            isPresented: Binding(
+                get: { persistenceError != nil },
+                set: { if !$0 { persistenceError = nil } }
+            )
+        ) {
+            Button("OK", role: .cancel) { persistenceError = nil }
+        } message: {
+            Text(persistenceError ?? "The shift changes could not be saved.")
         }
     }
 
@@ -1592,26 +1662,50 @@ struct ShiftEditView: View {
         )
     }
 
-    private func getOrCreateShiftStat(name: String, points: Int) -> ShiftStat {
+    private func getOrCreateShiftStat(name: String, points: Int) -> Stat {
         if let existing = shift.statValue(forName: name) {
             return existing
         }
 
-        let stat = ShiftStat(statName: name, pointValue: points, shift: shift)
+        guard let personGameStats = shift.personGameStats,
+              let game = personGameStats.game else {
+            preconditionFailure("A shift must belong to player game stats before editing")
+        }
+        let stat = Stat(
+            statName: name,
+            pointValue: points,
+            personGameStats: personGameStats,
+            game: game,
+            shift: shift
+        )
         modelContext.insert(stat)
-        if shift.stats == nil { shift.stats = [] }
-        shift.stats?.append(stat)
+        if shift.statRecords == nil { shift.statRecords = [] }
+        shift.statRecords?.append(stat)
+        if personGameStats.stats == nil { personGameStats.stats = [] }
+        personGameStats.stats?.append(stat)
+        if game.stats == nil { game.stats = [] }
+        game.stats?.append(stat)
         return stat
     }
 
-    private func cleanupShiftStatIfEmpty(_ stat: ShiftStat) {
-        guard stat.made == 0 && stat.missed == 0 && stat.count == 0 else { return }
-        shift.stats?.removeAll { $0.id == stat.id }
+    private func cleanupShiftStatIfEmpty(_ stat: Stat) {
+        guard stat.isEmpty else { return }
+        shift.statRecords?.removeAll { $0.id == stat.id }
+        shift.personGameStats?.stats?.removeAll { $0.id == stat.id }
+        shift.personGameStats?.game?.stats?.removeAll { $0.id == stat.id }
         modelContext.delete(stat)
     }
 
-    private func save() {
-        try? modelContext.save()
+    @discardableResult
+    private func save() -> Bool {
+        do {
+            try modelContext.save()
+            return true
+        } catch {
+            modelContext.rollback()
+            persistenceError = error.localizedDescription
+            return false
+        }
     }
 }
 

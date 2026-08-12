@@ -2,10 +2,18 @@ import SwiftUI
 import SwiftData
 
 struct RecentActivityView: View {
+    @Query private var users: [User]
     @Query(sort: \Game.gameDate, order: .reverse) private var allGames: [Game]
 
+    private var currentUser: User? {
+        users.resolvedCurrentUser
+    }
+
     private var recentGames: [Game] {
-        allGames.filter { $0.isCompleted }.prefix(20).map { $0 }
+        allGames
+            .filter { $0.isCompleted && $0.isOwned(by: currentUser) }
+            .prefix(20)
+            .map { $0 }
     }
 
     private var groupedByDate: [(String, [Game])] {
@@ -128,7 +136,7 @@ struct ActivityRow: View {
                     .frame(width: 44, height: 44)
 
                 Image(systemName: sportIcon)
-                    .font(.system(size: 18))
+                    .font(.body)
                     .foregroundStyle(sportColor)
             }
 
@@ -178,10 +186,15 @@ struct ActivityRow: View {
 // MARK: - Activity Summary Card (for use in other views)
 
 struct ActivitySummaryCard: View {
+    @Query private var users: [User]
     @Query(sort: \Game.gameDate, order: .reverse) private var allGames: [Game]
 
+    private var currentUser: User? {
+        users.resolvedCurrentUser
+    }
+
     private var recentGames: [Game] {
-        Array(allGames.filter { $0.isCompleted }.prefix(3))
+        Array(allGames.filter { $0.isCompleted && $0.isOwned(by: currentUser) }.prefix(3))
     }
 
     private var hasActivity: Bool {
@@ -226,6 +239,7 @@ struct MiniActivityRow: View {
             Circle()
                 .fill(Color.accentColor.opacity(0.2))
                 .frame(width: 8, height: 8)
+                .accessibilityHidden(true)
 
             Text(playerName)
                 .font(.subheadline)

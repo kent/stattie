@@ -1,0 +1,3 @@
+app_identifier("com.stattie.app")
+app(6758022135)
+platform("ios")

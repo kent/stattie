@@ -18,7 +18,12 @@ final class PersonGameStats {
     // MARK: - Current Shift
 
     var currentShift: Shift? {
-        (shifts ?? []).first { $0.isActive }
+        (shifts ?? []).filter { $0.isActive }.max { lhs, rhs in
+            if lhs.startTime != rhs.startTime {
+                return lhs.startTime < rhs.startTime
+            }
+            return lhs.createdAt < rhs.createdAt
+        }
     }
 
     var hasActiveShift: Bool {
@@ -40,34 +45,57 @@ final class PersonGameStats {
         return String(format: "%d:%02d", minutes, seconds)
     }
 
-    // MARK: - Aggregated Stats from Shifts
+    // MARK: - Canonical Stat Aggregation
+
+    /// Stats attributed to this player, including shift-scoped records, de-duplicated by ID.
+    var canonicalStats: [Stat] {
+        var result: [Stat] = []
+        var seen = Set<UUID>()
+        for stat in stats ?? []
+        where stat.personGameStats?.id == id &&
+              stat.game?.id == game?.id &&
+              seen.insert(stat.id).inserted {
+            result.append(stat)
+        }
+        for shift in shifts ?? [] where shift.personGameStats?.id == id {
+            for stat in shift.statRecords ?? []
+            where stat.personGameStats?.id == id &&
+                  stat.game?.id == game?.id &&
+                  stat.shift?.id == shift.id &&
+                  seen.insert(stat.id).inserted {
+                result.append(stat)
+            }
+        }
+        return result
+    }
 
     var totalPointsFromShifts: Int {
-        (shifts ?? []).reduce(0) { $0 + $1.totalPoints }
+        var seen = Set<UUID>()
+        return (shifts ?? []).reduce(0) { total, shift in
+            total + shift.canonicalStats
+                .filter { seen.insert($0.id).inserted }
+                .reduce(0) { $0 + $1.points }
+        }
     }
 
     var totalPoints: Int {
-        // Combine direct stats and shift stats
-        let directPoints = (stats ?? []).reduce(0) { $0 + $1.points }
-        return directPoints + totalPointsFromShifts
+        canonicalStats.reduce(0) { $0 + $1.points }
     }
 
     var totalRebounds: Int {
-        let drebs = (stats ?? []).first(where: { $0.statName == "DREB" })?.count ?? 0
-        let orebs = (stats ?? []).first(where: { $0.statName == "OREB" })?.count ?? 0
-        return drebs + orebs
+        aggregatedCount(forName: "DREB") + aggregatedCount(forName: "OREB")
     }
 
     var totalSteals: Int {
-        (stats ?? []).first(where: { $0.statName == "STL" })?.count ?? 0
+        aggregatedCount(forName: "STL")
     }
 
     var totalAssists: Int {
-        (stats ?? []).first(where: { $0.statName == "AST" })?.count ?? 0
+        aggregatedCount(forName: "AST")
     }
 
     var totalFouls: Int {
-        (stats ?? []).first(where: { $0.statName == "PF" })?.count ?? 0
+        aggregatedCount(forName: "PF")
     }
 
     init(person: Person? = nil, game: Game? = nil) {
@@ -75,10 +103,6 @@ final class PersonGameStats {
         self.person = person
         self.game = game
         self.createdAt = Date()
-    }
-
-    func stat(forName name: String) -> Stat? {
-        (stats ?? []).first { $0.statName == name }
     }
 
     // MARK: - Plus/Minus Aggregation
@@ -98,8 +122,9 @@ final class PersonGameStats {
     // MARK: - Shift Management
 
     func startNewShift(teamScore: Int = 0, opponentScore: Int = 0) -> Shift {
-        // End any active shift first (without scores - they should be passed separately)
-        currentShift?.endShift()
+        if let existing = currentShift {
+            return existing
+        }
 
         let shiftNumber = (shifts ?? []).count + 1
         let shift = Shift(
@@ -122,20 +147,14 @@ final class PersonGameStats {
     // MARK: - Aggregated Stat Helpers
 
     func aggregatedMade(forName name: String) -> Int {
-        let directMade = stat(forName: name)?.made ?? 0
-        let shiftMade = (shifts ?? []).reduce(0) { $0 + ($1.statValue(forName: name)?.made ?? 0) }
-        return directMade + shiftMade
+        canonicalStats.filter { $0.statName == name }.reduce(0) { $0 + $1.made }
     }
 
     func aggregatedMissed(forName name: String) -> Int {
-        let directMissed = stat(forName: name)?.missed ?? 0
-        let shiftMissed = (shifts ?? []).reduce(0) { $0 + ($1.statValue(forName: name)?.missed ?? 0) }
-        return directMissed + shiftMissed
+        canonicalStats.filter { $0.statName == name }.reduce(0) { $0 + $1.missed }
     }
 
     func aggregatedCount(forName name: String) -> Int {
-        let directCount = stat(forName: name)?.count ?? 0
-        let shiftCount = (shifts ?? []).reduce(0) { $0 + ($1.statValue(forName: name)?.count ?? 0) }
-        return directCount + shiftCount
+        canonicalStats.filter { $0.statName == name }.reduce(0) { $0 + $1.count }
     }
 }

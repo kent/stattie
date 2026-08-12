@@ -14,7 +14,7 @@ struct AddTeamView: View {
     @State private var selectedColorHex = "EA580C"  // Orange
 
     private var currentUser: User? {
-        users.first
+        users.resolvedCurrentUser
     }
 
     private var isValid: Bool {
@@ -36,6 +36,20 @@ struct AddTeamView: View {
         ("Indigo", "4F46E5"),
         ("Pink", "DB2777")
     ]
+
+    private func accessibleIconName(_ icon: String) -> String {
+        switch icon {
+        case "sportscourt": return "Sports court"
+        case "basketball.fill": return "Basketball"
+        case "soccerball": return "Soccer ball"
+        case "figure.basketball": return "Basketball player"
+        case "figure.run": return "Runner"
+        case "trophy.fill": return "Trophy"
+        case "star.fill": return "Star"
+        case "bolt.fill": return "Lightning bolt"
+        default: return "Team"
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -73,6 +87,8 @@ struct AddTeamView: View {
                                 }
                             }
                             .buttonStyle(.plain)
+                            .accessibilityLabel("\(accessibleIconName(icon)) icon")
+                            .accessibilityValue(selectedIcon == icon ? "Selected" : "Not selected")
                         }
                     }
                     .padding(.vertical, 8)
@@ -97,6 +113,8 @@ struct AddTeamView: View {
                                 }
                             }
                             .buttonStyle(.plain)
+                            .accessibilityLabel(name)
+                            .accessibilityValue(selectedColorHex == hex ? "Selected" : "Not selected")
                         }
                     }
                     .padding(.vertical, 8)

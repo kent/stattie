@@ -27,32 +27,117 @@ struct GameDetailView: View {
         game.sport?.name == "Soccer"
     }
 
+    private struct GameStatLine: Identifiable {
+        let id: String
+        let title: String
+        let value: String
+    }
+
+    private var primaryScoreValue: Int {
+        isSoccer ? game.totalCount(forName: "GOL") : game.totalPoints
+    }
+
+    private var primaryScoreLabel: String {
+        isSoccer ? "Goals" : "Total Points"
+    }
+
+    private var gameStatLines: [GameStatLine] {
+        var lines: [GameStatLine] = []
+
+        if isSoccer {
+            let shotsMade = game.totalMade(forName: "SOT")
+            let shotsAttempts = shotsMade + game.totalMissed(forName: "SOT")
+            if shotsAttempts > 0 {
+                lines.append(GameStatLine(id: "SOT", title: "Shots On Target", value: "\(shotsMade)/\(shotsAttempts)"))
+            }
+
+            let countStats: [(String, String)] = [
+                ("GOL", "Goals"),
+                ("AST", "Assists"),
+                ("SAV", "Saves"),
+                ("TKL", "Tackles"),
+                ("INT", "Interceptions"),
+                ("PAS", "Passes"),
+                ("CRN", "Corners"),
+                ("FLS", "Fouls"),
+                ("YC", "Yellow Cards"),
+                ("RC", "Red Cards"),
+            ]
+
+            for (code, title) in countStats {
+                let value = game.totalCount(forName: code)
+                if value > 0 {
+                    lines.append(GameStatLine(id: code, title: title, value: "\(value)"))
+                }
+            }
+        } else {
+            let shootingStats: [(String, String)] = [
+                ("2PT", "2-Pointers"),
+                ("3PT", "3-Pointers"),
+                ("FT", "Free Throws"),
+            ]
+
+            for (code, title) in shootingStats {
+                let made = game.totalMade(forName: code)
+                let attempts = made + game.totalMissed(forName: code)
+                if attempts > 0 {
+                    lines.append(GameStatLine(id: code, title: title, value: "\(made)/\(attempts)"))
+                }
+            }
+
+            let countStats: [(String, String)] = [
+                ("DREB", "Defensive Rebounds"),
+                ("OREB", "Offensive Rebounds"),
+                ("AST", "Assists"),
+                ("STL", "Steals"),
+                ("PF", "Fouls"),
+                ("TO", "Turnovers"),
+                ("MD", "Missed Drive"),
+                ("SD", "Successful Drive"),
+                ("BPO", "Bad Offense"),
+                ("BPD", "Bad Defense"),
+                ("GPO", "Great Offense"),
+                ("GPD", "Great Defense"),
+            ]
+
+            for (code, title) in countStats {
+                let value = game.totalCount(forName: code)
+                if value > 0 {
+                    lines.append(GameStatLine(id: code, title: title, value: "\(value)"))
+                }
+            }
+        }
+
+        return lines
+    }
+
     var body: some View {
         List {
             // Score header
             Section {
                 VStack(spacing: 12) {
-                    Text("\(game.totalPoints)")
-                        .font(.system(size: 64, weight: .bold))
+                    Text("\(primaryScoreValue)")
+                        .scaledFont(size: 64, weight: .bold, relativeTo: .largeTitle)
                         .foregroundStyle(.accent)
 
-                    Text(isSoccer ? "Goals" : "Total Points")
+                    Text(primaryScoreLabel)
                         .font(.headline)
                         .foregroundStyle(.secondary)
 
                     // Quick stats row
                     if !isSoccer {
-                        HStack(spacing: 24) {
-                            QuickStatPill(value: game.stat(named: "DREB")?.count ?? 0 + (game.stat(named: "OREB")?.count ?? 0), label: "REB")
-                            QuickStatPill(value: game.stat(named: "AST")?.count ?? 0, label: "AST")
-                            QuickStatPill(value: game.stat(named: "STL")?.count ?? 0, label: "STL")
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 60), spacing: 16)], spacing: 12) {
+                            QuickStatPill(value: game.totalCount(forName: "DREB") + game.totalCount(forName: "OREB"), label: "REB")
+                            QuickStatPill(value: game.totalCount(forName: "AST"), label: "AST")
+                            QuickStatPill(value: game.totalCount(forName: "STL"), label: "STL")
+                            QuickStatPill(value: game.totalCount(forName: "TO"), label: "TO")
                         }
                         .padding(.top, 8)
                     } else {
-                        HStack(spacing: 24) {
-                            QuickStatPill(value: game.stat(named: "AST")?.count ?? 0, label: "AST")
-                            QuickStatPill(value: game.stat(named: "SAV")?.count ?? 0, label: "SAV")
-                            QuickStatPill(value: game.stat(named: "SOT")?.made ?? 0, label: "SOT")
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 60), spacing: 16)], spacing: 12) {
+                            QuickStatPill(value: game.totalCount(forName: "AST"), label: "AST")
+                            QuickStatPill(value: game.totalCount(forName: "SAV"), label: "SAV")
+                            QuickStatPill(value: game.totalMade(forName: "SOT"), label: "SOT")
                         }
                         .padding(.top, 8)
                     }
@@ -60,6 +145,17 @@ struct GameDetailView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical)
                 .listRowBackground(Color.clear)
+            }
+
+            Section("Game Stats") {
+                if gameStatLines.isEmpty {
+                    Text("No stats recorded yet.")
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(gameStatLines) { line in
+                        LabeledContent(line.title, value: line.value)
+                    }
+                }
             }
 
             Section("Game Info") {
@@ -155,6 +251,7 @@ struct GameDetailView: View {
                     } label: {
                         Image(systemName: "ellipsis.circle")
                     }
+                    .accessibilityLabel("Game actions")
                 }
             }
         }
@@ -238,7 +335,7 @@ struct PersonStatsRow: View {
                     .foregroundStyle(.accent)
             }
 
-            HStack(spacing: 16) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 56), spacing: 16)], alignment: .leading, spacing: 12) {
                 ForEach(stats.stats?.filter { $0.total > 0 } ?? [], id: \.id) { stat in
                     if let def = stat.definition {
                         VStack(spacing: 2) {
@@ -279,6 +376,18 @@ struct QuickStatPill: View {
     let value: Int
     let label: String
 
+    private var accessibleLabel: String {
+        switch label {
+        case "REB": return "Rebounds"
+        case "AST": return "Assists"
+        case "STL": return "Steals"
+        case "TO": return "Turnovers"
+        case "SAV": return "Saves"
+        case "SOT": return "Shots on target"
+        default: return label
+        }
+    }
+
     var body: some View {
         VStack(spacing: 2) {
             Text("\(value)")
@@ -288,6 +397,8 @@ struct QuickStatPill: View {
                 .foregroundStyle(.secondary)
         }
         .frame(minWidth: 50)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(accessibleLabel): \(value)")
     }
 }
 

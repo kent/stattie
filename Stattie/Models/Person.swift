@@ -124,7 +124,7 @@ extension Person {
     var totalCareerPoints: Int {
         (gameStats ?? [])
             .filter { $0.game?.isCompleted == true }
-            .compactMap { $0.game?.totalPoints }
+            .map { $0.totalPoints }
             .reduce(0, +)
     }
 
@@ -145,7 +145,7 @@ extension Person {
     var careerHighPoints: Int {
         (gameStats ?? [])
             .filter { $0.game?.isCompleted == true }
-            .compactMap { $0.game?.totalPoints }
+            .map { $0.totalPoints }
             .max() ?? 0
     }
 
@@ -153,7 +153,7 @@ extension Person {
     var careerHighRebounds: Int {
         (gameStats ?? [])
             .filter { $0.game?.isCompleted == true }
-            .map { ($0.game?.stat(named: "DREB")?.count ?? 0) + ($0.game?.stat(named: "OREB")?.count ?? 0) }
+            .map { $0.totalRebounds }
             .max() ?? 0
     }
 
@@ -161,7 +161,7 @@ extension Person {
     var careerHighAssists: Int {
         (gameStats ?? [])
             .filter { $0.game?.isCompleted == true }
-            .compactMap { $0.game?.stat(named: "AST")?.count }
+            .map { $0.totalAssists }
             .max() ?? 0
     }
 
@@ -189,24 +189,5 @@ extension Person {
 
         let totalPM = gamesWithShifts.map { $0.totalPlusMinus }.reduce(0, +)
         return Double(totalPM) / Double(gamesWithShifts.count)
-    }
-}
-
-// MARK: - Sharing Support
-
-extension Person {
-    /// Checks if this person is shared (async operation via CloudKitShareManager)
-    func checkIsShared() async -> Bool {
-        await CloudKitShareManager.shared.isPersonShared(self)
-    }
-
-    /// Checks if current user is the owner of this person's share
-    func checkIsOwner() async -> Bool {
-        await CloudKitShareManager.shared.isOwner(of: self)
-    }
-
-    /// Gets the count of participants this person is shared with (excluding owner)
-    func getShareParticipantCount() async -> Int {
-        await CloudKitShareManager.shared.getParticipantCount(for: self)
     }
 }

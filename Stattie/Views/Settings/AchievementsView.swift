@@ -18,7 +18,7 @@ struct AchievementsView: View {
                 // Header with points
                 VStack(spacing: 8) {
                     Text("\(totalPoints)")
-                        .font(.system(size: 48, weight: .bold))
+                        .scaledFont(size: 48, weight: .bold, relativeTo: .largeTitle)
                         .foregroundStyle(.accent)
 
                     Text("Achievement Points")
@@ -55,6 +55,11 @@ struct AchievementsView: View {
         }
         .navigationTitle("Achievements")
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            AchievementManager.shared.synchronizeFromCloud(force: true)
+            unlockedAchievements = AchievementManager.shared.unlockedAchievements
+            totalPoints = AchievementManager.shared.totalPoints
+        }
     }
 }
 
@@ -120,6 +125,15 @@ struct AchievementRow: View {
         .background(Color(.secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .opacity(isUnlocked ? 1 : 0.7)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(
+            A11yLabels.achievement(
+                title: achievement.title,
+                description: achievement.description,
+                isUnlocked: isUnlocked,
+                points: achievement.points
+            )
+        )
     }
 }
 

@@ -17,7 +17,7 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://stattie.app'),
+  metadataBase: new URL('https://www.stattie.com'),
   title: {
     template: '%s - Stattie',
     default: 'Stattie - Track Every Game. Own Every Stat.',
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://stattie.app',
+    url: 'https://www.stattie.com',
     siteName: 'Stattie',
     title: 'Stattie - Track Every Game. Own Every Stat.',
     description:
@@ -83,16 +83,8 @@ export const metadata: Metadata = {
     title: 'Stattie',
     statusBarStyle: 'black-translucent',
   },
-  appLinks: {
-    ios: {
-      app_store_id: 'YOUR_APP_STORE_ID',
-      app_name: 'Stattie',
-      url: 'stattie://',
-    },
-  },
   itunes: {
-    appId: 'YOUR_APP_STORE_ID',
-    appArgument: 'stattie://',
+    appId: '6758022135',
   },
   category: 'sports',
   robots: {
@@ -126,11 +118,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={clsx('bg-gray-50 antialiased', inter.variable)}>
-      <head>
-        <link rel="canonical" href="https://stattie.app" />
-        <meta name="apple-itunes-app" content="app-id=YOUR_APP_STORE_ID" />
-        <meta name="google-site-verification" content="YOUR_GOOGLE_VERIFICATION_CODE" />
-      </head>
       <body>{children}</body>
     </html>
   )

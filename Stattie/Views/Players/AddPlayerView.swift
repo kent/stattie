@@ -14,7 +14,7 @@ struct AddPersonView: View {
     @Query private var users: [User]
 
     private var currentUser: User? {
-        users.first
+        users.resolvedCurrentUser
     }
 
     private var isValid: Bool {
@@ -52,6 +52,8 @@ struct AddPersonView: View {
                                 }
                             }
                         }
+                        .accessibilityLabel(photoData == nil ? "Add player photo" : "Change player photo")
+                        .accessibilityHint("Opens the photo library")
                         Spacer()
                     }
                     .listRowBackground(Color.clear)

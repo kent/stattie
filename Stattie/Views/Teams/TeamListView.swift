@@ -4,14 +4,23 @@ import SwiftData
 struct TeamListView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Team.name) private var teams: [Team]
+    @Query private var users: [User]
     @State private var showingAddTeam = false
     @State private var searchText = ""
 
+    private var currentUser: User? {
+        users.resolvedCurrentUser
+    }
+
+    private var ownedTeams: [Team] {
+        teams.filter { $0.isOwned(by: currentUser) }
+    }
+
     var filteredTeams: [Team] {
         if searchText.isEmpty {
-            return teams.filter { $0.isActive }
+            return ownedTeams.filter { $0.isActive }
         }
-        return teams.filter { team in
+        return ownedTeams.filter { team in
             team.isActive && team.name.localizedCaseInsensitiveContains(searchText)
         }
     }
@@ -37,6 +46,7 @@ struct TeamListView: View {
                     } label: {
                         Image(systemName: "plus")
                     }
+                    .accessibilityLabel("Create team")
                 }
             }
             .sheet(isPresented: $showingAddTeam) {
@@ -51,7 +61,7 @@ struct TeamListView: View {
             ContentUnavailableView {
                 Label("No Teams Yet", systemImage: "person.3.fill")
             } description: {
-                Text("Create a team to organize your players and track games together")
+                Text("Create a team to organize players and keep games together")
             } actions: {
                 Button("Create Team") {
                     showingAddTeam = true

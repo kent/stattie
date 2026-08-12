@@ -38,7 +38,11 @@ final class User {
         if let lastDate = lastGameDate {
             let daysBetween = calendar.dateComponents([.day], from: calendar.startOfDay(for: lastDate), to: calendar.startOfDay(for: date)).day ?? 0
 
-            if daysBetween == 0 {
+            // Completing or importing an older game must not rewind the current
+            // streak anchor or corrupt a newer completion.
+            if daysBetween < 0 {
+                return
+            } else if daysBetween == 0 {
                 // Same day, no change
                 return
             } else if daysBetween == 1 {

@@ -13,7 +13,7 @@ export default function TermsPage() {
         <h1 className="text-3xl font-medium tracking-tight text-gray-900">
           Terms of Service
         </h1>
-        <p className="mt-4 text-sm text-gray-500">Last updated: January 2025</p>
+        <p className="mt-4 text-sm text-gray-500">Last updated: August 12, 2026</p>
 
         <div className="mt-8 space-y-8 text-gray-700">
           <section>
@@ -84,8 +84,8 @@ export default function TermsPage() {
             <h2 className="text-xl font-semibold text-gray-900">Contact</h2>
             <p className="mt-4">
               If you have any questions about these terms, please contact us at{' '}
-              <a href="mailto:legal@stattie.app" className="text-orange-600 underline">
-                legal@stattie.app
+              <a href="mailto:kent.fenwick@gmail.com" className="text-orange-600 underline">
+                kent.fenwick@gmail.com
               </a>
               .
             </p>

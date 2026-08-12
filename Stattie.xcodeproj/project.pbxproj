@@ -7,12 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0E458EC7F75495D2C2723457 /* PostGameInvitePrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = BACDB9A33FCA993E1F17BAE1 /* PostGameInvitePrompt.swift */; };
-		8EC431B475F081128744B245 /* TeamInviteManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BE3B5E9409D77DB051711EB /* TeamInviteManager.swift */; };
-		B0260B140EDB144A102E1621 /* TeamInviteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7997BDECAA8F6DD8A163DEEF /* TeamInviteView.swift */; };
+		B8004615F3AD8C6A57104A65 /* CanonicalStatModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208F798872C3486286D461A4 /* CanonicalStatModelTests.swift */; };
 		C10000002B00003B /* TeamListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000002B00003B /* TeamListView.swift */; };
 		C10000002B00003C /* TeamDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000002B00003C /* TeamDetailView.swift */; };
 		C10000002B00003D /* AddTeamView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000002B00003D /* AddTeamView.swift */; };
+		D41AEE01896277DA537C7661 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B8D9E908A0524BDC7CCD3969 /* Foundation.framework */; };
 		E01000002B000001 /* StattieApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000001 /* StattieApp.swift */; };
 		E01000002B000002 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000002 /* AppState.swift */; };
 		E01000002B000003 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000003 /* ContentView.swift */; };
@@ -43,11 +42,6 @@
 		E01000002B00001D /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00001D /* Extensions.swift */; };
 		E01000002B00001E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E00000002B00001E /* Assets.xcassets */; };
 		E01000002B00001F /* CloudKitContainerProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000020 /* CloudKitContainerProvider.swift */; };
-		E01000002B000020 /* CloudKitShareManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000021 /* CloudKitShareManager.swift */; };
-		E01000002B000021 /* CloudSharingControllerRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000022 /* CloudSharingControllerRepresentable.swift */; };
-		E01000002B000022 /* SharedPlayerBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000023 /* SharedPlayerBadge.swift */; };
-		E01000002B000023 /* SharePlayerButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000024 /* SharePlayerButton.swift */; };
-		E01000002B000024 /* ShareManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000025 /* ShareManagementView.swift */; };
 		E01000002B000025 /* PlayerStatsOverTimeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000026 /* PlayerStatsOverTimeView.swift */; };
 		E01000002B000026 /* NewGameForPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000027 /* NewGameForPlayerView.swift */; };
 		E01000002B000028 /* SoccerPosition.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000028 /* SoccerPosition.swift */; };
@@ -57,7 +51,6 @@
 		E01000002B00002C /* Shift.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00002C /* Shift.swift */; };
 		E01000002B00002D /* ShiftStat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00002D /* ShiftStat.swift */; };
 		E01000002B00002E /* ShiftTrackingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00002E /* ShiftTrackingView.swift */; };
-		E01000002B00002F /* ShareInviteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00002F /* ShareInviteView.swift */; };
 		E01000002B000030 /* Achievement.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000030 /* Achievement.swift */; };
 		E01000002B000031 /* AchievementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000031 /* AchievementsView.swift */; };
 		E01000002B000032 /* ConfettiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000032 /* ConfettiView.swift */; };
@@ -69,15 +62,31 @@
 		E01000002B000038 /* ShareableStatsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000038 /* ShareableStatsCard.swift */; };
 		E01000002B000039 /* ReferralManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000039 /* ReferralManager.swift */; };
 		E01000002B00003A /* AccessibilityHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00003A /* AccessibilityHelpers.swift */; };
+		E01000002B00003B /* SharedModelContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00003B /* SharedModelContainer.swift */; };
+		E01000002B00003C /* SyncedAppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00003C /* SyncedAppSettings.swift */; };
+		E01000002B00003D /* SyncedAchievementState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00003D /* SyncedAchievementState.swift */; };
+		E01000002B00003E /* SyncedAICacheEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00003E /* SyncedAICacheEntry.swift */; };
+		E01000002B00003F /* CloudSyncedPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00003F /* CloudSyncedPreferences.swift */; };
+		ED23180261715630D5B7E8DB /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E6B07DDEB1324F07934F0292 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		00F7A89397B2A7BC1CBF17E3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E07000002B000000 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E04000002B000000;
+			remoteInfo = Stattie;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
-		3BE3B5E9409D77DB051711EB /* TeamInviteManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TeamInviteManager.swift; path = Stattie/Services/TeamInviteManager.swift; sourceTree = SOURCE_ROOT; };
-		7997BDECAA8F6DD8A163DEEF /* TeamInviteView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TeamInviteView.swift; path = Stattie/Views/Teams/TeamInviteView.swift; sourceTree = SOURCE_ROOT; };
+		208F798872C3486286D461A4 /* CanonicalStatModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CanonicalStatModelTests.swift; sourceTree = "<group>"; };
+		9B1A842DFB0B3585A4BB4990 /* StattieTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StattieTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B8D9E908A0524BDC7CCD3969 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		D10000002B00003B /* TeamListView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TeamListView.swift; path = Stattie/Views/Teams/TeamListView.swift; sourceTree = SOURCE_ROOT; };
 		D10000002B00003C /* TeamDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TeamDetailView.swift; path = Stattie/Views/Teams/TeamDetailView.swift; sourceTree = SOURCE_ROOT; };
 		D10000002B00003D /* AddTeamView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AddTeamView.swift; path = Stattie/Views/Teams/AddTeamView.swift; sourceTree = SOURCE_ROOT; };
-		BACDB9A33FCA993E1F17BAE1 /* PostGameInvitePrompt.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PostGameInvitePrompt.swift; path = Stattie/Views/Components/PostGameInvitePrompt.swift; sourceTree = SOURCE_ROOT; };
 		E00000002B000000 /* Stattie.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Stattie.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E00000002B000001 /* StattieApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StattieApp.swift; sourceTree = "<group>"; };
 		E00000002B000002 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
@@ -110,11 +119,6 @@
 		E00000002B00001E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E00000002B00001F /* Stattie.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Stattie.entitlements; sourceTree = "<group>"; };
 		E00000002B000020 /* CloudKitContainerProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitContainerProvider.swift; sourceTree = "<group>"; };
-		E00000002B000021 /* CloudKitShareManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitShareManager.swift; sourceTree = "<group>"; };
-		E00000002B000022 /* CloudSharingControllerRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSharingControllerRepresentable.swift; sourceTree = "<group>"; };
-		E00000002B000023 /* SharedPlayerBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedPlayerBadge.swift; sourceTree = "<group>"; };
-		E00000002B000024 /* SharePlayerButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharePlayerButton.swift; sourceTree = "<group>"; };
-		E00000002B000025 /* ShareManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareManagementView.swift; sourceTree = "<group>"; };
 		E00000002B000026 /* PlayerStatsOverTimeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerStatsOverTimeView.swift; sourceTree = "<group>"; };
 		E00000002B000027 /* NewGameForPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewGameForPlayerView.swift; sourceTree = "<group>"; };
 		E00000002B000028 /* SoccerPosition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoccerPosition.swift; sourceTree = "<group>"; };
@@ -124,7 +128,6 @@
 		E00000002B00002C /* Shift.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shift.swift; sourceTree = "<group>"; };
 		E00000002B00002D /* ShiftStat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShiftStat.swift; sourceTree = "<group>"; };
 		E00000002B00002E /* ShiftTrackingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShiftTrackingView.swift; sourceTree = "<group>"; };
-		E00000002B00002F /* ShareInviteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareInviteView.swift; sourceTree = "<group>"; };
 		E00000002B000030 /* Achievement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Achievement.swift; sourceTree = "<group>"; };
 		E00000002B000031 /* AchievementsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AchievementsView.swift; sourceTree = "<group>"; };
 		E00000002B000032 /* ConfettiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfettiView.swift; sourceTree = "<group>"; };
@@ -136,9 +139,23 @@
 		E00000002B000038 /* ShareableStatsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareableStatsCard.swift; sourceTree = "<group>"; };
 		E00000002B000039 /* ReferralManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReferralManager.swift; sourceTree = "<group>"; };
 		E00000002B00003A /* AccessibilityHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityHelpers.swift; sourceTree = "<group>"; };
+		E00000002B00003B /* SharedModelContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedModelContainer.swift; sourceTree = "<group>"; };
+		E00000002B00003C /* SyncedAppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncedAppSettings.swift; sourceTree = "<group>"; };
+		E00000002B00003D /* SyncedAchievementState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncedAchievementState.swift; sourceTree = "<group>"; };
+		E00000002B00003E /* SyncedAICacheEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncedAICacheEntry.swift; sourceTree = "<group>"; };
+		E00000002B00003F /* CloudSyncedPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncedPreferences.swift; sourceTree = "<group>"; };
+		E6B07DDEB1324F07934F0292 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		3114B61D345E2DABA91710C4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D41AEE01896277DA537C7661 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E02000002B000000 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -152,7 +169,6 @@
 		0E1643547B062EC7C59CA91C /* Teams */ = {
 			isa = PBXGroup;
 			children = (
-				7997BDECAA8F6DD8A163DEEF /* TeamInviteView.swift */,
 				D10000002B00003B /* TeamListView.swift */,
 				D10000002B00003C /* TeamDetailView.swift */,
 				D10000002B00003D /* AddTeamView.swift */,
@@ -179,15 +195,21 @@
 		63177C4CD8600E20ABC704DB /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				3BE3B5E9409D77DB051711EB /* TeamInviteManager.swift */,
 			);
 			name = Services;
+			sourceTree = "<group>";
+		};
+		A36C36EBBDD65E3D6DC7014E /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				F8EAC9955547CF9BEB4AB69B /* iOS */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		C925F575E02765A0F208E72A /* Components */ = {
 			isa = PBXGroup;
 			children = (
-				BACDB9A33FCA993E1F17BAE1 /* PostGameInvitePrompt.swift */,
 			);
 			name = Components;
 			sourceTree = "<group>";
@@ -197,6 +219,8 @@
 			children = (
 				E03000002B000001 /* Stattie */,
 				E03000002B000002 /* Products */,
+				A36C36EBBDD65E3D6DC7014E /* Frameworks */,
+				F07AA26D683F6A498754AF52 /* StattieTests */,
 			);
 			sourceTree = "<group>";
 		};
@@ -213,6 +237,7 @@
 				E00000002B00001F /* Stattie.entitlements */,
 				49CF6571D3962B08111F3B8A /* Views */,
 				63177C4CD8600E20ABC704DB /* Services */,
+				E6B07DDEB1324F07934F0292 /* PrivacyInfo.xcprivacy */,
 			);
 			path = Stattie;
 			sourceTree = "<group>";
@@ -221,6 +246,7 @@
 			isa = PBXGroup;
 			children = (
 				E00000002B000000 /* Stattie.app */,
+				9B1A842DFB0B3585A4BB4990 /* StattieTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -230,6 +256,7 @@
 			children = (
 				E00000002B000001 /* StattieApp.swift */,
 				E00000002B000002 /* AppState.swift */,
+				E00000002B00003B /* SharedModelContainer.swift */,
 				E00000002B000020 /* CloudKitContainerProvider.swift */,
 			);
 			path = App;
@@ -252,6 +279,9 @@
 				E00000002B00002D /* ShiftStat.swift */,
 				E00000002B000030 /* Achievement.swift */,
 				E00000002B000035 /* Season.swift */,
+				E00000002B00003C /* SyncedAppSettings.swift */,
+				E00000002B00003D /* SyncedAchievementState.swift */,
+				E00000002B00003E /* SyncedAICacheEntry.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -288,8 +318,8 @@
 				E00000002B000015 /* SyncManager.swift */,
 				E00000002B000016 /* LockManager.swift */,
 				E00000002B000017 /* ShareService.swift */,
+				E00000002B00003F /* CloudSyncedPreferences.swift */,
 				E00000002B000018 /* SeedDataService.swift */,
-				E00000002B000021 /* CloudKitShareManager.swift */,
 				E00000002B000036 /* NotificationManager.swift */,
 				E00000002B000037 /* ReviewManager.swift */,
 				E00000002B000039 /* ReferralManager.swift */,
@@ -384,9 +414,6 @@
 		E03000002B000011 /* Components */ = {
 			isa = PBXGroup;
 			children = (
-				E00000002B000022 /* CloudSharingControllerRepresentable.swift */,
-				E00000002B000023 /* SharedPlayerBadge.swift */,
-				E00000002B000024 /* SharePlayerButton.swift */,
 				E00000002B000029 /* PositionPickerView.swift */,
 				E00000002B000032 /* ConfettiView.swift */,
 			);
@@ -396,8 +423,6 @@
 		E03000002B000012 /* Sharing */ = {
 			isa = PBXGroup;
 			children = (
-				E00000002B000025 /* ShareManagementView.swift */,
-				E00000002B00002F /* ShareInviteView.swift */,
 				E00000002B000038 /* ShareableStatsCard.swift */,
 			);
 			path = Sharing;
@@ -419,9 +444,44 @@
 			path = Accessibility;
 			sourceTree = "<group>";
 		};
+		F07AA26D683F6A498754AF52 /* StattieTests */ = {
+			isa = PBXGroup;
+			children = (
+				208F798872C3486286D461A4 /* CanonicalStatModelTests.swift */,
+			);
+			name = StattieTests;
+			path = StattieTests;
+			sourceTree = "<group>";
+		};
+		F8EAC9955547CF9BEB4AB69B /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				B8D9E908A0524BDC7CCD3969 /* Foundation.framework */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		851B7358EA2902E9AD308150 /* StattieTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5051F6AF9A4D42C05DA2F2A5 /* Build configuration list for PBXNativeTarget "StattieTests" */;
+			buildPhases = (
+				B6E3E18CD7904F1E040B339F /* Sources */,
+				3114B61D345E2DABA91710C4 /* Frameworks */,
+				6150ADF94DD3CA45C718C505 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				8E6B13C40DD8DF9DBAE7D8E3 /* PBXTargetDependency */,
+			);
+			name = StattieTests;
+			productName = StattieTests;
+			productReference = 9B1A842DFB0B3585A4BB4990 /* StattieTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		E04000002B000000 /* Stattie */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = E06000002B000000 /* Build configuration list for PBXNativeTarget "Stattie" */;
@@ -468,22 +528,39 @@
 			projectRoot = "";
 			targets = (
 				E04000002B000000 /* Stattie */,
+				851B7358EA2902E9AD308150 /* StattieTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		6150ADF94DD3CA45C718C505 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E05000002B000001 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				E01000002B00001E /* Assets.xcassets in Resources */,
+				ED23180261715630D5B7E8DB /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		B6E3E18CD7904F1E040B339F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B8004615F3AD8C6A57104A65 /* CanonicalStatModelTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E05000002B000000 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -517,11 +594,6 @@
 				E01000002B00001C /* SettingsView.swift in Sources */,
 				E01000002B00001D /* Extensions.swift in Sources */,
 				E01000002B00001F /* CloudKitContainerProvider.swift in Sources */,
-				E01000002B000020 /* CloudKitShareManager.swift in Sources */,
-				E01000002B000021 /* CloudSharingControllerRepresentable.swift in Sources */,
-				E01000002B000022 /* SharedPlayerBadge.swift in Sources */,
-				E01000002B000023 /* SharePlayerButton.swift in Sources */,
-				E01000002B000024 /* ShareManagementView.swift in Sources */,
 				E01000002B000025 /* PlayerStatsOverTimeView.swift in Sources */,
 				E01000002B000026 /* NewGameForPlayerView.swift in Sources */,
 				E01000002B000028 /* SoccerPosition.swift in Sources */,
@@ -531,7 +603,6 @@
 				E01000002B00002C /* Shift.swift in Sources */,
 				E01000002B00002D /* ShiftStat.swift in Sources */,
 				E01000002B00002E /* ShiftTrackingView.swift in Sources */,
-				E01000002B00002F /* ShareInviteView.swift in Sources */,
 				E01000002B000030 /* Achievement.swift in Sources */,
 				E01000002B000031 /* AchievementsView.swift in Sources */,
 				E01000002B000032 /* ConfettiView.swift in Sources */,
@@ -543,18 +614,70 @@
 				E01000002B000038 /* ShareableStatsCard.swift in Sources */,
 				E01000002B000039 /* ReferralManager.swift in Sources */,
 				E01000002B00003A /* AccessibilityHelpers.swift in Sources */,
-				B0260B140EDB144A102E1621 /* TeamInviteView.swift in Sources */,
+				E01000002B00003B /* SharedModelContainer.swift in Sources */,
+				E01000002B00003C /* SyncedAppSettings.swift in Sources */,
+				E01000002B00003D /* SyncedAchievementState.swift in Sources */,
+				E01000002B00003E /* SyncedAICacheEntry.swift in Sources */,
+				E01000002B00003F /* CloudSyncedPreferences.swift in Sources */,
 				C10000002B00003B /* TeamListView.swift in Sources */,
 				C10000002B00003C /* TeamDetailView.swift in Sources */,
 				C10000002B00003D /* AddTeamView.swift in Sources */,
-				8EC431B475F081128744B245 /* TeamInviteManager.swift in Sources */,
-				0E458EC7F75495D2C2723457 /* PostGameInvitePrompt.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		8E6B13C40DD8DF9DBAE7D8E3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = Stattie;
+			target = E04000002B000000 /* Stattie */;
+			targetProxy = 00F7A89397B2A7BC1CBF17E3 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		2621BFDAC8D31D376119F812 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = PS5W7BFTQ2;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stattie.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Stattie.app/Stattie";
+				TEST_TARGET_NAME = Stattie;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		DA3312C110FB94CF1E177BA6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = PS5W7BFTQ2;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stattie.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Stattie.app/Stattie";
+				TEST_TARGET_NAME = Stattie;
+			};
+			name = Debug;
+		};
 		E08000002B000000 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -681,22 +804,25 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Stattie/Stattie.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = PS5W7BFTQ2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Stattie/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Stattie;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.sports";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIRequiresFullScreen = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.stattie.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -712,22 +838,25 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Stattie/Stattie.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = PS5W7BFTQ2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Stattie/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Stattie;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.sports";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIRequiresFullScreen = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.stattie.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -739,6 +868,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		5051F6AF9A4D42C05DA2F2A5 /* Build configuration list for PBXNativeTarget "StattieTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2621BFDAC8D31D376119F812 /* Release */,
+				DA3312C110FB94CF1E177BA6 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		E06000002B000000 /* Build configuration list for PBXNativeTarget "Stattie" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

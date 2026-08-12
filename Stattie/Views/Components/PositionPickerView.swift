@@ -48,6 +48,8 @@ struct PositionPickerView: View {
                                 .foregroundStyle(.secondary)
                         }
                         .buttonStyle(.plain)
+                        .minimumAccessibleTapTarget()
+                        .accessibilityLabel("Remove \(assignment.position.displayName)")
                     }
                 }
 
@@ -134,6 +136,9 @@ struct SimplePositionSelectionSheet: View {
                                 }
                             }
                             .buttonStyle(.plain)
+                            .accessibilityLabel(position.displayName)
+                            .accessibilityValue(selectedPositions.contains(position) ? "Selected" : "Not selected")
+                            .accessibilityHint("Double tap to toggle selection")
                         }
                     }
                 }
@@ -231,7 +236,7 @@ struct InlinePositionPicker: View {
                 } else {
                     Text(assignments.shortDisplayText)
                         .foregroundStyle(.secondary)
-                        .lineLimit(1)
+                        .multilineTextAlignment(.trailing)
                 }
                 Image(systemName: "chevron.right")
                     .font(.caption)

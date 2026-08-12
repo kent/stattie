@@ -3,7 +3,7 @@ import { Container } from '@/components/Container'
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
-  description: 'Stattie Privacy Policy - Learn how we protect your data.',
+  description: 'How Stattie handles app data and protects your privacy.',
 }
 
 export default function PrivacyPage() {
@@ -13,67 +13,94 @@ export default function PrivacyPage() {
         <h1 className="text-3xl font-medium tracking-tight text-gray-900">
           Privacy Policy
         </h1>
-        <p className="mt-4 text-sm text-gray-500">Last updated: January 2025</p>
+        <p className="mt-4 text-sm text-gray-500">Last updated: August 12, 2026</p>
 
         <div className="mt-8 space-y-8 text-gray-700">
           <section>
             <h2 className="text-xl font-semibold text-gray-900">Overview</h2>
             <p className="mt-4">
-              Stattie is designed with your privacy in mind. We believe your data belongs to you,
-              and we&apos;ve built our app to respect that principle.
+              Stattie does not use advertising, third-party analytics, or cross-app tracking.
+              The app is designed to keep the player and game information you enter under
+              your control.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900">Data Storage</h2>
+            <h2 className="text-xl font-semibold text-gray-900">Information you create</h2>
             <p className="mt-4">
-              All your data is stored locally on your device and in your personal iCloud account.
-              We do not have access to your data, and we do not store any information on our servers.
+              You may enter player names, photos, team and season details, game statistics,
+              notes, and app preferences. This content is stored on your device. If you use
+              iCloud, Apple also stores it in your private iCloud account so it can sync
+              between your devices.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900">iCloud Sync</h2>
+            <h2 className="text-xl font-semibold text-gray-900">How information is used</h2>
             <p className="mt-4">
-              When you enable iCloud sync, your data is stored in your personal iCloud account
-              using Apple&apos;s CloudKit framework. This data is protected by Apple&apos;s security
-              measures and your Apple ID credentials.
+              Stattie uses your information to provide tracking, summaries, trends,
+              notifications you enable, and coaching recommendations. Coaching calculations
+              run on the device; Stattie does not send player or game information to an AI
+              service.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900">Data Sharing</h2>
+            <h2 className="text-xl font-semibold text-gray-900">iCloud</h2>
             <p className="mt-4">
-              When you share data with other users through iCloud sharing, only the people you
-              explicitly invite can access that shared data. You control who has access and can
-              revoke access at any time.
+              iCloud sync is optional and is provided by Apple&apos;s CloudKit service. Stattie
+              does not operate a separate account system or developer database for your app
+              content. Apple processes iCloud data according to your Apple account settings
+              and Apple&apos;s privacy terms.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900">Analytics</h2>
+            <h2 className="text-xl font-semibold text-gray-900">Sharing</h2>
             <p className="mt-4">
-              We do not collect any personal information or usage analytics. We don&apos;t track
-              how you use the app, what stats you record, or any other information about your activity.
+              When you choose an iOS share action, the content you select is sent to the
+              destination you choose using Apple&apos;s share sheet. Stattie does not receive a
+              copy. Be careful when sharing information about minors or other people.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900">Third Parties</h2>
+            <h2 className="text-xl font-semibold text-gray-900">Tracking and analytics</h2>
             <p className="mt-4">
-              We do not share, sell, or transfer your data to any third parties. The only external
-              service involved is Apple&apos;s iCloud, which is necessary for sync and sharing features.
+              Stattie does not include advertising SDKs, use the advertising identifier,
+              profile you across apps or websites, or collect usage analytics. Apple may
+              process App Store, iCloud, and device diagnostic information under Apple&apos;s own
+              policies and the diagnostic choices on your device.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-gray-900">Retention and deletion</h2>
+            <p className="mt-4">
+              Your content remains on your device and, when enabled, in iCloud until you
+              delete it. Deleting content in Stattie removes it from the app and allows that
+              deletion to sync through iCloud. You can also manage Stattie&apos;s iCloud data in
+              your Apple account settings.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-gray-900">Children&apos;s information</h2>
+            <p className="mt-4">
+              Stattie is intended for coaches, parents, and other adults. If you add
+              information about a child or another person, you are responsible for having
+              permission to record and share it.
             </p>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-gray-900">Contact</h2>
             <p className="mt-4">
-              If you have any questions about this privacy policy, please contact us at{' '}
-              <a href="mailto:privacy@stattie.app" className="text-orange-600 underline">
-                privacy@stattie.app
+              Questions or privacy requests can be sent to{' '}
+              <a href="mailto:kent.fenwick@gmail.com" className="text-orange-600 underline">
+                kent.fenwick@gmail.com
               </a>
-              .
+              . Please do not include player records or other sensitive app content in email.
             </p>
           </section>
         </div>

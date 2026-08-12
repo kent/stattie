@@ -30,7 +30,7 @@ const features = [
   'Shift-based live tracking',
   'Sport-specific stat presets',
   'Game edit and delete tools',
-  'iCloud sharing with team',
+  'Shareable game summaries',
   'Detailed game and shift summaries',
   'Offline mode',
   'All future updates included',

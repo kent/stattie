@@ -1,0 +1,13 @@
+Track basketball and soccer stats in real time with Stattie. Built for coaches, parents, and players, Stattie makes live game tracking simple with large tap targets, shift-based stat capture, and instant game summaries.
+
+Use Stattie to record shots, rebounds, assists, steals, fouls, turnovers, and sport-specific events while the game is happening. Review every player and team with clean summaries, trend views, and shareable insights.
+
+Features:
+- Live in-game stat tracking for basketball and soccer
+- Player, team, and game-level summaries
+- Shift tracking with score context
+- On-device coaching priorities and practice focus items
+- iCloud sync across your devices
+- Offline-friendly capture during games
+
+Stattie helps you focus on what matters next: better decisions, better practice focus, and better game-day outcomes.

@@ -6,6 +6,7 @@ struct GameSummaryView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.requestReview) private var requestReview
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let game: Game
 
     @Query private var users: [User]
@@ -15,10 +16,10 @@ struct GameSummaryView: View {
     @State private var newAchievements: [AchievementType] = []
     @State private var showingAchievement = false
     @State private var currentAchievementIndex = 0
-    @State private var showingInvitePrompt = false
-    @State private var showingTeamInvite = false
+    @State private var coachingReport: CoachingInsightReport?
+    @State private var isLoadingCoachingReport = false
 
-    private var currentUser: User? { users.first }
+    private var currentUser: User? { users.resolvedCurrentUser }
 
     private var motivationalMessage: String {
         let messages = [
@@ -31,21 +32,95 @@ struct GameSummaryView: View {
         return messages.randomElement() ?? messages[0]
     }
 
-    // Get stats sorted by category
-    var shootingStats: [Stat] {
-        (game.stats ?? []).filter { ["2PT", "3PT", "FT"].contains($0.statName) }
-            .sorted { statOrder($0.statName) < statOrder($1.statName) }
+    private struct ShootingStatConfig: Identifiable {
+        let id: String
+        let title: String
+        let pointValue: Int
     }
 
-    var otherStats: [Stat] {
-        (game.stats ?? []).filter { ["DREB", "OREB", "STL", "PF"].contains($0.statName) }
-            .sorted { statOrder($0.statName) < statOrder($1.statName) }
+    private struct CountStatConfig: Identifiable {
+        let id: String
+        let title: String
     }
 
-    var totalRebounds: Int {
-        let dreb = game.stat(named: "DREB")?.count ?? 0
-        let oreb = game.stat(named: "OREB")?.count ?? 0
-        return dreb + oreb
+    private var isSoccer: Bool {
+        game.sport?.name == "Soccer"
+    }
+
+    private var summaryPrimaryValue: Int {
+        isSoccer ? game.totalCount(forName: "GOL") : game.totalPoints
+    }
+
+    private var summaryPrimaryLabel: String {
+        isSoccer ? "Total Goals" : "Total Points"
+    }
+
+    private var shootingStatConfigs: [ShootingStatConfig] {
+        if isSoccer {
+            return [ShootingStatConfig(id: "SOT", title: "Shots On Target", pointValue: 0)]
+        }
+
+        return [
+            ShootingStatConfig(id: "2PT", title: "2-Pointers", pointValue: 2),
+            ShootingStatConfig(id: "3PT", title: "3-Pointers", pointValue: 3),
+            ShootingStatConfig(id: "FT", title: "Free Throws", pointValue: 1),
+        ]
+    }
+
+    private var countStatConfigs: [CountStatConfig] {
+        if isSoccer {
+            return [
+                CountStatConfig(id: "GOL", title: "Goals"),
+                CountStatConfig(id: "AST", title: "Assists"),
+                CountStatConfig(id: "SAV", title: "Saves"),
+                CountStatConfig(id: "TKL", title: "Tackles"),
+                CountStatConfig(id: "INT", title: "Interceptions"),
+                CountStatConfig(id: "PAS", title: "Passes"),
+                CountStatConfig(id: "CRN", title: "Corners"),
+                CountStatConfig(id: "FLS", title: "Fouls"),
+                CountStatConfig(id: "YC", title: "Yellow Cards"),
+                CountStatConfig(id: "RC", title: "Red Cards"),
+            ]
+        }
+
+        return [
+            CountStatConfig(id: "DREB", title: "Defensive Rebounds"),
+            CountStatConfig(id: "OREB", title: "Offensive Rebounds"),
+            CountStatConfig(id: "AST", title: "Assists"),
+            CountStatConfig(id: "STL", title: "Steals"),
+            CountStatConfig(id: "PF", title: "Fouls"),
+            CountStatConfig(id: "TO", title: "Turnovers"),
+            CountStatConfig(id: "MD", title: "Missed Drive"),
+            CountStatConfig(id: "SD", title: "Successful Drive"),
+            CountStatConfig(id: "BPO", title: "Bad Offense"),
+            CountStatConfig(id: "BPD", title: "Bad Defense"),
+            CountStatConfig(id: "GPO", title: "Great Offense"),
+            CountStatConfig(id: "GPD", title: "Great Defense"),
+        ]
+    }
+
+    private var totalRebounds: Int {
+        game.totalCount(forName: "DREB") + game.totalCount(forName: "OREB")
+    }
+
+    private var hasShootingData: Bool {
+        shootingStatConfigs.contains { config in
+            let attempts = game.totalMade(forName: config.id) + game.totalMissed(forName: config.id)
+            return attempts > 0
+        }
+    }
+
+    private var allStatLines: [(title: String, value: String)] {
+        var lines: [(String, String)] = []
+
+        for config in countStatConfigs {
+            let value = game.totalCount(forName: config.id)
+            if value > 0 {
+                lines.append((config.title, "\(value)"))
+            }
+        }
+
+        return lines
     }
 
     // Plus/minus data from player shifts
@@ -80,11 +155,11 @@ struct GameSummaryView: View {
                                 .font(.title2.bold())
                         }
 
-                        Text("\(game.totalPoints)")
-                            .font(.system(size: 72, weight: .bold))
+                        Text("\(summaryPrimaryValue)")
+                            .scaledFont(size: 72, weight: .bold, relativeTo: .largeTitle)
                             .foregroundStyle(.blue)
 
-                        Text("Total Points")
+                        Text(summaryPrimaryLabel)
                             .font(.headline)
                             .foregroundStyle(.secondary)
 
@@ -98,7 +173,7 @@ struct GameSummaryView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 16))
 
                     // Shooting Stats Table
-                    if !shootingStats.isEmpty || game.totalPoints > 0 {
+                    if hasShootingData {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("SHOOTING")
                                 .font(.caption.bold())
@@ -106,52 +181,36 @@ struct GameSummaryView: View {
                                 .padding(.horizontal)
 
                             VStack(spacing: 0) {
-                                // Header row
-                                HStack {
-                                    Text("Stat")
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                    Text("Made")
-                                        .frame(width: 50)
-                                    Text("Att")
-                                        .frame(width: 50)
-                                    Text("Pct")
-                                        .frame(width: 50)
-                                    Text("Pts")
-                                        .frame(width: 50)
+                                // The compact table header is omitted at accessibility
+                                // sizes; each row supplies full, wrapping labels instead.
+                                if !dynamicTypeSize.isAccessibilitySize {
+                                    HStack {
+                                        Text("Stat")
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                        Text("Made").frame(width: 50)
+                                        Text("Att").frame(width: 50)
+                                        Text("Pct").frame(width: 50)
+                                        Text("Pts").frame(width: 50)
+                                    }
+                                    .font(.caption.bold())
+                                    .foregroundStyle(.secondary)
+                                    .padding(.horizontal)
+                                    .padding(.vertical, 8)
+                                    .background(Color(.tertiarySystemGroupedBackground))
                                 }
-                                .font(.caption.bold())
-                                .foregroundStyle(.secondary)
-                                .padding(.horizontal)
-                                .padding(.vertical, 8)
-                                .background(Color(.tertiarySystemGroupedBackground))
 
-                                // 2PT row
-                                StatRow(
-                                    name: "2-Pointers",
-                                    made: game.stat(named: "2PT")?.made ?? 0,
-                                    attempts: (game.stat(named: "2PT")?.made ?? 0) + (game.stat(named: "2PT")?.missed ?? 0),
-                                    pointValue: 2
-                                )
+                                ForEach(Array(shootingStatConfigs.enumerated()), id: \.element.id) { index, config in
+                                    if index > 0 {
+                                        Divider()
+                                    }
 
-                                Divider()
-
-                                // 3PT row
-                                StatRow(
-                                    name: "3-Pointers",
-                                    made: game.stat(named: "3PT")?.made ?? 0,
-                                    attempts: (game.stat(named: "3PT")?.made ?? 0) + (game.stat(named: "3PT")?.missed ?? 0),
-                                    pointValue: 3
-                                )
-
-                                Divider()
-
-                                // FT row
-                                StatRow(
-                                    name: "Free Throws",
-                                    made: game.stat(named: "FT")?.made ?? 0,
-                                    attempts: (game.stat(named: "FT")?.made ?? 0) + (game.stat(named: "FT")?.missed ?? 0),
-                                    pointValue: 1
-                                )
+                                    StatRow(
+                                        name: config.title,
+                                        made: game.totalMade(forName: config.id),
+                                        attempts: game.totalMade(forName: config.id) + game.totalMissed(forName: config.id),
+                                        pointValue: config.pointValue
+                                    )
+                                }
                             }
                             .background(Color(.secondarySystemGroupedBackground))
                             .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -165,24 +224,87 @@ struct GameSummaryView: View {
                             .foregroundStyle(.secondary)
                             .padding(.horizontal)
 
-                        HStack(spacing: 12) {
-                            StatBox(
-                                title: "Rebounds",
-                                value: totalRebounds,
-                                detail: "D: \(game.stat(named: "DREB")?.count ?? 0) / O: \(game.stat(named: "OREB")?.count ?? 0)"
-                            )
+                        if isSoccer {
+                            HStack(spacing: 12) {
+                                StatBox(
+                                    title: "Goals",
+                                    value: game.totalCount(forName: "GOL"),
+                                    detail: nil
+                                )
 
-                            StatBox(
-                                title: "Steals",
-                                value: game.stat(named: "STL")?.count ?? 0,
-                                detail: nil
-                            )
+                                StatBox(
+                                    title: "Assists",
+                                    value: game.totalCount(forName: "AST"),
+                                    detail: nil
+                                )
 
-                            StatBox(
-                                title: "Fouls",
-                                value: game.stat(named: "PF")?.count ?? 0,
-                                detail: nil
-                            )
+                                StatBox(
+                                    title: "Saves",
+                                    value: game.totalCount(forName: "SAV"),
+                                    detail: nil
+                                )
+
+                                StatBox(
+                                    title: "Tackles",
+                                    value: game.totalCount(forName: "TKL"),
+                                    detail: nil
+                                )
+                            }
+                        } else {
+                            HStack(spacing: 12) {
+                                StatBox(
+                                    title: "Rebounds",
+                                    value: totalRebounds,
+                                    detail: "D: \(game.totalCount(forName: "DREB")) / O: \(game.totalCount(forName: "OREB"))"
+                                )
+
+                                StatBox(
+                                    title: "Assists",
+                                    value: game.totalCount(forName: "AST"),
+                                    detail: nil
+                                )
+
+                                StatBox(
+                                    title: "Steals",
+                                    value: game.totalCount(forName: "STL"),
+                                    detail: nil
+                                )
+
+                                StatBox(
+                                    title: "Turnovers",
+                                    value: game.totalCount(forName: "TO"),
+                                    detail: nil
+                                )
+                            }
+                        }
+                    }
+
+                    if !allStatLines.isEmpty {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("ALL STATS")
+                                .font(.caption.bold())
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal)
+
+                            VStack(spacing: 0) {
+                                ForEach(Array(allStatLines.enumerated()), id: \.offset) { index, line in
+                                    if index > 0 {
+                                        Divider()
+                                    }
+
+                                    HStack {
+                                        Text(line.title)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                        Text(line.value)
+                                            .fontWeight(.semibold)
+                                    }
+                                    .font(.subheadline)
+                                    .padding(.horizontal)
+                                    .padding(.vertical, 12)
+                                }
+                            }
+                            .background(Color(.secondarySystemGroupedBackground))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
                     }
 
@@ -195,22 +317,20 @@ struct GameSummaryView: View {
                                 .padding(.horizontal)
 
                             VStack(spacing: 0) {
-                                // Header row
-                                HStack {
-                                    Text("Player")
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                    Text("Shifts")
-                                        .frame(width: 50)
-                                    Text("Time")
-                                        .frame(width: 60)
-                                    Text("+/-")
-                                        .frame(width: 50)
+                                if !dynamicTypeSize.isAccessibilitySize {
+                                    HStack {
+                                        Text("Player")
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                        Text("Shifts").frame(width: 50)
+                                        Text("Time").frame(width: 60)
+                                        Text("+/-").frame(width: 50)
+                                    }
+                                    .font(.caption.bold())
+                                    .foregroundStyle(.secondary)
+                                    .padding(.horizontal)
+                                    .padding(.vertical, 8)
+                                    .background(Color(.tertiarySystemGroupedBackground))
                                 }
-                                .font(.caption.bold())
-                                .foregroundStyle(.secondary)
-                                .padding(.horizontal)
-                                .padding(.vertical, 8)
-                                .background(Color(.tertiarySystemGroupedBackground))
 
                                 ForEach(Array(playerPlusMinusData.enumerated()), id: \.offset) { index, data in
                                     if index > 0 {
@@ -227,6 +347,65 @@ struct GameSummaryView: View {
                             .background(Color(.secondarySystemGroupedBackground))
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
+                    }
+
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Text("NEXT GAME FOCUS")
+                                .font(.caption.bold())
+                                .foregroundStyle(.secondary)
+                            Spacer()
+
+                            if let coachingReport {
+                                Text(coachingReport.source.rawValue)
+                                    .font(.caption.bold())
+                                    .foregroundStyle(.green)
+                            }
+                        }
+                        .padding(.horizontal)
+
+                        if isLoadingCoachingReport {
+                            ProgressView("Calculating from game stats...")
+                                .padding()
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(Color(.secondarySystemGroupedBackground))
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                        } else if let coachingReport {
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text(coachingReport.headline)
+                                    .font(.headline)
+                                Text(coachingReport.summary)
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+
+                                ForEach(coachingReport.focusItems.sorted { $0.rank < $1.rank }) { item in
+                                    CoachingFocusCard(item: item)
+                                }
+                            }
+                            .padding()
+                            .background(Color(.secondarySystemGroupedBackground))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                        } else {
+                            Text("Calculate 3 on-device priorities for what to practice before the next game.")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .padding()
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(Color(.secondarySystemGroupedBackground))
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
+
+                        Button {
+                            Task {
+                                await loadCoachingReport(forceRefresh: true)
+                            }
+                        } label: {
+                            Label("Refresh Insights", systemImage: "sparkles")
+                                .font(.subheadline.weight(.semibold))
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(isLoadingCoachingReport)
                     }
 
                     Spacer(minLength: 40)
@@ -254,88 +433,31 @@ struct GameSummaryView: View {
             .sheet(isPresented: $showingShareSheet) {
                 ShareSheet(items: [generateShareText()])
             }
-            .sheet(isPresented: $showingTeamInvite) {
-                inviteSheetContent
-            }
-            .overlay {
-                invitePromptOverlay
-            }
-            .onAppear(perform: checkInvitePrompt)
-        }
-    }
-
-    // MARK: - Invite Prompt Views
-
-    /// Get players associated with this game
-    private var gamePlayers: [Person] {
-        (game.personStats ?? []).compactMap { $0.person }
-    }
-
-    /// First player's name for display
-    private var firstPlayerName: String {
-        gamePlayers.first?.fullName ?? "Player"
-    }
-
-    @ViewBuilder
-    private var inviteSheetContent: some View {
-        TeamInviteView(team: game.team, players: gamePlayers)
-    }
-
-    @ViewBuilder
-    private var invitePromptOverlay: some View {
-        if showingInvitePrompt {
-            invitePromptContent
-        }
-    }
-
-    private var invitePromptContent: some View {
-        ZStack {
-            Color.black.opacity(0.4)
-                .ignoresSafeArea()
-                .onTapGesture {
-                    withAnimation {
-                        showingInvitePrompt = false
+            .onAppear {
+                if coachingReport == nil {
+                    Task {
+                        await loadCoachingReport()
                     }
                 }
-
-            PostGameInvitePrompt(
-                playerName: firstPlayerName,
-                teamName: game.team?.name ?? "My Team",
-                onInvite: {
-                    showingInvitePrompt = false
-                    showingTeamInvite = true
-                },
-                onDismiss: {
-                    withAnimation {
-                        showingInvitePrompt = false
-                    }
-                }
-            )
-            .transition(.scale.combined(with: .opacity))
-        }
-    }
-
-    private func checkInvitePrompt() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            if PostGameInvitePrompt.shouldShow() {
-                withAnimation(.spring()) {
-                    showingInvitePrompt = true
-                }
             }
         }
     }
 
-    private func statOrder(_ name: String) -> Int {
-        switch name {
-        case "2PT": return 0
-        case "3PT": return 1
-        case "FT": return 2
-        case "DREB": return 3
-        case "OREB": return 4
-        case "STL": return 5
-        case "PF": return 6
-        default: return 99
+    @MainActor
+    private func loadCoachingReport(forceRefresh: Bool = false) async {
+        if isLoadingCoachingReport { return }
+        if !forceRefresh, let cached = LocalCoachingService.shared.cachedEndOfGameInsights(for: game) {
+            coachingReport = cached
+            return
         }
+        if coachingReport != nil && !forceRefresh { return }
+
+        isLoadingCoachingReport = true
+        coachingReport = await LocalCoachingService.shared.generateAndCacheEndOfGameInsights(
+            for: game,
+            forceRefresh: forceRefresh
+        )
+        isLoadingCoachingReport = false
     }
 
     private func handleDismiss() {
@@ -358,26 +480,42 @@ struct GameSummaryView: View {
     }
 
     private func generateShareText() -> String {
-        var text = "🏀 Game Stats\n"
+        var text = isSoccer ? "⚽ Game Stats\n" : "🏀 Game Stats\n"
         if !game.opponent.isEmpty {
             text += "vs \(game.opponent)\n"
         }
-        text += "📊 \(game.totalPoints) Points\n"
+        if isSoccer {
+            text += "📊 \(summaryPrimaryValue) Goals\n"
+        } else {
+            text += "📊 \(summaryPrimaryValue) Points\n"
+        }
         text += "\(game.formattedDate)\n\n"
 
-        text += "SHOOTING\n"
-        let twoPt = game.stat(named: "2PT")
-        let threePt = game.stat(named: "3PT")
-        let ft = game.stat(named: "FT")
+        if hasShootingData {
+            text += "SHOOTING\n"
+            for config in shootingStatConfigs {
+                let made = game.totalMade(forName: config.id)
+                let attempts = made + game.totalMissed(forName: config.id)
+                if attempts > 0 {
+                    text += "\(config.title): \(made)/\(attempts)\n"
+                }
+            }
+            text += "\n"
+        }
 
-        text += "2PT: \(twoPt?.made ?? 0)/\(((twoPt?.made ?? 0) + (twoPt?.missed ?? 0)))\n"
-        text += "3PT: \(threePt?.made ?? 0)/\(((threePt?.made ?? 0) + (threePt?.missed ?? 0)))\n"
-        text += "FT: \(ft?.made ?? 0)/\(((ft?.made ?? 0) + (ft?.missed ?? 0)))\n\n"
+        if !allStatLines.isEmpty {
+            text += "ALL STATS\n"
+            for line in allStatLines {
+                text += "\(line.title): \(line.value)\n"
+            }
+        }
 
-        text += "OTHER\n"
-        text += "Rebounds: \(totalRebounds) (D: \(game.stat(named: "DREB")?.count ?? 0), O: \(game.stat(named: "OREB")?.count ?? 0))\n"
-        text += "Steals: \(game.stat(named: "STL")?.count ?? 0)\n"
-        text += "Fouls: \(game.stat(named: "PF")?.count ?? 0)\n"
+        if let coachingReport {
+            text += "\nNEXT GAME FOCUS\n"
+            for item in coachingReport.focusItems.sorted(by: { $0.rank < $1.rank }) {
+                text += "\(item.rank). \(item.title): \(item.actionPlan)\n"
+            }
+        }
 
         // Add plus/minus if shift data exists
         if hasShiftData {
@@ -412,23 +550,90 @@ struct StatRow: View {
         made * pointValue
     }
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    @ViewBuilder
     var body: some View {
-        HStack {
-            Text(name)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            Text("\(made)")
-                .frame(width: 50)
-            Text("\(attempts)")
-                .frame(width: 50)
-            Text(percentage)
-                .frame(width: 50)
-            Text("\(points)")
-                .frame(width: 50)
-                .fontWeight(.semibold)
+        if dynamicTypeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(name).font(.headline)
+                LabeledContent("Made", value: "\(made)")
+                LabeledContent("Attempts", value: "\(attempts)")
+                LabeledContent("Percentage", value: percentage)
+                LabeledContent("Points", value: "\(points)")
+                    .fontWeight(.semibold)
+            }
+            .padding()
+        } else {
+            HStack {
+                Text(name)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Text("\(made)").frame(width: 50)
+                Text("\(attempts)").frame(width: 50)
+                Text(percentage).frame(width: 50)
+                Text("\(points)")
+                    .frame(width: 50)
+                    .fontWeight(.semibold)
+            }
+            .font(.subheadline)
+            .padding(.horizontal)
+            .padding(.vertical, 12)
         }
-        .font(.subheadline)
-        .padding(.horizontal)
-        .padding(.vertical, 12)
+    }
+}
+
+struct CoachingFocusCard: View {
+    let item: CoachingFocusItem
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .top, spacing: 10) {
+                Text("\(item.rank)")
+                    .font(.headline.monospacedDigit())
+                    .frame(width: 26, height: 26)
+                    .background(Color.accentColor.opacity(0.15))
+                    .clipShape(Circle())
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
+                        Text(item.title)
+                            .font(.headline)
+                        if item.confirmationCount > 1 {
+                            Text("Confirmed x\(item.confirmationCount)")
+                                .font(.caption2.bold())
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.accentColor.opacity(0.15))
+                                .clipShape(Capsule())
+                        }
+                    }
+                    Text(item.whyItMatters)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Text(item.actionPlan)
+                .font(.subheadline)
+
+            if !item.resources.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Resources")
+                        .font(.caption.bold())
+                        .foregroundStyle(.secondary)
+
+                    ForEach(item.resources) { resource in
+                        Link(destination: resource.url) {
+                            Label(resource.title, systemImage: "link")
+                                .font(.caption)
+                        }
+                    }
+                }
+            }
+        }
+        .padding(12)
+        .background(Color(.tertiarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 }
 
@@ -476,23 +681,37 @@ struct PlusMinusRow: View {
         return .secondary
     }
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    @ViewBuilder
     var body: some View {
-        HStack {
-            Text(name)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .lineLimit(1)
-            Text("\(shiftCount)")
-                .frame(width: 50)
-            Text(time)
-                .frame(width: 60)
-            Text(plusMinusText)
-                .frame(width: 50)
-                .fontWeight(.bold)
-                .foregroundStyle(plusMinusColor)
+        if dynamicTypeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(name).font(.headline)
+                LabeledContent("Shifts", value: "\(shiftCount)")
+                LabeledContent("Time", value: time)
+                LabeledContent("Plus/minus") {
+                    Text(plusMinusText)
+                        .fontWeight(.bold)
+                        .foregroundStyle(plusMinusColor)
+                }
+            }
+            .padding()
+        } else {
+            HStack {
+                Text(name)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Text("\(shiftCount)").frame(width: 50)
+                Text(time).frame(width: 60)
+                Text(plusMinusText)
+                    .frame(width: 50)
+                    .fontWeight(.bold)
+                    .foregroundStyle(plusMinusColor)
+            }
+            .font(.subheadline)
+            .padding(.horizontal)
+            .padding(.vertical, 12)
         }
-        .font(.subheadline)
-        .padding(.horizontal)
-        .padding(.vertical, 12)
     }
 }
 

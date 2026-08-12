@@ -26,6 +26,7 @@ struct OnboardingView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var displayName = ""
     @State private var selectedSports: Set<SportSelection> = [.basketball]
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var isCreating = false
     @State private var currentPage = 0
 
@@ -35,18 +36,36 @@ struct OnboardingView: View {
         !displayName.trimmingCharacters(in: .whitespaces).isEmpty && !selectedSports.isEmpty
     }
 
+    @ViewBuilder
+    private var sportCards: some View {
+        ForEach(SportSelection.allCases) { sport in
+            SportSelectionCard(
+                sport: sport,
+                isSelected: selectedSports.contains(sport)
+            ) {
+                if selectedSports.contains(sport) {
+                    selectedSports.remove(sport)
+                } else {
+                    selectedSports.insert(sport)
+                }
+            }
+        }
+    }
+
     var body: some View {
         NavigationStack {
-            VStack(spacing: 24) {
+            GeometryReader { geometry in
+                ScrollView {
+                    VStack(spacing: 24) {
                 Spacer()
 
                 VStack(spacing: 16) {
                     HStack(spacing: 8) {
                         Image(systemName: "basketball.fill")
-                            .font(.system(size: 40))
+                            .scaledFont(size: 40, relativeTo: .largeTitle)
                             .foregroundStyle(.orange)
                         Image(systemName: "soccerball")
-                            .font(.system(size: 40))
+                            .scaledFont(size: 40, relativeTo: .largeTitle)
                             .foregroundStyle(.green)
                     }
 
@@ -60,7 +79,7 @@ struct OnboardingView: View {
                     // Value props
                     VStack(alignment: .leading, spacing: 8) {
                         FeatureRow(icon: "hand.tap.fill", text: "One-tap stat tracking", color: .blue)
-                        FeatureRow(icon: "person.2.fill", text: "Share with family & coaches", color: .green)
+                        FeatureRow(icon: "chart.line.uptrend.xyaxis", text: "Review progress over time", color: .green)
                         FeatureRow(icon: "chart.line.uptrend.xyaxis", text: "See performance trends", color: .purple)
                     }
                     .padding(.top, 8)
@@ -85,17 +104,14 @@ struct OnboardingView: View {
                     Text("Which sports do you track?")
                         .font(.headline)
 
-                    HStack(spacing: 16) {
-                        ForEach(SportSelection.allCases) { sport in
-                            SportSelectionCard(
-                                sport: sport,
-                                isSelected: selectedSports.contains(sport)
-                            ) {
-                                if selectedSports.contains(sport) {
-                                    selectedSports.remove(sport)
-                                } else {
-                                    selectedSports.insert(sport)
-                                }
+                    Group {
+                        if dynamicTypeSize.isAccessibilitySize {
+                            VStack(spacing: 16) {
+                                sportCards
+                            }
+                        } else {
+                            HStack(spacing: 16) {
+                                sportCards
                             }
                         }
                     }
@@ -127,8 +143,11 @@ struct OnboardingView: View {
                 .padding(.horizontal, 32)
                 .disabled(!isValid || isCreating)
 
-                Spacer()
-                    .frame(height: 32)
+                        Spacer()
+                            .frame(height: 32)
+                    }
+                    .frame(minHeight: geometry.size.height)
+                }
             }
         }
     }
@@ -154,6 +173,7 @@ struct OnboardingView: View {
 
         do {
             try modelContext.save()
+            AppState.shared.completeOnboarding(userID: user.id)
             onComplete()
         } catch {
             print("Failed to create user: \(error)")
@@ -173,7 +193,7 @@ struct FirstPlayerPromptView: View {
             Spacer()
 
             Image(systemName: "person.badge.plus")
-                .font(.system(size: 60))
+                .scaledFont(size: 60, relativeTo: .largeTitle)
                 .foregroundStyle(.accent)
 
             Text("Ready to track your first game?")
@@ -225,7 +245,7 @@ struct SportSelectionCard: View {
         Button(action: onTap) {
             VStack(spacing: 12) {
                 Image(systemName: sport.iconName)
-                    .font(.system(size: 36))
+                    .scaledFont(size: 36, relativeTo: .title1)
                     .foregroundStyle(isSelected ? .white : .accent)
 
                 Text(sport.rawValue)
@@ -236,7 +256,6 @@ struct SportSelectionCard: View {
                     .font(.caption)
                     .foregroundStyle(isSelected ? .white.opacity(0.8) : .secondary)
                     .multilineTextAlignment(.center)
-                    .lineLimit(2)
             }
             .frame(maxWidth: .infinity)
             .padding()
@@ -246,8 +265,19 @@ struct SportSelectionCard: View {
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
             )
+            .overlay(alignment: .topTrailing) {
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(.white)
+                        .padding(8)
+                        .accessibilityHidden(true)
+                }
+            }
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(sport.rawValue)
+        .accessibilityValue(isSelected ? "Selected" : "Not selected")
+        .accessibilityHint("Double tap to toggle this sport")
     }
 }
 

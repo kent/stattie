@@ -17,12 +17,16 @@ struct NewGameForPersonView: View {
     @State private var gameDate = Date()
     @State private var selectedMembershipID: UUID?
 
-    private var currentUser: User? { users.first }
+    private var currentUser: User? { users.resolvedCurrentUser }
     private var basketball: Sport? { sports.first }
 
     private var activeMemberships: [TeamMembership] {
         (player.teamMemberships ?? [])
-            .filter { $0.isActive && $0.team?.isActive == true }
+            .filter {
+                $0.isActive &&
+                $0.team?.isActive == true &&
+                $0.team?.isOwned(by: currentUser) == true
+            }
             .sorted { ($0.team?.name ?? "") < ($1.team?.name ?? "") }
     }
 
@@ -143,6 +147,9 @@ struct NewGameForPersonView: View {
                                     .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.plain)
+                                .accessibilityLabel(team.name)
+                                .accessibilityValue(selectedMembership?.id == membership.id ? "Selected" : "Not selected")
+                                .accessibilityHint("Selects this team for the game")
                             }
                         }
                     }

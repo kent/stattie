@@ -3,6 +3,7 @@ import SwiftData
 
 struct GameListView: View {
     @Environment(\.modelContext) private var modelContext
+    @Query private var users: [User]
     @Query(sort: \Game.gameDate, order: .reverse) private var games: [Game]
     @State private var showingNewGame = false
     @State private var selectedGame: Game?
@@ -11,25 +12,33 @@ struct GameListView: View {
     @State private var showingDeleteConfirmation = false
     @State private var gameCountBeforeNew = 0
 
+    private var currentUser: User? {
+        users.resolvedCurrentUser
+    }
+
+    private var ownedGames: [Game] {
+        games.filter { $0.isOwned(by: currentUser) }
+    }
+
     var activeGames: [Game] {
-        games.filter { !$0.isCompleted }
+        ownedGames.filter { !$0.isCompleted }
     }
 
     var completedGames: [Game] {
-        games.filter { $0.isCompleted }
+        ownedGames.filter { $0.isCompleted }
     }
 
     var body: some View {
         NavigationStack {
             Group {
-                if games.isEmpty {
+                if ownedGames.isEmpty {
                     ContentUnavailableView {
                         Label("No Games", systemImage: "sportscourt")
                     } description: {
                         Text("Start a new game to track player stats")
                     } actions: {
                         Button("New Game") {
-                            gameCountBeforeNew = games.count
+                            gameCountBeforeNew = ownedGames.count
                             showingNewGame = true
                         }
                         .buttonStyle(.borderedProminent)
@@ -39,11 +48,14 @@ struct GameListView: View {
                         if !activeGames.isEmpty {
                             Section("Active Games") {
                                 ForEach(activeGames) { game in
-                                    GameRowView(game: game)
-                                        .contentShape(Rectangle())
-                                        .onTapGesture {
-                                            selectedGame = game
-                                        }
+                                    Button {
+                                        selectedGame = game
+                                    } label: {
+                                        GameRowView(game: game)
+                                            .contentShape(Rectangle())
+                                    }
+                                    .buttonStyle(.plain)
+                                    .accessibilityHint("Opens live game tracking")
                                         .swipeActions(edge: .leading, allowsFullSwipe: false) {
                                             Button {
                                                 editingGame = game
@@ -97,16 +109,17 @@ struct GameListView: View {
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
-                        gameCountBeforeNew = games.count
+                        gameCountBeforeNew = ownedGames.count
                         showingNewGame = true
                     } label: {
                         Image(systemName: "plus")
                     }
+                    .accessibilityLabel("New game")
                 }
             }
             .sheet(isPresented: $showingNewGame, onDismiss: {
                 // Check if a new game was created
-                if games.count > gameCountBeforeNew {
+                if ownedGames.count > gameCountBeforeNew {
                     // Find the newest active game and start tracking
                     if let newestGame = activeGames.first {
                         // Small delay to let sheet fully dismiss
@@ -179,6 +192,7 @@ struct GameRowView: View {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundStyle(.green)
                             .font(.caption)
+                            .accessibilityLabel("Completed")
                     }
                 }
 

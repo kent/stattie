@@ -32,12 +32,12 @@ class ReferralManager: ObservableObject {
 
         One-tap stat tracking, performance trends, and easy sharing with family & coaches.
 
-        Download free: https://apps.apple.com/app/stattie/id0
+        Download free: https://apps.apple.com/app/id6758022135
         """
     }
 
     var shortReferralMessage: String {
-        "Track game stats the easy way! Download Stattie: https://apps.apple.com/app/stattie/id0 🏀"
+        "Track game stats the easy way! Download Stattie: https://apps.apple.com/app/id6758022135 🏀"
     }
 
     // MARK: - Share Actions

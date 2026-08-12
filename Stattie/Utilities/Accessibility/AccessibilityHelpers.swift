@@ -95,7 +95,10 @@ class HapticManager {
 struct A11yLabels {
     // Player List
     static func playerRow(name: String, jerseyNumber: Int, gamesCount: Int, ppg: Double) -> String {
-        var label = "\(name), number \(jerseyNumber)"
+        var label = name
+        if jerseyNumber > 0 {
+            label += ", number \(jerseyNumber)"
+        }
         if gamesCount > 0 {
             label += ", \(gamesCount) games played, averaging \(String(format: "%.1f", ppg)) points per game"
         }
@@ -206,22 +209,38 @@ extension View {
 struct ScaledFont: ViewModifier {
     let size: CGFloat
     let weight: Font.Weight
-
-    @Environment(\.sizeCategory) var sizeCategory
+    let relativeTo: UIFont.TextStyle
 
     func body(content: Content) -> some View {
         content
             .font(.system(size: scaledSize, weight: weight))
     }
 
-    var scaledSize: CGFloat {
-        UIFontMetrics.default.scaledValue(for: size)
+    private var scaledSize: CGFloat {
+        UIFontMetrics(forTextStyle: relativeTo).scaledValue(for: size)
+    }
+}
+
+struct MinimumAccessibleTapTarget: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .frame(minWidth: 44, minHeight: 44)
+            .contentShape(Rectangle())
     }
 }
 
 extension View {
-    func scaledFont(size: CGFloat, weight: Font.Weight = .regular) -> some View {
-        modifier(ScaledFont(size: size, weight: weight))
+    func scaledFont(
+        size: CGFloat,
+        weight: Font.Weight = .regular,
+        relativeTo textStyle: UIFont.TextStyle = .body
+    ) -> some View {
+        modifier(ScaledFont(size: size, weight: weight, relativeTo: textStyle))
+    }
+
+    /// Expands compact custom controls to Apple's minimum comfortable hit area.
+    func minimumAccessibleTapTarget() -> some View {
+        modifier(MinimumAccessibleTapTarget())
     }
 }
 

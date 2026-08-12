@@ -2,6 +2,7 @@ import Foundation
 import CloudKit
 import SwiftData
 import Combine
+import CoreData
 
 @Observable
 final class SyncManager {
@@ -12,8 +13,16 @@ final class SyncManager {
     private(set) var isCheckingStatus = false
     private(set) var lastSyncDate: Date?
     private(set) var syncError: Error?
+    private(set) var isSyncInProgress = false
+    private(set) var lastSyncOperation: String?
+    private(set) var lastSyncErrorMessage: String?
 
     private var accountChangeObserver: NSObjectProtocol?
+    private var cloudKitEventObserver: NSObjectProtocol?
+    private let defaults = UserDefaults.standard
+    private let lastSyncDateKey = "cloudKitLastSuccessfulSyncDate"
+    private let lastSyncOperationKey = "cloudKitLastSyncOperation"
+    private let lastSyncErrorMessageKey = "cloudKitLastSyncErrorMessage"
 
     var isSignedIntoiCloud: Bool {
         iCloudStatus == .available
@@ -36,13 +45,54 @@ final class SyncManager {
         }
     }
 
+    var syncHealthDescription: String {
+        if !SharedModelContainer.isCloudKitBacked {
+            return "Local only (CloudKit unavailable)"
+        }
+
+        if iCloudStatus != .available {
+            return statusDescription
+        }
+
+        if isSyncInProgress {
+            if let lastSyncOperation {
+                return "Syncing \(lastSyncOperation.lowercased())..."
+            }
+            return "Syncing..."
+        }
+
+        if let lastSyncErrorMessage, !lastSyncErrorMessage.isEmpty {
+            return "Sync issue"
+        }
+
+        if lastSyncDate != nil {
+            return "Healthy"
+        }
+
+        return "Waiting for first sync"
+    }
+
     private init() {
+        lastSyncDate = defaults.object(forKey: lastSyncDateKey) as? Date
+        lastSyncOperation = defaults.string(forKey: lastSyncOperationKey)
+        lastSyncErrorMessage = defaults.string(forKey: lastSyncErrorMessageKey)
+
+        if let lastSyncErrorMessage, !lastSyncErrorMessage.isEmpty {
+            syncError = NSError(
+                domain: "CloudKitSync",
+                code: 1,
+                userInfo: [NSLocalizedDescriptionKey: lastSyncErrorMessage]
+            )
+        }
+
         // Start observing account changes
         startObservingAccountChanges()
+        startObservingCloudKitEvents()
     }
 
     deinit {
         stopObservingAccountChanges()
+        stopObservingCloudKitEvents()
     }
 
     // MARK: - Account Change Monitoring
@@ -58,7 +108,6 @@ final class SyncManager {
                 await self?.checkiCloudStatus()
 
                 // Clear share cache when account changes
-                await CloudKitShareManager.shared.clearCache()
             }
         }
     }
@@ -67,6 +116,75 @@ final class SyncManager {
         if let observer = accountChangeObserver {
             NotificationCenter.default.removeObserver(observer)
             accountChangeObserver = nil
+        }
+    }
+
+    private func startObservingCloudKitEvents() {
+        cloudKitEventObserver = NotificationCenter.default.addObserver(
+            forName: NSPersistentCloudKitContainer.eventChangedNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard let self else { return }
+            guard let event = notification.userInfo?[NSPersistentCloudKitContainer.eventNotificationUserInfoKey]
+                as? NSPersistentCloudKitContainer.Event else {
+                return
+            }
+
+            Task { @MainActor in
+                self.handleCloudKitEvent(event)
+            }
+        }
+    }
+
+    private func stopObservingCloudKitEvents() {
+        if let observer = cloudKitEventObserver {
+            NotificationCenter.default.removeObserver(observer)
+            cloudKitEventObserver = nil
+        }
+    }
+
+    @MainActor
+    private func handleCloudKitEvent(_ event: NSPersistentCloudKitContainer.Event) {
+        let operation = syncOperationName(for: event.type)
+        lastSyncOperation = operation
+        defaults.set(operation, forKey: lastSyncOperationKey)
+
+        if event.endDate == nil {
+            isSyncInProgress = true
+            return
+        }
+
+        isSyncInProgress = false
+
+        if let error = event.error {
+            syncError = error
+            lastSyncErrorMessage = error.localizedDescription
+            defaults.set(error.localizedDescription, forKey: lastSyncErrorMessageKey)
+            return
+        }
+
+        syncError = nil
+        lastSyncErrorMessage = nil
+        defaults.removeObject(forKey: lastSyncErrorMessageKey)
+
+        let eventDate = event.endDate ?? Date()
+        lastSyncDate = eventDate
+        defaults.set(eventDate, forKey: lastSyncDateKey)
+
+        AppState.shared.synchronizeFromCloud()
+    }
+
+    private func syncOperationName(for type: NSPersistentCloudKitContainer.EventType) -> String {
+        switch type {
+        case .setup:
+            return "Setup"
+        case .import:
+            return "Import"
+        case .export:
+            return "Export"
+        @unknown default:
+            return "Sync"
         }
     }
 
@@ -114,7 +232,9 @@ final class SyncManager {
     // MARK: - Sync Status
 
     func updateLastSyncDate() {
-        lastSyncDate = Date()
+        let now = Date()
+        lastSyncDate = now
+        defaults.set(now, forKey: lastSyncDateKey)
     }
 
     /// Formatted description of the last sync

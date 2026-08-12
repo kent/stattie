@@ -12,6 +12,7 @@ class NotificationManager: ObservableObject {
     private let defaults = UserDefaults.standard
     private let permissionRequestedKey = "notificationPermissionRequested"
     private let streakReminderEnabledKey = "streakReminderEnabled"
+    private let academyLastNotifiedGamePrefix = "academyLastNotifiedGame"
 
     var streakReminderEnabled: Bool {
         get { defaults.bool(forKey: streakReminderEnabledKey) }
@@ -107,6 +108,57 @@ class NotificationManager: ObservableObject {
         // Store for later celebration
         defaults.set(milestone, forKey: "nextGameMilestone")
         defaults.set(gamesNeeded, forKey: "gamesUntilMilestone")
+    }
+
+    // MARK: - Academy Notifications
+
+    func sendAcademyPlanReadyNotification(
+        playerName: String,
+        playerID: UUID,
+        gameID: UUID,
+        topFocusTitle: String?
+    ) {
+        let key = "\(academyLastNotifiedGamePrefix).\(playerID.uuidString)"
+        if defaults.string(forKey: key) == gameID.uuidString {
+            return
+        }
+
+        UNUserNotificationCenter.current().getNotificationSettings { [weak self] settings in
+            guard let self else { return }
+            let status = settings.authorizationStatus
+            guard status == .authorized || status == .provisional || status == .ephemeral else {
+                return
+            }
+
+            let cleanPlayerName = playerName.trimmingCharacters(in: .whitespacesAndNewlines)
+            let resolvedName = cleanPlayerName.isEmpty ? "Player" : cleanPlayerName
+
+            let content = UNMutableNotificationContent()
+            content.title = "Academy update ready"
+            if let topFocusTitle, !topFocusTitle.isEmpty {
+                content.body = "\(resolvedName): \(topFocusTitle). Open Academy to review this player's latest priorities."
+            } else {
+                content.body = "\(resolvedName)'s latest priorities are ready. Open Academy to review."
+            }
+            content.sound = .default
+            content.categoryIdentifier = "ACADEMY_READY"
+            content.threadIdentifier = "academy_updates"
+            content.userInfo = [
+                "destination": "academy",
+                "playerID": playerID.uuidString,
+                "gameID": gameID.uuidString
+            ]
+
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1.0, repeats: false)
+            let identifier = "academy_ready.\(gameID.uuidString).\(playerID.uuidString)"
+            let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+
+            UNUserNotificationCenter.current().add(request) { error in
+                if error == nil {
+                    self.defaults.set(gameID.uuidString, forKey: key)
+                }
+            }
+        }
     }
 }
 

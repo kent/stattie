@@ -40,9 +40,9 @@ const features = [
     icon: DeviceTapIcon,
   },
   {
-    name: 'iCloud Sharing + Offline',
+    name: 'Offline Tracking + Easy Sharing',
     description:
-      'Track games in gyms with spotty wifi, then sync when you reconnect. Invite family and coaches so everyone can stay up to date.',
+      'Track games in gyms with spotty wifi, then share a game summary or stats export with family and coaches when you are ready.',
     icon: DeviceOfflineIcon,
   },
 ]

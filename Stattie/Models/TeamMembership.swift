@@ -26,7 +26,7 @@ final class TeamMembership {
                 }
                 return PositionAssignments()
             }
-            return PositionAssignments.fromJSON(json) ?? PositionAssignments()
+            return PositionAssignments.fromJSON(json)
         }
         set {
             positionAssignmentsJSON = newValue.toJSON()
