@@ -126,7 +126,7 @@ export function Header() {
                             <MobileNavLink href="/#faqs">FAQs</MobileNavLink>
                           </div>
                           <div className="mt-8 flex flex-col gap-4">
-                            <Button href="https://apps.apple.com/app/id6758022135" color="orange">Download the app</Button>
+                            <Button href="/support" color="orange">Release status</Button>
                           </div>
                         </PopoverPanel>
                       </>
@@ -136,7 +136,7 @@ export function Header() {
               )}
             </Popover>
             <div className="flex items-center gap-6 max-lg:hidden">
-              <Button href="https://apps.apple.com/app/id6758022135" color="orange">Download</Button>
+              <Button href="/support" color="orange">Release status</Button>
             </div>
           </div>
         </Container>
