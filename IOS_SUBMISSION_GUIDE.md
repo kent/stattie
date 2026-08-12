@@ -1,6 +1,6 @@
 # Stattie iOS App Store Submission Guide
 
-This guide records the current release identifiers and the minimum checks required before the next App Store upload.
+This guide records the current release identifiers, uploaded build, and remaining App Store release checks.
 
 ## Release source of truth
 
@@ -16,11 +16,12 @@ This guide records the current release identifiers and the minimum checks requir
 | Privacy policy | <https://www.stattie.com/privacy> |
 | Support | <https://www.stattie.com/support> |
 | Review contact | Kent Fenwick, `kent.fenwick@gmail.com`, `+1 416-788-1373` |
+| Release version | `1.0.1` (build `2`) |
 | Minimum iOS version | iOS 17.0 |
 
 The bundle ID and team ID above agree with the Xcode signing configuration and the exported archive. The numeric app ID was verified against the App Store Connect API for `com.stattie.app` on August 12, 2026.
 
-> **Availability check:** App Store Connect reports the 1.0 record as ready for sale, but the public product URL returned HTTP 404 during the August 12 check. Confirm territory availability in App Store Connect and confirm the public URL on a device before publishing a campaign or submitting a new website deployment.
+> **External release blocker — agreement acceptance required:** Version 1.0 is `READY_FOR_SALE`, but App Store Connect reports the app as `PENDING_CONTRACT`; every territory is marked `CANNOT_SELL`, and the public product URL returns HTTP 404. Version 1.0.1 build 2 was successfully uploaded and processed as `VALID` on August 12, 2026, but App Store Connect will not allow creation of the 1.0.1 store-version record until the account holder accepts the pending paid-app agreement in **Business → Agreements**. This legal acceptance cannot be completed through the App Store Connect API. After acceptance, create 1.0.1, select build 2, upload the checked-in metadata, submit it for review, and confirm the public URL.
 
 ## App Review contact
 
@@ -109,11 +110,12 @@ Private iCloud sync is optional for this review path. Reviewers do not need a se
 - [ ] Confirm App Review name, email, and real phone number.
 - [ ] Confirm the privacy label still matches shipped behavior.
 - [ ] Confirm encryption/export-compliance answers match the built Info.plist.
+- [ ] Accept the pending paid-app agreement under **Business → Agreements**.
 - [ ] Verify price, territories, availability date, screenshots, age rating, and release method directly in App Store Connect; do not infer them from this repository.
 
 ### Upload
 
-Use Xcode Organizer or the project's normal authenticated Fastlane workflow. API keys and `.p8` files must remain outside the repository. After upload, select the processed build, re-run App Store Connect validation, and perform a TestFlight smoke test before review submission.
+Build 2 has been uploaded and processed successfully. API keys and `.p8` files must remain outside the repository. After the pending agreement is accepted, create version 1.0.1, select build 2, upload metadata/screenshots, re-run App Store Connect validation, and perform a TestFlight smoke test before review submission.
 
 ## Post-release
 
