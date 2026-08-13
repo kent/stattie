@@ -16,12 +16,12 @@ This guide records the current release identifiers, uploaded build, and remainin
 | Privacy policy | <https://www.stattie.com/privacy> |
 | Support | <https://www.stattie.com/support> |
 | Review contact | Kent Fenwick, `kent.fenwick@gmail.com`, `+1 416-788-1373` |
-| Release version | `1.0.1` (build `2`) |
+| TestFlight candidate | `1.0.1` (build `4`) |
 | Minimum iOS version | iOS 17.0 |
 
 The bundle ID and team ID above agree with the Xcode signing configuration and the exported archive. The numeric app ID was verified against the App Store Connect API for `com.stattie.app` on August 12, 2026.
 
-> **Free release configured:** The base App Store price is USD 0.00, with automatic equalized pricing across territories. The public App Store product page and website download links are live. Version 1.0.1 build 2 is processed as `VALID`, passed metadata precheck, and is `WAITING_FOR_REVIEW` with release-after-approval enabled.
+> **Free release configured:** The base App Store price is USD 0.00, with automatic equalized pricing across territories. The public App Store product page and website download links are live. The App Store submission remains version 1.0.1 build 2: processed as `VALID`, passed metadata precheck, and `WAITING_FOR_REVIEW` with release-after-approval enabled. Build 4 is the parent-focused TestFlight candidate.
 
 ## App Review contact
 

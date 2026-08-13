@@ -8,6 +8,7 @@ struct NewGameForPersonView: View {
     @Environment(\.dismiss) private var dismiss
 
     let player: Person
+    var onGameCreated: ((PersonGameStats, SoccerPosition?) -> Void)? = nil
 
     @Query private var users: [User]
     @Query(sort: \Sport.name) private var sports: [Sport]
@@ -68,6 +69,16 @@ struct NewGameForPersonView: View {
         guard requiresPositionSelection else { return true }
         guard let selectedPositionID else { return false }
         return availablePositionAssignments.contains { $0.position.rawValue == selectedPositionID }
+    }
+
+    private var selectedStartingPosition: SoccerPosition? {
+        if requiresPositionSelection {
+            guard let selectedPositionID else { return nil }
+            return availablePositionAssignments.first {
+                $0.position.rawValue == selectedPositionID
+            }?.position
+        }
+        return availablePositionAssignments.first?.position
     }
 
     private var displayJerseyNumber: Int? {
@@ -255,6 +266,7 @@ struct NewGameForPersonView: View {
 
         do {
             try modelContext.save()
+            onGameCreated?(personStats, selectedStartingPosition)
             dismiss()
         } catch {
             modelContext.delete(personStats)

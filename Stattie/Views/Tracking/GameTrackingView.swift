@@ -43,6 +43,7 @@ struct GameTrackingView: View {
 
     @Bindable var game: Game
     let initialSelectedPersonStatsID: UUID?
+    @State private var selectedGamePosition: SoccerPosition?
     @State private var showingEndGameAlert = false
     @State private var showingSummary = false
     @State private var persistenceError: String?
@@ -189,9 +190,14 @@ struct GameTrackingView: View {
         return String(format: "%02d:%02d", minutes, seconds)
     }
 
-    init(game: Game, initialSelectedPersonStatsID: UUID? = nil) {
+    init(
+        game: Game,
+        initialSelectedPersonStatsID: UUID? = nil,
+        initialSelectedPosition: SoccerPosition? = nil
+    ) {
         self._game = Bindable(game)
         self.initialSelectedPersonStatsID = initialSelectedPersonStatsID
+        self._selectedGamePosition = State(initialValue: initialSelectedPosition)
     }
 
     var body: some View {
@@ -228,6 +234,16 @@ struct GameTrackingView: View {
                 }
                 .padding(.horizontal)
                 .padding(.top, 4)
+
+                if let selectedGamePosition {
+                    Label(
+                        "Starting as \(selectedGamePosition.displayName)",
+                        systemImage: selectedGamePosition.iconName
+                    )
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .accessibilityLabel("Starting position: \(selectedGamePosition.displayName)")
+                }
 
                 if hasShiftTracking {
                     shiftControls

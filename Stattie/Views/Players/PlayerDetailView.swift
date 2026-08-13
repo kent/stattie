@@ -14,6 +14,7 @@ struct PersonDetailView: View {
     @State private var activeGameStats: PersonGameStats?
     @State private var newGameTrackingLaunch: NewGameTrackingLaunch?
     @State private var gameCountBeforeNew = 0
+    @State private var pendingStartingPosition: SoccerPosition?
     @State private var editingGame: Game?
     @State private var pendingGameDeletion: Game?
 
@@ -21,6 +22,7 @@ struct PersonDetailView: View {
         let id = UUID()
         let game: Game
         let selectedPersonStatsID: UUID
+        let startingPosition: SoccerPosition?
     }
 
     // Get player's games sorted by date
@@ -247,12 +249,18 @@ struct PersonDetailView: View {
             if playerGames.count > gameCountBeforeNew {
                 if let newestGameStats = activeGames.first {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        autoStartNewGameTracking(for: newestGameStats)
+                        autoStartNewGameTracking(
+                            for: newestGameStats,
+                            startingPosition: pendingStartingPosition
+                        )
+                        pendingStartingPosition = nil
                     }
                 }
             }
         }) {
-            NewGameForPersonView(player: player)
+            NewGameForPersonView(player: player) { _, startingPosition in
+                pendingStartingPosition = startingPosition
+            }
         }
         .fullScreenCover(item: $activeGameStats) { personGameStats in
             PlayerGameOverviewView(personGameStats: personGameStats)
@@ -260,7 +268,8 @@ struct PersonDetailView: View {
         .fullScreenCover(item: $newGameTrackingLaunch) { launch in
             GameTrackingView(
                 game: launch.game,
-                initialSelectedPersonStatsID: launch.selectedPersonStatsID
+                initialSelectedPersonStatsID: launch.selectedPersonStatsID,
+                initialSelectedPosition: launch.startingPosition
             )
         }
         .sheet(item: $editingGame) { game in
@@ -300,12 +309,16 @@ struct PersonDetailView: View {
         showingNewGame = true
     }
 
-    private func autoStartNewGameTracking(for personGameStats: PersonGameStats) {
+    private func autoStartNewGameTracking(
+        for personGameStats: PersonGameStats,
+        startingPosition: SoccerPosition? = nil
+    ) {
         guard let game = personGameStats.game else { return }
 
         newGameTrackingLaunch = NewGameTrackingLaunch(
             game: game,
-            selectedPersonStatsID: personGameStats.id
+            selectedPersonStatsID: personGameStats.id,
+            startingPosition: startingPosition
         )
     }
 
