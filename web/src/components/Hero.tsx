@@ -84,10 +84,9 @@ export function Hero() {
               Track Every Game. Own Every Stat.
             </h1>
             <p className="mt-6 text-lg text-gray-600">
-              Team-based stat tracking for basketball and soccer. Pick a team
-              and sport before each game, keep jerseys and positions in the
-              right context, track every shift live, and manage games with
-              quick edit and delete actions.
+              A single-player stat tracker made for parents on the sidelines.
+              Follow your child&apos;s basketball or soccer game one tap at a
+              time, review every shift, and keep a clear personal game history.
             </p>
             <div className="mt-8 flex flex-wrap gap-x-6 gap-y-4">
               <AppStoreLink />
@@ -103,7 +102,7 @@ export function Hero() {
           </div>
           <div className="relative -mt-4 lg:col-span-7 lg:mt-0 xl:col-span-6">
             <p className="text-center text-sm font-semibold text-gray-900 lg:text-left">
-              Built for families and coaches
+              Made for parents tracking one player
             </p>
             <div className="mx-auto mt-8 flex max-w-xl flex-wrap justify-center gap-x-10 gap-y-6 lg:mx-0 lg:justify-start">
               <div className="flex items-center gap-2">
@@ -125,10 +124,10 @@ export function Hero() {
               <div className="flex items-center gap-2">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100">
                   <svg className="h-5 w-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M16 6l-4-4m0 0L8 6m4-4v13" />
                   </svg>
                 </div>
-                <span className="text-sm text-gray-700">Basketball + Soccer</span>
+                <span className="text-sm text-gray-700">Share after the game</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100">

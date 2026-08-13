@@ -6,16 +6,13 @@ import Observation
 final class AppState {
     enum MainTab: Int {
         case players = 0
-        case teams = 1
         case activity = 2
-        case academy = 3
         case settings = 4
     }
 
     static let shared = AppState()
 
     private let selectedTabKey = "selectedMainTab"
-    private let pendingAcademyPlayerIDKey = "pendingAcademyPlayerID"
 
     var hasCompletedOnboarding: Bool {
         get {
@@ -42,25 +39,16 @@ final class AppState {
     }
 
     var selectedTabRaw: Int {
-        get { UserDefaults.standard.integer(forKey: selectedTabKey) }
+        get {
+            let storedValue = UserDefaults.standard.integer(forKey: selectedTabKey)
+            return MainTab(rawValue: storedValue)?.rawValue ?? MainTab.players.rawValue
+        }
         set { UserDefaults.standard.set(newValue, forKey: selectedTabKey) }
     }
 
     var selectedTab: MainTab {
         get { MainTab(rawValue: selectedTabRaw) ?? .players }
         set { selectedTabRaw = newValue.rawValue }
-    }
-
-    var pendingAcademyPlayerID: UUID? {
-        get {
-            guard let raw = UserDefaults.standard.string(forKey: pendingAcademyPlayerIDKey) else {
-                return nil
-            }
-            return UUID(uuidString: raw)
-        }
-        set {
-            UserDefaults.standard.set(newValue?.uuidString, forKey: pendingAcademyPlayerIDKey)
-        }
     }
 
     private init() {}
@@ -75,16 +63,10 @@ final class AppState {
         hasCompletedOnboarding = true
     }
 
-    func navigateToAcademy(playerID: UUID?) {
-        selectedTab = .academy
-        pendingAcademyPlayerID = playerID
-    }
-
     func reset() {
         hasCompletedOnboarding = false
         currentUserID = nil
         selectedTab = .players
-        pendingAcademyPlayerID = nil
     }
 }
 

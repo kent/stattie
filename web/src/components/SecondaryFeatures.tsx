@@ -6,43 +6,43 @@ const features = [
   {
     name: 'Basketball + Soccer',
     description:
-      'Track games across both sports with sport-aware setup, stat definitions, and game details that adapt automatically.',
+      'Choose the sport for each game and get stat buttons that adapt to basketball or soccer automatically.',
     icon: DeviceTargetIcon,
   },
   {
-    name: 'Team-Based Player Context',
+    name: 'Focused on One Player',
     description:
-      'Jersey numbers and positions are tracked per team, so the same player can keep accurate context across different rosters.',
+      'Each game stays centered on the child you are watching, keeping live entry quick, clear, and personal.',
     icon: DeviceUserIcon,
   },
   {
-    name: 'Team Required Before Start',
+    name: 'Fast Parent-Friendly Setup',
     description:
-      'Record New Game is disabled until a team is selected. This prevents orphan games and keeps stats connected to the right team.',
+      'Enter the game details and start tracking in moments, so you can keep your attention on the action.',
     icon: DeviceAlertIcon,
   },
   {
     name: 'Sport-Specific Stat Presets',
     description:
-      'Use basketball actions like Missed Drive and Great Play, or soccer actions like Goals, Saves, Passes, Corners, and Cards.',
+      'Use basketball actions for shooting and impact, or soccer actions for goals, saves, passes, tackles, and cards.',
     icon: DeviceCalendarIcon,
   },
   {
     name: 'Game Edit + Delete',
     description:
-      'Create, edit, and delete games quickly. Swipe actions on game rows make cleanup and corrections fast on mobile.',
+      'Correct or remove games quickly with simple mobile actions and keep the player\'s history tidy.',
     icon: DeviceCalendarIcon,
   },
   {
-    name: 'Shift Quick Summary + Plus/Minus',
+    name: 'Shift Quick Summaries',
     description:
-      'End a shift to get an instant recap including on-court impact, then start a new shift with one tap to keep tracking flow uninterrupted.',
+      'End a shift for an instant recap, then start a new shift with one tap and keep tracking the same player.',
     icon: DeviceTapIcon,
   },
   {
-    name: 'Offline Tracking + Easy Sharing',
+    name: 'Private by Default, Shared by You',
     description:
-      'Track games in gyms with spotty wifi, then share a game summary or stats export with family and coaches when you are ready.',
+      'Track offline and keep the game private. After the game, you can choose to share its summary with friends or family.',
     icon: DeviceOfflineIcon,
   },
 ]
@@ -205,8 +205,8 @@ export function SecondaryFeatures() {
             Built for the sidelines.
           </h2>
           <p className="mt-2 text-lg text-gray-600">
-            Every flow is optimized for fast taps, clean list actions, and
-            team-aware data across basketball and soccer.
+            Every flow is designed for a parent following one child, from fast
+            live taps to an optional post-game share.
           </p>
         </div>
         <ul

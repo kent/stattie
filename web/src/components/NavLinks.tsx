@@ -10,8 +10,7 @@ export function NavLinks() {
 
   return [
     ['Features', '/#features'],
-    ['On-Device Coaching', '/#ai-coaching'],
-    ['Academy', '/#academy'],
+    ['How it works', '/#secondary-features'],
     ['Reviews', '/#reviews'],
     ['Pricing', '/#pricing'],
     ['FAQs', '/#faqs'],

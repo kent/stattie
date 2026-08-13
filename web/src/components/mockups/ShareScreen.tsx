@@ -26,12 +26,12 @@ export function ShareScreen(props: ScreenProps) {
       {props.animated ? (
         <MotionAppScreenHeader {...props.headerAnimation}>
           <AppScreen.Title>Share Stats</AppScreen.Title>
-          <AppScreen.Subtitle>Share a game summary</AppScreen.Subtitle>
+          <AppScreen.Subtitle>Parent-triggered post-game sharing</AppScreen.Subtitle>
         </MotionAppScreenHeader>
       ) : (
         <AppScreen.Header>
           <AppScreen.Title>Share Stats</AppScreen.Title>
-          <AppScreen.Subtitle>Share a game summary</AppScreen.Subtitle>
+          <AppScreen.Subtitle>Parent-triggered post-game sharing</AppScreen.Subtitle>
         </AppScreen.Header>
       )}
       {props.animated ? (
@@ -49,8 +49,8 @@ export function ShareScreen(props: ScreenProps) {
 
 function ShareContent() {
   const shareOptions = [
-    { label: 'Messages', detail: 'Send a summary' },
-    { label: 'Mail', detail: 'Email the stats' },
+    { label: 'Messages', detail: 'Send to family or friends' },
+    { label: 'Mail', detail: 'Email the final summary' },
     { label: 'More…', detail: 'Open the iOS share sheet' },
   ]
 
@@ -60,8 +60,8 @@ function ShareContent() {
         <p className="text-xs font-semibold tracking-wide text-orange-600 uppercase">
           Final
         </p>
-        <h3 className="mt-1 font-semibold text-gray-900">Falcons 68 · Tigers 61</h3>
-        <p className="mt-1 text-sm text-gray-500">Game summary and player stats</p>
+        <h3 className="mt-1 font-semibold text-gray-900">Marcus vs. Tigers</h3>
+        <p className="mt-1 text-sm text-gray-500">24 points · 5 rebounds · 7 assists</p>
       </div>
 
       <div className="mt-6">
@@ -81,7 +81,7 @@ function ShareContent() {
       </div>
 
       <div className="mt-6 rounded-lg bg-orange-50 p-3 text-xs text-orange-800">
-        You choose when and how to share each game summary.
+        Nothing is shared until you choose an option after the game.
       </div>
     </div>
   )

@@ -24,13 +24,13 @@ function CheckIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
 }
 
 const features = [
-  'Unlimited players and games',
+  'Unlimited games for one player at a time',
   'Basketball + Soccer support',
-  'Team-first game setup',
+  'Parent-friendly game setup',
   'Shift-based live tracking',
   'Sport-specific stat presets',
   'Game edit and delete tools',
-  'Shareable game summaries',
+  'Parent-triggered post-game sharing',
   'Detailed game and shift summaries',
   'Offline mode',
   'All future updates included',
@@ -70,8 +70,8 @@ export function Pricing() {
             </div>
 
             <p className="mt-6 text-gray-700">
-              Everything you need to track basketball and soccer stats for your
-              players, with all future updates included.
+              Everything a parent needs to follow one player&apos;s basketball or
+              soccer games, with all future updates included.
             </p>
 
             <ul role="list" className="mt-8 space-y-3">

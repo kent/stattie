@@ -60,13 +60,13 @@ struct PersonListView: View {
                             TipCard(
                                 icon: "person.badge.plus",
                                 title: "Add a player",
-                                description: "Enter their name, then assign jersey on a team"
+                                description: "Enter their name and optional jersey details"
                             )
 
                             TipCard(
                                 icon: "sportscourt",
                                 title: "Track a game",
-                                description: "Tap Record New Game on any player's profile"
+                                description: "Tap Start Game on your player’s profile"
                             )
 
                             TipCard(
@@ -95,23 +95,12 @@ struct PersonListView: View {
             .searchable(text: $searchText, prompt: "Search players")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    HStack(spacing: 16) {
-                        if filteredPersons.count >= 2 {
-                            NavigationLink {
-                                PlayerComparisonView()
-                            } label: {
-                                Image(systemName: "arrow.left.arrow.right")
-                            }
-                            .accessibilityLabel("Compare players")
-                        }
-
-                        Button {
-                            showingAddPerson = true
-                        } label: {
-                            Image(systemName: "plus")
-                        }
-                        .accessibilityLabel("Add player")
+                    Button {
+                        showingAddPerson = true
+                    } label: {
+                        Image(systemName: "plus")
                     }
+                    .accessibilityLabel("Add player")
                 }
             }
             .sheet(isPresented: $showingAddPerson) {

@@ -8,16 +8,12 @@ struct PersonDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Bindable var player: Person
 
-    @Query private var users: [User]
-    @Query(filter: #Predicate<Sport> { $0.name == "Basketball" }) private var sports: [Sport]
-
     @State private var isEditing = false
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var showingNewGame = false
     @State private var activeGameStats: PersonGameStats?
     @State private var newGameTrackingLaunch: NewGameTrackingLaunch?
     @State private var gameCountBeforeNew = 0
-    @State private var showingAddToTeam = false
     @State private var editingGame: Game?
     @State private var pendingGameDeletion: Game?
 
@@ -26,9 +22,6 @@ struct PersonDetailView: View {
         let game: Game
         let selectedPersonStatsID: UUID
     }
-
-    private var currentUser: User? { users.resolvedCurrentUser }
-    private var basketball: Sport? { sports.first }
 
     // Get player's games sorted by date
     private var playerGames: [PersonGameStats] {
@@ -40,12 +33,12 @@ struct PersonDetailView: View {
         playerGames.filter { $0.game?.isCompleted == false }
     }
 
-    private var completedGames: [PersonGameStats] {
-        playerGames.filter { $0.game?.isCompleted == true }
+    private var preferredActiveGameStats: PersonGameStats? {
+        activeGames.first
     }
 
-    private var canRecordNewGame: Bool {
-        !playerTeams.isEmpty
+    private var completedGames: [PersonGameStats] {
+        playerGames.filter { $0.game?.isCompleted == true }
     }
 
     var body: some View {
@@ -96,36 +89,27 @@ struct PersonDetailView: View {
                 }
             } header: {
                 Text("Player Info")
-            } footer: {
-                Text("Jersey numbers are set per team.")
-            }
-
-            // Teams Section
-            if !isEditing {
-                teamsSection
             }
 
             // Actions
             if !isEditing {
                 Section {
                     Button {
-                        startNewGame()
+                        startOrContinueGame()
                     } label: {
                         HStack {
                             Spacer()
-                            Label("Record New Game", systemImage: "plus.circle.fill")
-                                .font(.headline)
+                            Label(
+                                preferredActiveGameStats == nil ? "Start Game" : "Continue Game",
+                                systemImage: preferredActiveGameStats == nil ? "play.circle.fill" : "arrow.right.circle.fill"
+                            )
+                            .font(.headline)
                             Spacer()
                         }
                         .padding(.vertical, 12)
                     }
-                    .disabled(!canRecordNewGame)
-                    .listRowBackground(canRecordNewGame ? Color.accentColor : Color(.secondarySystemFill))
-                    .foregroundStyle(canRecordNewGame ? Color.white : Color.secondary)
-                } footer: {
-                    if !canRecordNewGame {
-                        Text("Add this player to a team before recording a game.")
-                    }
+                    .listRowBackground(Color.accentColor)
+                    .foregroundStyle(Color.white)
                 }
 
                 if !playerGames.isEmpty {
@@ -248,9 +232,6 @@ struct PersonDetailView: View {
         .navigationDestination(for: Game.self) { game in
             GameDetailView(game: game)
         }
-        .navigationDestination(for: Team.self) { team in
-            TeamDetailView(team: team)
-        }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button(isEditing ? "Done" : "Edit") {
@@ -260,9 +241,6 @@ struct PersonDetailView: View {
                     isEditing.toggle()
                 }
             }
-        }
-        .sheet(isPresented: $showingAddToTeam) {
-            AddPersonToTeamView(person: player)
         }
         .sheet(isPresented: $showingNewGame, onDismiss: {
             // Check if a new game was created and auto-start tracking
@@ -312,8 +290,12 @@ struct PersonDetailView: View {
         }
     }
 
-    private func startNewGame() {
-        guard canRecordNewGame else { return }
+    private func startOrContinueGame() {
+        if let preferredActiveGameStats {
+            autoStartNewGameTracking(for: preferredActiveGameStats)
+            return
+        }
+
         gameCountBeforeNew = playerGames.count
         showingNewGame = true
     }
@@ -346,364 +328,6 @@ struct PersonDetailView: View {
         try? modelContext.save()
     }
 
-    // MARK: - Teams Section
-
-    private var playerTeams: [TeamMembership] {
-        (player.teamMemberships ?? []).filter { $0.isActive && $0.team?.isActive == true }
-    }
-
-    @ViewBuilder
-    private var teamsSection: some View {
-        Section {
-            if playerTeams.isEmpty {
-                HStack {
-                    Image(systemName: "person.3")
-                        .foregroundStyle(.secondary)
-                        .frame(width: 28)
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("No team yet")
-                            .foregroundStyle(.secondary)
-                        Text("Add to a team to track position per team")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            } else {
-                ForEach(playerTeams) { membership in
-                    if let team = membership.team {
-                        NavigationLink(value: team) {
-                            PersonTeamRow(team: team, membership: membership)
-                        }
-                    }
-                }
-            }
-
-            Button {
-                showingAddToTeam = true
-            } label: {
-                Label("Add to Team", systemImage: "plus.circle")
-            }
-        } header: {
-            HStack {
-                Text("Teams")
-                Spacer()
-                if playerTeams.count > 0 {
-                    Text("\(playerTeams.count)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-        }
-    }
-}
-
-// MARK: - Person Team Row
-
-struct PersonTeamRow: View {
-    let team: Team
-    let membership: TeamMembership
-
-    private var jerseyText: String? {
-        guard let jerseyNumber = membership.jerseyNumber, jerseyNumber > 0 else { return nil }
-        return "#\(jerseyNumber)"
-    }
-
-    private var hasPositionText: Bool {
-        !membership.positionShortText.isEmpty && membership.positionShortText != "-"
-    }
-
-    var body: some View {
-        HStack(spacing: 12) {
-            ZStack {
-                Circle()
-                    .fill(Color(hex: team.colorHex))
-                    .frame(width: 40, height: 40)
-
-                Image(systemName: team.iconName.isEmpty ? "sportscourt" : team.iconName)
-                    .font(.headline)
-                    .foregroundStyle(.white)
-            }
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(team.name)
-                    .font(.headline)
-
-                HStack(spacing: 8) {
-                    if let jerseyText {
-                        Text(jerseyText)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    if let sport = team.sport {
-                        if jerseyText != nil {
-                            Text("•")
-                                .foregroundStyle(.secondary)
-                        }
-                        Text(sport.name)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    if hasPositionText {
-                        if jerseyText != nil || team.sport != nil {
-                            Text("•")
-                                .foregroundStyle(.secondary)
-                        }
-                        Text(membership.positionShortText)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-
-                        if membership.hasMultiplePositions {
-                            Image(systemName: "arrow.triangle.branch")
-                                .font(.caption2)
-                                .foregroundStyle(.orange)
-                        }
-                    }
-                }
-            }
-
-            Spacer()
-        }
-    }
-}
-
-// MARK: - Add Person to Team View
-
-struct AddPersonToTeamView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Environment(\.dismiss) private var dismiss
-
-    let person: Person
-
-    @Query private var users: [User]
-    @Query(sort: \Team.name) private var allTeams: [Team]
-
-    @State private var selectedTeam: Team?
-    @State private var positionAssignments: PositionAssignments = PositionAssignments()
-    @State private var jerseyNumber: Int?
-    @State private var showingCreateTeam = false
-
-    private var currentUser: User? {
-        users.resolvedCurrentUser
-    }
-
-    private var availableTeams: [Team] {
-        let currentTeamIDs = Set(
-            (person.teamMemberships ?? [])
-                .filter { $0.isActive }
-                .compactMap { $0.team?.id }
-        )
-        return allTeams.filter {
-            $0.isActive &&
-            $0.isOwned(by: currentUser) &&
-            !currentTeamIDs.contains($0.id)
-        }
-    }
-
-    private var hasAnyActiveTeams: Bool {
-        allTeams.contains { $0.isActive && $0.isOwned(by: currentUser) }
-    }
-
-    private var personInitials: String {
-        let firstInitial = person.firstName.trimmingCharacters(in: .whitespaces).first.map(String.init) ?? ""
-        let lastInitial = person.lastName.trimmingCharacters(in: .whitespaces).first.map(String.init) ?? ""
-        return (firstInitial + lastInitial).uppercased()
-    }
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    HStack {
-                        ZStack {
-                            Circle()
-                                .fill(Color.accentColor.opacity(0.2))
-                                .frame(width: 50, height: 50)
-
-                            if let photoData = person.photoData,
-                               let uiImage = UIImage(data: photoData) {
-                                Image(uiImage: uiImage)
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: 50, height: 50)
-                                    .clipShape(Circle())
-                            } else {
-                                if !personInitials.isEmpty {
-                                    Text(personInitials)
-                                        .font(.headline.weight(.semibold))
-                                        .foregroundStyle(.accent)
-                                } else {
-                                    Image(systemName: "person.fill")
-                                        .font(.headline)
-                                        .foregroundStyle(.accent)
-                                }
-                            }
-                        }
-
-                        VStack(alignment: .leading) {
-                            Text(person.fullName)
-                                .font(.headline)
-                            Text("Adding to team")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .listRowBackground(Color.clear)
-                }
-
-                Section("Select Team") {
-                    if availableTeams.isEmpty {
-                        VStack(alignment: .leading, spacing: 6) {
-                            if hasAnyActiveTeams {
-                                Text("This player is already on all active teams.")
-                            } else {
-                                Text("No teams available yet.")
-                            }
-                            Text("Create a team to continue.")
-                        }
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .padding(.vertical, 4)
-                    } else {
-                        ForEach(availableTeams) { team in
-                            Button {
-                                selectedTeam = team
-                            } label: {
-                                HStack(spacing: 12) {
-                                    ZStack {
-                                        Circle()
-                                            .fill(Color(hex: team.colorHex))
-                                            .frame(width: 36, height: 36)
-
-                                        Image(systemName: team.iconName.isEmpty ? "sportscourt" : team.iconName)
-                                            .font(.subheadline)
-                                            .foregroundStyle(.white)
-                                    }
-
-                                    VStack(alignment: .leading) {
-                                        Text(team.name)
-                                            .foregroundStyle(.primary)
-
-                                        if let sport = team.sport {
-                                            Text(sport.name)
-                                                .font(.caption)
-                                                .foregroundStyle(.secondary)
-                                        }
-                                    }
-
-                                    Spacer()
-
-                                    if selectedTeam?.id == team.id {
-                                        Image(systemName: "checkmark.circle.fill")
-                                            .foregroundStyle(.accent)
-                                    }
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .contentShape(Rectangle())
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel(team.name)
-                            .accessibilityValue(selectedTeam?.id == team.id ? "Selected" : "Not selected")
-                            .accessibilityHint("Selects this team")
-                        }
-                    }
-
-                    Button {
-                        showingCreateTeam = true
-                    } label: {
-                        Label("Create New Team", systemImage: "plus.circle.fill")
-                            .fontWeight(.semibold)
-                    }
-                    .foregroundStyle(.accent)
-                }
-
-                if selectedTeam != nil {
-                    Section("Jersey Number") {
-                        TextField("Enter jersey number", value: $jerseyNumber, format: .number)
-                            .keyboardType(.numberPad)
-                    }
-
-                    Section("Position on This Team") {
-                        PositionPickerView(
-                            assignments: $positionAssignments,
-                            sportName: selectedTeam?.sport?.name
-                        )
-                    }
-
-                    if positionAssignments.assignments.count > 1 {
-                        Section {
-                            HStack {
-                                Image(systemName: "info.circle")
-                                    .foregroundStyle(.blue)
-                                Text("Multiple positions: You'll confirm position when starting a shift.")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                    }
-                }
-            }
-            .navigationTitle("Add to Team")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Add") {
-                        addToTeam()
-                    }
-                    .disabled(selectedTeam == nil)
-                }
-            }
-            .onAppear {
-                // Jersey numbers are team-specific, so don't prefill from a global value.
-                jerseyNumber = nil
-            }
-            .onChange(of: availableTeams.map(\.id)) { _, teamIDs in
-                guard let selectedTeam else { return }
-                if !teamIDs.contains(selectedTeam.id) {
-                    self.selectedTeam = nil
-                }
-            }
-            .sheet(isPresented: $showingCreateTeam) {
-                AddTeamView()
-            }
-        }
-    }
-
-    private func addToTeam() {
-        guard let team = selectedTeam else { return }
-
-        let membership = TeamMembership(
-            person: person,
-            team: team,
-            role: "player",
-            jerseyNumber: jerseyNumber,
-            position: positionAssignments.displayText,
-            positionAssignments: positionAssignments
-        )
-
-        modelContext.insert(membership)
-
-        if team.memberships == nil {
-            team.memberships = []
-        }
-        team.memberships?.append(membership)
-
-        if person.teamMemberships == nil {
-            person.teamMemberships = []
-        }
-        person.teamMemberships?.append(membership)
-
-        try? modelContext.save()
-        dismiss()
-    }
 }
 
 // MARK: - Person Game Row

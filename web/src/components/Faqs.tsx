@@ -5,56 +5,51 @@ const faqs = [
     {
       question: 'What sports can I track?',
       answer:
-        'Stattie supports basketball and soccer. You can pick the sport for each game, and the stat buttons adapt automatically.',
+        'Stattie supports basketball and soccer. Pick the sport for each game and the stat buttons adapt automatically.',
     },
     {
-      question: 'Can I share a game with family or coaches?',
+      question: 'Does each game focus on one player?',
       answer:
-        'Yes. You can share a text game summary using the standard iOS share sheet.',
-    },
-    {
-      question: 'Can I start a game without assigning a team?',
-      answer:
-        'No. Stattie requires team selection before Start Game, so jersey number, position, and stats are always tied to the correct team context.',
+        'Yes. Stattie is designed for a parent to focus on one player at a time and keep that player\'s game history clear.',
     },
     {
       question: 'What stats can I track?',
       answer:
-        'Basketball includes shooting, rebounds, assists, steals, and custom impact actions. Soccer includes goals, shots, assists, saves, passes, tackles, interceptions, corners, fouls, and cards.',
+        'Basketball includes shooting, rebounds, assists, steals, and impact actions. Soccer includes goals, shots, assists, saves, passes, tackles, interceptions, corners, fouls, and cards.',
     },
   ],
   [
     {
       question: 'Is there a subscription?',
       answer:
-        'Nope! Stattie is free. No subscriptions, no ads, and no in-app purchases.',
+        'No. Stattie is free, with no subscriptions, ads, or in-app purchases.',
     },
     {
       question: 'Can I edit or delete games later?',
       answer:
-        'Yes. Games are fully manageable after creation, including quick edit/delete actions from your game lists.',
+        'Yes. You can quickly edit or delete games from your game list.',
     },
     {
-      question: 'Can I export my data?',
+      question: 'Can I share a game with friends or family?',
       answer:
-        'You can share a text game summary through the standard iOS share sheet. Your records remain available in the app.',
+        'Yes. After the game, you can choose to send a text summary using the standard iOS share sheet. Stattie never shares it automatically.',
     },
   ],
   [
     {
       question: 'What devices does it work on?',
       answer:
-        'Stattie works on iPhone and iPad. Your data syncs seamlessly between devices via iCloud.',
+        'Stattie works on iPhone and iPad. Your data can sync between your own devices via iCloud.',
     },
     {
       question: 'How do shifts work during tracking?',
       answer:
-        'Run tracking in shifts, tap End Shift for a quick recap, then start a new shift immediately to continue recording without breaking flow.',
+        'Tap End Shift for a quick recap, then start a new shift immediately to keep recording the same player without breaking the flow.',
     },
     {
       question: 'Does it work without internet?',
       answer:
-        'Absolutely. Stattie works completely offline. Your stats are saved locally and sync to iCloud automatically when you\'re back online.',
+        "Yes. Stattie works offline. Your stats are saved locally and can sync to iCloud when you're back online.",
     },
   ],
 ]

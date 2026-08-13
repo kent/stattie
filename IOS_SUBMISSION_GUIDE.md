@@ -29,11 +29,11 @@ The App Review contact is Kent Fenwick, `kent.fenwick@gmail.com`, `+1 416-788-13
 
 ## Privacy and product behavior
 
-- Core player, team, game, and preference data is stored on-device.
+- Core tracked-player, game, and preference data is stored on-device.
 - Private sync through the user's own iCloud account is optional.
-- Coaching recommendations are generated on-device. No player or game data is sent to an AI provider.
+- Player and game data is not sent to an analytics or AI service.
 - Stattie has no advertising SDK, cross-app tracking, or developer analytics.
-- Ordinary user-initiated exports use the iOS share sheet. The app does not ship CKShare/team-invite collaboration.
+- A parent can choose to share a completed-game stat summary with friends or family using the iOS share sheet.
 - The App Store privacy answer remains **Data Not Collected** so long as no new server analytics, accounts, support upload, or remote processing is added.
 
 If any of those facts change, update all of the following before upload:
@@ -52,7 +52,7 @@ The project generates its final Info.plist while also referencing `Stattie/Info.
 1. `ITSAppUsesNonExemptEncryption = NO`.
 2. `PrivacyInfo.xcprivacy` appears at the root of the built `.app` bundle.
 
-Do not restore the old `cloudkit-iCloud.com.stattie.app` custom URL scheme. Private CloudKit sync uses the iCloud entitlement and does not require that CKShare URL scheme.
+Do not restore the old `cloudkit-iCloud.com.stattie.app` custom URL scheme. Private CloudKit sync uses the iCloud entitlement and does not require a custom URL scheme.
 
 Useful archive checks:
 
@@ -80,13 +80,14 @@ Fastlane metadata uses the canonical `www.stattie.com` URLs. Do not use `stattie
 
 No login or demo account is required.
 
-1. Add a player.
+1. Add the player you want to track.
 2. Create a game for that player.
 3. Record several stats.
 4. End the game and inspect the summary.
-5. Review on-device coaching focus and player trends.
+5. Review the player's completed-game stats and trend history.
+6. Optionally share the completed-game stat summary with a friend or family member using the iOS share sheet.
 
-Private iCloud sync is optional for this review path. Reviewers do not need a second account, a collaboration invite, an API key, or a proxy token.
+Private iCloud sync is optional for this review path. No additional account or setup is required.
 
 ## Submission checklist
 
@@ -97,8 +98,8 @@ Private iCloud sync is optional for this review path. Reviewers do not need a se
 - [ ] Confirm the production iCloud container is `iCloud.com.stattie.app`.
 - [ ] Confirm the privacy manifest and export-compliance key are in the built app.
 - [ ] Run a clean Release build and all configured tests.
-- [ ] Test first launch, local save, game finalization, undo, summaries, on-device coaching, offline use, iCloud recovery, Settings links, and the share sheet on a physical device.
-- [ ] Confirm no placeholder URLs, identifiers, contacts, demo data, or remote-AI claims remain.
+- [ ] Test first launch, the single-player setup and game flow, local save, game finalization, undo, summaries and trends, offline use, iCloud recovery, Settings links, and completed-game summary sharing on a physical device.
+- [ ] Confirm no placeholder URLs, identifiers, contacts, demo data, or unsupported feature claims remain.
 - [ ] Confirm screenshots match the current UI and claims. Submission assets are documented in `assets/app-store/2026-03-02/README.md`.
 
 ### App Store Connect

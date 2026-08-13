@@ -1,13 +1,14 @@
 No login or demo account is required. Core functionality is available immediately after completing the short on-device setup.
 
 Review path:
-1. Add a player from the Players tab.
+1. Add the player you want to track.
 2. Create a game for that player.
 3. Track several made/missed shots or other stats.
 4. End the game to open its summary.
-5. Review the on-device next-game coaching focus and player trends.
+5. Review the player’s completed-game stats and trend history.
+6. Optionally share the completed-game stat summary with a friend or family member using the iOS share sheet.
 
 Technical notes:
-- Coaching recommendations are generated locally on the device; player and game data is not sent to an AI service.
-- Stattie stores data locally and can privately sync it between the reviewer's own devices through their iCloud account.
+- Player and game data is stored locally and is not sent to an analytics or AI service.
+- Stattie can privately sync data between the reviewer’s own devices through their iCloud account.
 - iCloud is optional for the core tracking and summary flow.

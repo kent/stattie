@@ -4,7 +4,6 @@ import StoreKit
 
 struct SettingsView: View {
     private let websiteBaseURL = URL(string: "https://www.stattie.com")!
-    private let appStoreURL = URL(string: "https://apps.apple.com/app/id6758022135")!
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.requestReview) private var requestReview
@@ -164,7 +163,7 @@ struct SettingsView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Achievements")
                                     .font(.body)
-                                Text("\(AchievementManager.shared.unlockedAchievements.count)/\(AchievementType.allCases.count) unlocked")
+                                Text("\(AchievementManager.shared.unlockedAchievements.filter { $0 != .sharedPlayer }.count)/\(AchievementType.allCases.filter { $0 != .sharedPlayer }.count) unlocked")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
@@ -210,18 +209,6 @@ struct SettingsView: View {
                     }
                 }
 
-                Section("Coaching") {
-                    Label("On-device coaching", systemImage: "iphone.and.arrow.forward")
-                        .foregroundStyle(.green)
-
-                    Text("Practice priorities are calculated from recorded stats directly on this device. Stattie does not send player or game data to an AI service.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                // Invite Friends
-                InviteFriendsSection()
-
                 Section {
                     Link(destination: websiteBaseURL.appending(path: "support")) {
                         Label("Contact Support", systemImage: "questionmark.circle")
@@ -233,11 +220,6 @@ struct SettingsView: View {
                         Label("Rate Stattie", systemImage: "star.fill")
                     }
 
-                    Button {
-                        shareApp()
-                    } label: {
-                        Label("Share Stattie", systemImage: "square.and.arrow.up")
-                    }
                 }
             }
             .navigationTitle("Settings")
@@ -265,19 +247,7 @@ struct SettingsView: View {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "—"
     }
 
-    private func shareApp() {
-        let text = "I'm using Stattie to track game stats for my players! Check it out:"
-        let activityVC = UIActivityViewController(
-            activityItems: [text, appStoreURL],
-            applicationActivities: nil
-        )
 
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let window = windowScene.windows.first,
-           let rootVC = window.rootViewController {
-            rootVC.present(activityVC, animated: true)
-        }
-    }
 }
 
 struct StatsSummaryPill: View {

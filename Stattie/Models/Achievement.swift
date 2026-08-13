@@ -47,8 +47,8 @@ enum AchievementType: String, CaseIterable, Codable {
         case .fiftyPoints: return "Unstoppable"
         case .hatTrick: return "Hat Trick Hero"
         case .cleanSheet: return "Brick Wall"
-        case .firstShare: return "Team Player"
-        case .sharedPlayer: return "Coach's Assistant"
+        case .firstShare: return "Family Update"
+        case .sharedPlayer: return "Stattie Supporter"
         }
     }
 
@@ -69,7 +69,7 @@ enum AchievementType: String, CaseIterable, Codable {
         case .hatTrick: return "Score 3 goals in a game"
         case .cleanSheet: return "Record a clean sheet (goalkeeper)"
         case .firstShare: return "Share your first game stats"
-        case .sharedPlayer: return "Share Stattie with someone"
+        case .sharedPlayer: return "Legacy achievement"
         }
     }
 

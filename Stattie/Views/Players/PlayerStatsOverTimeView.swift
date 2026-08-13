@@ -8,7 +8,6 @@ struct PersonStatsOverTimeView: View {
 
     @State private var selectedStat: StatType = .points
     @State private var timeRange: TimeRange = .all
-    @State private var showingShareSheet = false
 
     enum StatType: String, CaseIterable {
         case points = "Points"
@@ -308,19 +307,6 @@ struct PersonStatsOverTimeView: View {
         }
         .navigationTitle("Stats Over Time")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    showingShareSheet = true
-                } label: {
-                    Image(systemName: "square.and.arrow.up")
-                }
-                .accessibilityLabel("Share stats")
-            }
-        }
-        .sheet(isPresented: $showingShareSheet) {
-            ShareStatsSheet(player: player, stats: chartData, selectedStat: selectedStat, averageValue: averageValue)
-        }
     }
 }
 
@@ -433,132 +419,6 @@ struct StatPill: View {
         }
         .frame(width: 36)
     }
-}
-
-// MARK: - Share Stats Sheet
-
-struct ShareStatsSheet: View {
-    @Environment(\.dismiss) private var dismiss
-    let player: Person
-    let stats: [(date: Date, value: Int, gameNumber: Int)]
-    let selectedStat: PersonStatsOverTimeView.StatType
-    let averageValue: Double
-
-    @State private var showingActivitySheet = false
-
-    var shareText: String {
-        let gamesCount = stats.count
-        let highValue = stats.map { $0.value }.max() ?? 0
-
-        return """
-        \(player.fullName) Stats 📊
-
-        \(selectedStat.rawValue) over \(gamesCount) games:
-        • Average: \(String(format: "%.1f", averageValue))
-        • Career High: \(highValue)
-
-        Tracked with Stattie 📱
-        """
-    }
-
-    var body: some View {
-        NavigationStack {
-            VStack(spacing: 20) {
-                // Preview card
-                VStack(spacing: 16) {
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text(player.fullName)
-                                .font(.title2.bold())
-                        }
-                        Spacer()
-                        Image(systemName: "chart.line.uptrend.xyaxis")
-                            .font(.largeTitle)
-                            .foregroundStyle(.accent)
-                    }
-
-                    Divider()
-
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 90), spacing: 24)], spacing: 16) {
-                        VStack {
-                            Text(String(format: "%.1f", averageValue))
-                                .scaledFont(size: 36, weight: .bold, relativeTo: .title1)
-                                .foregroundStyle(selectedStat.color)
-                            Text("Avg \(selectedStat.shortName)")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-
-                        VStack {
-                            Text("\(stats.map { $0.value }.max() ?? 0)")
-                                .scaledFont(size: 36, weight: .bold, relativeTo: .title1)
-                                .foregroundStyle(.green)
-                            Text("High")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-
-                        VStack {
-                            Text("\(stats.count)")
-                                .scaledFont(size: 36, weight: .bold, relativeTo: .title1)
-                            Text("Games")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-
-                    Text("Tracked with Stattie")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .padding(.top, 8)
-                }
-                .padding(24)
-                .background(Color(.systemBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 16))
-                .shadow(color: .black.opacity(0.1), radius: 10)
-                .padding(.horizontal)
-
-                Spacer()
-
-                Button {
-                    showingActivitySheet = true
-                } label: {
-                    Label("Share Stats", systemImage: "square.and.arrow.up")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.accentColor)
-                        .foregroundStyle(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                }
-                .padding(.horizontal)
-                .padding(.bottom)
-            }
-            .padding(.top)
-            .navigationTitle("Share Stats")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-            }
-            .sheet(isPresented: $showingActivitySheet) {
-                ActivityView(items: [shareText])
-            }
-        }
-    }
-}
-
-struct ActivityView: UIViewControllerRepresentable {
-    let items: [Any]
-
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: items, applicationActivities: nil)
-    }
-
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 #Preview {

@@ -16,8 +16,8 @@ import { CircleBackground } from '@/components/CircleBackground'
 import { Container } from '@/components/Container'
 import { PhoneFrame } from '@/components/PhoneFrame'
 import { StatTrackingScreen } from '@/components/mockups/StatTrackingScreen'
-import { TeamGameSetupScreen } from '@/components/mockups/TeamGameSetupScreen'
-import { GameManagementScreen } from '@/components/mockups/GameManagementScreen'
+import { PlayerGameSetupScreen } from '@/components/mockups/PlayerGameSetupScreen'
+import { ShareScreen } from '@/components/mockups/ShareScreen'
 
 interface CustomAnimationProps {
   isForwards: boolean
@@ -26,11 +26,11 @@ interface CustomAnimationProps {
 
 const features = [
   {
-    name: 'Multi-Sport Team Setup',
+    name: 'One-Player Game Setup',
     description:
-      'Choose basketball or soccer, then select the right team before you start. Jerseys and positions stay tied to that team so every stat keeps the right context.',
+      'Set up a basketball or soccer game around the child you are watching, then start tracking with a quick, focused workflow.',
     icon: DeviceShareIcon,
-    screen: TeamGameSetupScreen,
+    screen: PlayerGameSetupScreen,
   },
   {
     name: 'Sport-Specific Live Tracking',
@@ -40,11 +40,11 @@ const features = [
     screen: StatTrackingScreen,
   },
   {
-    name: 'Shift Recaps + Game Control',
+    name: 'Share When the Game Ends',
     description:
-      'End a shift for a quick recap, then keep momentum with Start New Shift. Manage active and recent games with fast edit/delete actions in one place.',
+      'Review the final summary, then choose whether to send it to friends or family through the iOS share sheet. Nothing is shared automatically.',
     icon: DeviceListIcon,
-    screen: GameManagementScreen,
+    screen: ShareScreen,
   },
 ]
 
@@ -364,9 +364,8 @@ export function PrimaryFeatures() {
             Built for real game flow, not spreadsheets.
           </h2>
           <p className="mt-2 text-lg text-gray-400">
-            Start with sport + team context, track by shift, and manage games
-            cleanly. Fast enough for parents on the sidelines, structured
-            enough for coaches.
+            Follow one player from the opening whistle to the final summary.
+            Fast taps keep parents focused on the game instead of the screen.
           </p>
         </div>
       </Container>

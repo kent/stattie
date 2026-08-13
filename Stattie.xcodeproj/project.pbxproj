@@ -8,9 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		B8004615F3AD8C6A57104A65 /* CanonicalStatModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208F798872C3486286D461A4 /* CanonicalStatModelTests.swift */; };
-		C10000002B00003B /* TeamListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000002B00003B /* TeamListView.swift */; };
-		C10000002B00003C /* TeamDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000002B00003C /* TeamDetailView.swift */; };
-		C10000002B00003D /* AddTeamView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000002B00003D /* AddTeamView.swift */; };
 		D41AEE01896277DA537C7661 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B8D9E908A0524BDC7CCD3969 /* Foundation.framework */; };
 		E01000002B000001 /* StattieApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000001 /* StattieApp.swift */; };
 		E01000002B000002 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000002 /* AppState.swift */; };
@@ -25,18 +22,13 @@
 		E01000002B00000B /* PlayerListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00000B /* PlayerListView.swift */; };
 		E01000002B00000C /* PlayerDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00000C /* PlayerDetailView.swift */; };
 		E01000002B00000D /* AddPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00000D /* AddPlayerView.swift */; };
-		E01000002B00000E /* GameListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00000E /* GameListView.swift */; };
-		E01000002B00000F /* NewGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00000F /* NewGameView.swift */; };
 		E01000002B000010 /* GameDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000010 /* GameDetailView.swift */; };
 		E01000002B000011 /* GameTrackingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000011 /* GameTrackingView.swift */; };
 		E01000002B000012 /* StatButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000012 /* StatButtonView.swift */; };
 		E01000002B000013 /* GameSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000013 /* GameSummaryView.swift */; };
-		E01000002B000014 /* ShareableGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000014 /* ShareableGameView.swift */; };
 		E01000002B000015 /* SyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000015 /* SyncManager.swift */; };
 		E01000002B000016 /* LockManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000016 /* LockManager.swift */; };
-		E01000002B000017 /* ShareService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000017 /* ShareService.swift */; };
 		E01000002B000018 /* SeedDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000018 /* SeedDataService.swift */; };
-		E01000002B00001A /* ShareViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00001A /* ShareViewModel.swift */; };
 		E01000002B00001B /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00001B /* OnboardingView.swift */; };
 		E01000002B00001C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00001C /* SettingsView.swift */; };
 		E01000002B00001D /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00001D /* Extensions.swift */; };
@@ -54,18 +46,14 @@
 		E01000002B000030 /* Achievement.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000030 /* Achievement.swift */; };
 		E01000002B000031 /* AchievementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000031 /* AchievementsView.swift */; };
 		E01000002B000032 /* ConfettiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000032 /* ConfettiView.swift */; };
-		E01000002B000033 /* PlayerComparisonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000033 /* PlayerComparisonView.swift */; };
 		E01000002B000034 /* RecentActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000034 /* RecentActivityView.swift */; };
 		E01000002B000035 /* Season.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000035 /* Season.swift */; };
 		E01000002B000036 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000036 /* NotificationManager.swift */; };
 		E01000002B000037 /* ReviewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000037 /* ReviewManager.swift */; };
-		E01000002B000038 /* ShareableStatsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000038 /* ShareableStatsCard.swift */; };
-		E01000002B000039 /* ReferralManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000039 /* ReferralManager.swift */; };
 		E01000002B00003A /* AccessibilityHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00003A /* AccessibilityHelpers.swift */; };
 		E01000002B00003B /* SharedModelContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00003B /* SharedModelContainer.swift */; };
 		E01000002B00003C /* SyncedAppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00003C /* SyncedAppSettings.swift */; };
 		E01000002B00003D /* SyncedAchievementState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00003D /* SyncedAchievementState.swift */; };
-		E01000002B00003E /* SyncedAICacheEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00003E /* SyncedAICacheEntry.swift */; };
 		E01000002B00003F /* CloudSyncedPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00003F /* CloudSyncedPreferences.swift */; };
 		ED23180261715630D5B7E8DB /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E6B07DDEB1324F07934F0292 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
@@ -84,9 +72,6 @@
 		208F798872C3486286D461A4 /* CanonicalStatModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CanonicalStatModelTests.swift; sourceTree = "<group>"; };
 		9B1A842DFB0B3585A4BB4990 /* StattieTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StattieTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B8D9E908A0524BDC7CCD3969 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
-		D10000002B00003B /* TeamListView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TeamListView.swift; path = Stattie/Views/Teams/TeamListView.swift; sourceTree = SOURCE_ROOT; };
-		D10000002B00003C /* TeamDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TeamDetailView.swift; path = Stattie/Views/Teams/TeamDetailView.swift; sourceTree = SOURCE_ROOT; };
-		D10000002B00003D /* AddTeamView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AddTeamView.swift; path = Stattie/Views/Teams/AddTeamView.swift; sourceTree = SOURCE_ROOT; };
 		E00000002B000000 /* Stattie.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Stattie.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E00000002B000001 /* StattieApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StattieApp.swift; sourceTree = "<group>"; };
 		E00000002B000002 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
@@ -101,18 +86,13 @@
 		E00000002B00000B /* PlayerListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerListView.swift; sourceTree = "<group>"; };
 		E00000002B00000C /* PlayerDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerDetailView.swift; sourceTree = "<group>"; };
 		E00000002B00000D /* AddPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddPlayerView.swift; sourceTree = "<group>"; };
-		E00000002B00000E /* GameListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameListView.swift; sourceTree = "<group>"; };
-		E00000002B00000F /* NewGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewGameView.swift; sourceTree = "<group>"; };
 		E00000002B000010 /* GameDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameDetailView.swift; sourceTree = "<group>"; };
 		E00000002B000011 /* GameTrackingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameTrackingView.swift; sourceTree = "<group>"; };
 		E00000002B000012 /* StatButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatButtonView.swift; sourceTree = "<group>"; };
 		E00000002B000013 /* GameSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSummaryView.swift; sourceTree = "<group>"; };
-		E00000002B000014 /* ShareableGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareableGameView.swift; sourceTree = "<group>"; };
 		E00000002B000015 /* SyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncManager.swift; sourceTree = "<group>"; };
 		E00000002B000016 /* LockManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockManager.swift; sourceTree = "<group>"; };
-		E00000002B000017 /* ShareService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareService.swift; sourceTree = "<group>"; };
 		E00000002B000018 /* SeedDataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeedDataService.swift; sourceTree = "<group>"; };
-		E00000002B00001A /* ShareViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewModel.swift; sourceTree = "<group>"; };
 		E00000002B00001B /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		E00000002B00001C /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		E00000002B00001D /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
@@ -131,18 +111,14 @@
 		E00000002B000030 /* Achievement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Achievement.swift; sourceTree = "<group>"; };
 		E00000002B000031 /* AchievementsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AchievementsView.swift; sourceTree = "<group>"; };
 		E00000002B000032 /* ConfettiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfettiView.swift; sourceTree = "<group>"; };
-		E00000002B000033 /* PlayerComparisonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerComparisonView.swift; sourceTree = "<group>"; };
 		E00000002B000034 /* RecentActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentActivityView.swift; sourceTree = "<group>"; };
 		E00000002B000035 /* Season.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Season.swift; sourceTree = "<group>"; };
 		E00000002B000036 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		E00000002B000037 /* ReviewManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewManager.swift; sourceTree = "<group>"; };
-		E00000002B000038 /* ShareableStatsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareableStatsCard.swift; sourceTree = "<group>"; };
-		E00000002B000039 /* ReferralManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReferralManager.swift; sourceTree = "<group>"; };
 		E00000002B00003A /* AccessibilityHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityHelpers.swift; sourceTree = "<group>"; };
 		E00000002B00003B /* SharedModelContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedModelContainer.swift; sourceTree = "<group>"; };
 		E00000002B00003C /* SyncedAppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncedAppSettings.swift; sourceTree = "<group>"; };
 		E00000002B00003D /* SyncedAchievementState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncedAchievementState.swift; sourceTree = "<group>"; };
-		E00000002B00003E /* SyncedAICacheEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncedAICacheEntry.swift; sourceTree = "<group>"; };
 		E00000002B00003F /* CloudSyncedPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncedPreferences.swift; sourceTree = "<group>"; };
 		E6B07DDEB1324F07934F0292 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -169,9 +145,6 @@
 		0E1643547B062EC7C59CA91C /* Teams */ = {
 			isa = PBXGroup;
 			children = (
-				D10000002B00003B /* TeamListView.swift */,
-				D10000002B00003C /* TeamDetailView.swift */,
-				D10000002B00003D /* AddTeamView.swift */,
 			);
 			name = Teams;
 			sourceTree = "<group>";
@@ -281,7 +254,6 @@
 				E00000002B000035 /* Season.swift */,
 				E00000002B00003C /* SyncedAppSettings.swift */,
 				E00000002B00003D /* SyncedAchievementState.swift */,
-				E00000002B00003E /* SyncedAICacheEntry.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -289,7 +261,6 @@
 		E03000002B000005 /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
-				E00000002B00001A /* ShareViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -317,12 +288,10 @@
 			children = (
 				E00000002B000015 /* SyncManager.swift */,
 				E00000002B000016 /* LockManager.swift */,
-				E00000002B000017 /* ShareService.swift */,
 				E00000002B00003F /* CloudSyncedPreferences.swift */,
 				E00000002B000018 /* SeedDataService.swift */,
 				E00000002B000036 /* NotificationManager.swift */,
 				E00000002B000037 /* ReviewManager.swift */,
-				E00000002B000039 /* ReferralManager.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -359,7 +328,6 @@
 				E00000002B00000C /* PlayerDetailView.swift */,
 				E00000002B00000D /* AddPlayerView.swift */,
 				E00000002B000026 /* PlayerStatsOverTimeView.swift */,
-				E00000002B000033 /* PlayerComparisonView.swift */,
 			);
 			path = Players;
 			sourceTree = "<group>";
@@ -367,8 +335,6 @@
 		E03000002B00000C /* Games */ = {
 			isa = PBXGroup;
 			children = (
-				E00000002B00000E /* GameListView.swift */,
-				E00000002B00000F /* NewGameView.swift */,
 				E00000002B000027 /* NewGameForPlayerView.swift */,
 				E00000002B000010 /* GameDetailView.swift */,
 			);
@@ -389,7 +355,6 @@
 			isa = PBXGroup;
 			children = (
 				E00000002B000013 /* GameSummaryView.swift */,
-				E00000002B000014 /* ShareableGameView.swift */,
 			);
 			path = Summary;
 			sourceTree = "<group>";
@@ -423,7 +388,6 @@
 		E03000002B000012 /* Sharing */ = {
 			isa = PBXGroup;
 			children = (
-				E00000002B000038 /* ShareableStatsCard.swift */,
 			);
 			path = Sharing;
 			sourceTree = "<group>";
@@ -578,18 +542,13 @@
 				E01000002B00000B /* PlayerListView.swift in Sources */,
 				E01000002B00000C /* PlayerDetailView.swift in Sources */,
 				E01000002B00000D /* AddPlayerView.swift in Sources */,
-				E01000002B00000E /* GameListView.swift in Sources */,
-				E01000002B00000F /* NewGameView.swift in Sources */,
 				E01000002B000010 /* GameDetailView.swift in Sources */,
 				E01000002B000011 /* GameTrackingView.swift in Sources */,
 				E01000002B000012 /* StatButtonView.swift in Sources */,
 				E01000002B000013 /* GameSummaryView.swift in Sources */,
-				E01000002B000014 /* ShareableGameView.swift in Sources */,
 				E01000002B000015 /* SyncManager.swift in Sources */,
 				E01000002B000016 /* LockManager.swift in Sources */,
-				E01000002B000017 /* ShareService.swift in Sources */,
 				E01000002B000018 /* SeedDataService.swift in Sources */,
-				E01000002B00001A /* ShareViewModel.swift in Sources */,
 				E01000002B00001B /* OnboardingView.swift in Sources */,
 				E01000002B00001C /* SettingsView.swift in Sources */,
 				E01000002B00001D /* Extensions.swift in Sources */,
@@ -606,22 +565,15 @@
 				E01000002B000030 /* Achievement.swift in Sources */,
 				E01000002B000031 /* AchievementsView.swift in Sources */,
 				E01000002B000032 /* ConfettiView.swift in Sources */,
-				E01000002B000033 /* PlayerComparisonView.swift in Sources */,
 				E01000002B000034 /* RecentActivityView.swift in Sources */,
 				E01000002B000035 /* Season.swift in Sources */,
 				E01000002B000036 /* NotificationManager.swift in Sources */,
 				E01000002B000037 /* ReviewManager.swift in Sources */,
-				E01000002B000038 /* ShareableStatsCard.swift in Sources */,
-				E01000002B000039 /* ReferralManager.swift in Sources */,
 				E01000002B00003A /* AccessibilityHelpers.swift in Sources */,
 				E01000002B00003B /* SharedModelContainer.swift in Sources */,
 				E01000002B00003C /* SyncedAppSettings.swift in Sources */,
 				E01000002B00003D /* SyncedAchievementState.swift in Sources */,
-				E01000002B00003E /* SyncedAICacheEntry.swift in Sources */,
 				E01000002B00003F /* CloudSyncedPreferences.swift in Sources */,
-				C10000002B00003B /* TeamListView.swift in Sources */,
-				C10000002B00003C /* TeamDetailView.swift in Sources */,
-				C10000002B00003D /* AddTeamView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -804,7 +756,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Stattie/Stattie.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = PS5W7BFTQ2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -838,7 +790,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Stattie/Stattie.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = PS5W7BFTQ2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;

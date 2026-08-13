@@ -1,1 +1,1 @@
-basketball,soccer,stats,stat tracker,coach,youth sports,game tracker,player stats,team stats
+basketball,soccer,stats,stat tracker,parents,youth sports,game tracker,player stats,game stats

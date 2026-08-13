@@ -8,8 +8,12 @@ struct AchievementsView: View {
         unlockedAchievements.count
     }
 
+    private var visibleAchievements: [AchievementType] {
+        AchievementType.allCases.filter { $0 != .sharedPlayer }
+    }
+
     var totalCount: Int {
-        AchievementType.allCases.count
+        visibleAchievements.count
     }
 
     var body: some View {
@@ -45,7 +49,7 @@ struct AchievementsView: View {
 
                     AchievementSection(title: "Soccer", achievements: [.hatTrick, .cleanSheet], unlocked: unlockedAchievements)
 
-                    AchievementSection(title: "Social", achievements: [.firstShare, .sharedPlayer], unlocked: unlockedAchievements)
+                    AchievementSection(title: "Post-Game Sharing", achievements: [.firstShare], unlocked: unlockedAchievements)
                 }
                 .padding(.horizontal)
 

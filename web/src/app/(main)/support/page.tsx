@@ -41,7 +41,7 @@ export default function SupportPage() {
           <section>
             <h2 className="text-xl font-semibold text-gray-900">Privacy</h2>
             <p className="mt-3">
-              Please do not email player photos, full game exports, passwords, or other
+              Please do not email a player photo, full game exports, passwords, or other
               sensitive information. We will never ask for your Apple ID password.
             </p>
           </section>

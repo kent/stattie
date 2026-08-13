@@ -70,7 +70,7 @@ struct AddPersonView: View {
                 } header: {
                     Text("Player Info")
                 } footer: {
-                    Text("Jersey numbers are assigned per team.")
+                    Text("You can add jersey and position details later.")
                 }
             }
             .navigationTitle("Add Player")

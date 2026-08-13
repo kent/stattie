@@ -51,14 +51,14 @@ export function StatTrackingScreen(props: ScreenProps) {
         <MotionAppScreenHeader {...props.headerAnimation}>
           <AppScreen.Title>Track Game</AppScreen.Title>
           <AppScreen.Subtitle>
-            Comets • Basketball <span className="text-white">Shift 2 • 00:16</span>
+            Basketball <span className="text-white">Shift 2 • 00:16</span>
           </AppScreen.Subtitle>
         </MotionAppScreenHeader>
       ) : (
         <AppScreen.Header>
           <AppScreen.Title>Track Game</AppScreen.Title>
           <AppScreen.Subtitle>
-            Comets • Basketball <span className="text-white">Shift 2 • 00:16</span>
+            Basketball <span className="text-white">Shift 2 • 00:16</span>
           </AppScreen.Subtitle>
         </AppScreen.Header>
       )}
@@ -85,7 +85,7 @@ function StatTrackingContent() {
         </div>
         <div>
           <div className="font-semibold text-gray-900">Marcus Johnson</div>
-          <div className="text-xs text-gray-500">Comets • Point Guard</div>
+          <div className="text-xs text-gray-500">Point Guard • #23</div>
         </div>
         <div className="ml-auto text-right">
           <div className="text-lg font-bold text-gray-900">12 PTS</div>

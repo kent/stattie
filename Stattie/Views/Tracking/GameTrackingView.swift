@@ -913,7 +913,6 @@ struct GameTrackingView: View {
                 teamScore: shiftTeamScore,
                 opponentScore: shiftOpponentScore
             )
-            LocalCoachingService.shared.refreshPostGameInsightsInBackground(for: game)
             showingSummary = true
         } catch {
             persistenceError = error.localizedDescription

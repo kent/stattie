@@ -111,11 +111,8 @@ export function Header() {
                             <MobileNavLink href="/#features">
                               Features
                             </MobileNavLink>
-                            <MobileNavLink href="/#ai-coaching">
-                              On-Device Coaching
-                            </MobileNavLink>
-                            <MobileNavLink href="/#academy">
-                              Academy
+                            <MobileNavLink href="/#secondary-features">
+                              How it works
                             </MobileNavLink>
                             <MobileNavLink href="/#reviews">
                               Reviews

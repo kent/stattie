@@ -16,8 +16,6 @@ struct GameSummaryView: View {
     @State private var newAchievements: [AchievementType] = []
     @State private var showingAchievement = false
     @State private var currentAchievementIndex = 0
-    @State private var coachingReport: CoachingInsightReport?
-    @State private var isLoadingCoachingReport = false
 
     private var currentUser: User? { users.resolvedCurrentUser }
 
@@ -349,65 +347,6 @@ struct GameSummaryView: View {
                         }
                     }
 
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Text("NEXT GAME FOCUS")
-                                .font(.caption.bold())
-                                .foregroundStyle(.secondary)
-                            Spacer()
-
-                            if let coachingReport {
-                                Text(coachingReport.source.rawValue)
-                                    .font(.caption.bold())
-                                    .foregroundStyle(.green)
-                            }
-                        }
-                        .padding(.horizontal)
-
-                        if isLoadingCoachingReport {
-                            ProgressView("Calculating from game stats...")
-                                .padding()
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(Color(.secondarySystemGroupedBackground))
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                        } else if let coachingReport {
-                            VStack(alignment: .leading, spacing: 10) {
-                                Text(coachingReport.headline)
-                                    .font(.headline)
-                                Text(coachingReport.summary)
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-
-                                ForEach(coachingReport.focusItems.sorted { $0.rank < $1.rank }) { item in
-                                    CoachingFocusCard(item: item)
-                                }
-                            }
-                            .padding()
-                            .background(Color(.secondarySystemGroupedBackground))
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                        } else {
-                            Text("Calculate 3 on-device priorities for what to practice before the next game.")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                                .padding()
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(Color(.secondarySystemGroupedBackground))
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                        }
-
-                        Button {
-                            Task {
-                                await loadCoachingReport(forceRefresh: true)
-                            }
-                        } label: {
-                            Label("Refresh Insights", systemImage: "sparkles")
-                                .font(.subheadline.weight(.semibold))
-                                .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(isLoadingCoachingReport)
-                    }
-
                     Spacer(minLength: 40)
                 }
                 .padding()
@@ -433,31 +372,7 @@ struct GameSummaryView: View {
             .sheet(isPresented: $showingShareSheet) {
                 ShareSheet(items: [generateShareText()])
             }
-            .onAppear {
-                if coachingReport == nil {
-                    Task {
-                        await loadCoachingReport()
-                    }
-                }
-            }
         }
-    }
-
-    @MainActor
-    private func loadCoachingReport(forceRefresh: Bool = false) async {
-        if isLoadingCoachingReport { return }
-        if !forceRefresh, let cached = LocalCoachingService.shared.cachedEndOfGameInsights(for: game) {
-            coachingReport = cached
-            return
-        }
-        if coachingReport != nil && !forceRefresh { return }
-
-        isLoadingCoachingReport = true
-        coachingReport = await LocalCoachingService.shared.generateAndCacheEndOfGameInsights(
-            for: game,
-            forceRefresh: forceRefresh
-        )
-        isLoadingCoachingReport = false
     }
 
     private func handleDismiss() {
@@ -507,13 +422,6 @@ struct GameSummaryView: View {
             text += "ALL STATS\n"
             for line in allStatLines {
                 text += "\(line.title): \(line.value)\n"
-            }
-        }
-
-        if let coachingReport {
-            text += "\nNEXT GAME FOCUS\n"
-            for item in coachingReport.focusItems.sorted(by: { $0.rank < $1.rank }) {
-                text += "\(item.rank). \(item.title): \(item.actionPlan)\n"
             }
         }
 
@@ -579,61 +487,6 @@ struct StatRow: View {
             .padding(.horizontal)
             .padding(.vertical, 12)
         }
-    }
-}
-
-struct CoachingFocusCard: View {
-    let item: CoachingFocusItem
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .top, spacing: 10) {
-                Text("\(item.rank)")
-                    .font(.headline.monospacedDigit())
-                    .frame(width: 26, height: 26)
-                    .background(Color.accentColor.opacity(0.15))
-                    .clipShape(Circle())
-
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 6) {
-                        Text(item.title)
-                            .font(.headline)
-                        if item.confirmationCount > 1 {
-                            Text("Confirmed x\(item.confirmationCount)")
-                                .font(.caption2.bold())
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color.accentColor.opacity(0.15))
-                                .clipShape(Capsule())
-                        }
-                    }
-                    Text(item.whyItMatters)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            Text(item.actionPlan)
-                .font(.subheadline)
-
-            if !item.resources.isEmpty {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Resources")
-                        .font(.caption.bold())
-                        .foregroundStyle(.secondary)
-
-                    ForEach(item.resources) { resource in
-                        Link(destination: resource.url) {
-                            Label(resource.title, systemImage: "link")
-                                .font(.caption)
-                        }
-                    }
-                }
-            }
-        }
-        .padding(12)
-        .background(Color(.tertiarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 }
 

@@ -36,8 +36,8 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-semibold text-gray-900">User Content</h2>
             <p className="mt-4">
-              You retain ownership of all data you create within Stattie, including player
-              profiles, game statistics, and any other content. You are responsible for the
+              You retain ownership of all data you create within Stattie, including a player
+              profile, game statistics, and any other content. You are responsible for the
               accuracy of the data you enter.
             </p>
           </section>

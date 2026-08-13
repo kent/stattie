@@ -28,20 +28,18 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-semibold text-gray-900">Information you create</h2>
             <p className="mt-4">
-              You may enter player names, photos, team and season details, game statistics,
-              notes, and app preferences. This content is stored on your device. If you use
-              iCloud, Apple also stores it in your private iCloud account so it can sync
-              between your devices.
+              You may enter a player name, photo, game details, statistics, notes, and app
+              preferences. This content is stored on your device. If you use iCloud, Apple
+              also stores it in your private iCloud account so it can sync between your
+              devices.
             </p>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-gray-900">How information is used</h2>
             <p className="mt-4">
-              Stattie uses your information to provide tracking, summaries, trends,
-              notifications you enable, and coaching recommendations. Coaching calculations
-              run on the device; Stattie does not send player or game information to an AI
-              service.
+              Stattie uses your information to provide game tracking, shift and game
+              summaries, trends, and notifications you enable.
             </p>
           </section>
 
@@ -58,9 +56,10 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-semibold text-gray-900">Sharing</h2>
             <p className="mt-4">
-              When you choose an iOS share action, the content you select is sent to the
-              destination you choose using Apple&apos;s share sheet. Stattie does not receive a
-              copy. Be careful when sharing information about minors or other people.
+              After a game, you can choose to share its summary. Only when you select an iOS
+              share action is that content sent to the friend or family member you choose
+              using Apple&apos;s share sheet. Stattie does not receive a copy or share game data
+              automatically. Be careful when sharing information about minors.
             </p>
           </section>
 
@@ -87,9 +86,9 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-semibold text-gray-900">Children&apos;s information</h2>
             <p className="mt-4">
-              Stattie is intended for coaches, parents, and other adults. If you add
-              information about a child or another person, you are responsible for having
-              permission to record and share it.
+              Stattie is intended for parents and other adults. If you add information about
+              a child or another person, you are responsible for having permission to record
+              it and to share any post-game summary.
             </p>
           </section>
 

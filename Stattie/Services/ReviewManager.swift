@@ -128,7 +128,7 @@ struct ReviewPromptCard: View {
                     }
                 }
 
-                Text("Your review helps other parents and coaches discover Stattie!")
+                Text("Your review helps other parents discover Stattie!")
                     .font(.caption)
                     .foregroundStyle(.secondary)
 

@@ -20,8 +20,7 @@ struct StattieApp: App {
             Shift.self,
             ShiftStat.self,
             SyncedAppSettings.self,
-            SyncedAchievementState.self,
-            SyncedAICacheEntry.self
+            SyncedAchievementState.self
         ])
 
         // Try CloudKit first, fall back to local-only if not available
@@ -67,7 +66,6 @@ struct StattieApp: App {
         }
         CloudSyncedPreferences.bootstrapIfNeeded(force: true)
         AchievementManager.shared.synchronizeFromCloud(force: true)
-        LocalCoachingService.shared.bootstrapCloudCacheIfNeeded()
     }
 
     var body: some Scene {
@@ -95,7 +93,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         let notificationCenter = UNUserNotificationCenter.current()
         notificationCenter.delegate = self
-        registerNotificationCategories()
+        notificationCenter.setNotificationCategories([])
 
         // Register quick actions
         application.shortcutItems = [
@@ -122,48 +120,11 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         completionHandler(true)
     }
 
-    private func registerNotificationCategories() {
-        let openAcademyAction = UNNotificationAction(
-            identifier: "OPEN_ACADEMY",
-            title: "Open Academy",
-            options: [.foreground]
-        )
-
-        let academyReadyCategory = UNNotificationCategory(
-            identifier: "ACADEMY_READY",
-            actions: [openAcademyAction],
-            intentIdentifiers: [],
-            options: []
-        )
-
-        UNUserNotificationCenter.current().setNotificationCategories([academyReadyCategory])
-    }
-
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
         completionHandler([.banner, .sound, .badge])
-    }
-
-    func userNotificationCenter(
-        _ center: UNUserNotificationCenter,
-        didReceive response: UNNotificationResponse,
-        withCompletionHandler completionHandler: @escaping () -> Void
-    ) {
-        let userInfo = response.notification.request.content.userInfo
-        let destination = userInfo["destination"] as? String
-
-        if destination == "academy" {
-            let playerIDRaw = userInfo["playerID"] as? String
-            let playerID = playerIDRaw.flatMap(UUID.init(uuidString:))
-
-            DispatchQueue.main.async {
-                AppState.shared.navigateToAcademy(playerID: playerID)
-            }
-        }
-
-        completionHandler()
     }
 }

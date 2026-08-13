@@ -72,15 +72,15 @@ struct OnboardingView: View {
                     Text("Welcome to Stattie")
                         .font(.largeTitle.bold())
 
-                    Text("The easiest way to track game stats")
+                    Text("Track one player’s game, one tap at a time")
                         .font(.headline)
                         .foregroundStyle(.secondary)
 
                     // Value props
                     VStack(alignment: .leading, spacing: 8) {
-                        FeatureRow(icon: "hand.tap.fill", text: "One-tap stat tracking", color: .blue)
-                        FeatureRow(icon: "chart.line.uptrend.xyaxis", text: "Review progress over time", color: .green)
-                        FeatureRow(icon: "chart.line.uptrend.xyaxis", text: "See performance trends", color: .purple)
+                        FeatureRow(icon: "hand.tap.fill", text: "Track one player per game", color: .blue)
+                        FeatureRow(icon: "chart.line.uptrend.xyaxis", text: "Review your player’s progress", color: .green)
+                        FeatureRow(icon: "heart.fill", text: "Built for parents in the stands", color: .purple)
                     }
                     .padding(.top, 8)
                 }

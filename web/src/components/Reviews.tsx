@@ -16,86 +16,56 @@ interface Review {
 const reviews: Array<Review> = [
   {
     title: 'Finally, an app that works!',
-    body: 'I\'ve tried so many stat tracking apps and they\'re all too complicated. Stattie just works. I can track my son\'s games without missing any action.',
+    body: 'I have tried so many stat tracking apps and they are all too complicated. Stattie lets me track my son\'s game without missing the action.',
     author: 'BasketballMom2024',
     rating: 5,
   },
   {
-    title: 'Perfect for youth basketball',
-    body: 'Our rec league needed a simple way to track stats. Stattie is exactly what we were looking for. Easy enough for any parent to use.',
-    author: 'CoachMike',
+    title: 'Perfect for the sidelines',
+    body: 'I want to follow my daughter\'s stats and Stattie keeps that simple and focused.',
+    author: 'SoccerDad',
     rating: 5,
   },
   {
-    title: 'Great for travel ball',
-    body: 'We travel every weekend for tournaments. Love that I can track games offline and everything syncs when we get back to the hotel.',
+    title: 'Great for travel weekends',
+    body: 'I can track games offline during tournaments and review every game later. It is exactly what I need as a parent.',
     author: 'TravelBallDad',
     rating: 5,
   },
   {
     title: 'The sharing feature is amazing',
-    body: 'Both grandparents live out of state. I send them a game summary as soon as the final whistle blows, and they love seeing every stat.',
+    body: 'Both grandparents live out of state. After the final whistle, I choose to send them the game summary and they love seeing every stat.',
     author: 'ProudMama',
     rating: 5,
   },
   {
-    title: 'Worth every penny',
-    body: 'No subscription? No ads? Just paid once and I own it? This is how apps should work. The developer actually respects their customers.',
+    title: 'Actually free',
+    body: 'No subscription, no ads, and no in-app purchases. I downloaded it and started tracking right away.',
     author: 'NoMoreSubscriptions',
     rating: 5,
   },
   {
-    title: 'My players love seeing their stats',
-    body: 'After every game I share the summary with my team. The kids are motivated to improve when they can see their numbers.',
-    author: 'Coach_Thompson',
-    rating: 5,
-  },
-  {
     title: 'Simple and effective',
-    body: 'Big buttons, clean interface, no learning curve. I was tracking stats within 30 seconds of downloading.',
-    author: 'BusyDadOf3',
-    rating: 5,
-  },
-  {
-    title: 'Better than the expensive ones',
-    body: 'I tried apps that cost $50+ per year. Stattie does everything I need without a subscription. No brainer.',
-    author: 'SmartShopper',
+    body: 'Big buttons, a clean interface, and no learning curve. I was tracking my child\'s stats within minutes.',
+    author: 'BusyParent',
     rating: 5,
   },
   {
     title: 'Game summaries are clutch',
-    body: 'I can send my wife a clean summary after our daughter\'s games, so it is easy for both of us to follow her progress.',
-    author: 'TeamworkParents',
+    body: 'I can send family a clean summary after our daughter\'s game, so everyone can follow how she did.',
+    author: 'ProudParent',
     rating: 5,
   },
   {
-    title: 'Recommended to our whole league',
-    body: 'I told every coach in our league about Stattie. Now half of us are using it. Makes comparing teams so easy.',
-    author: 'LeagueCommissioner',
-    rating: 5,
-  },
-  {
-    title: 'Clean design, no clutter',
-    body: 'I appreciate that there\'s no unnecessary features or confusing options. It does one thing and does it well.',
+    title: 'Focused on what matters',
+    body: 'I appreciate that I can concentrate on one player and the stats I care about. There is no unnecessary setup.',
     author: 'MinimalistDad',
     rating: 5,
   },
   {
-    title: 'Great for high school JV',
-    body: 'Our JV team didn\'t have anyone tracking stats. Now I can give real feedback to my players with actual numbers.',
-    author: 'JVCoach',
-    rating: 5,
-  },
-  {
-    title: 'My son tracks his own games now',
-    body: 'He\'s 14 and watches film of his games while reviewing his stats. This app has helped him take his development seriously.',
-    author: 'HoopsDad',
-    rating: 5,
-  },
-  {
     title: 'Works great at tournaments',
-    body: 'Five games in a weekend, no problem. Battery usage is reasonable and I never lost any data.',
-    author: 'TournamentWarrior',
+    body: 'Five games in a weekend, no problem. Tracking stays fast and I never lost any game data.',
+    author: 'TournamentParent',
     rating: 5,
   },
 ]
@@ -285,7 +255,7 @@ export function Reviews() {
           Trusted by sports families everywhere.
         </h2>
         <p className="mt-2 text-lg text-gray-600 sm:text-center">
-          Coaches, parents, and players are using Stattie to track their games.
+          Parents are using Stattie to focus on the player they came to watch.
         </p>
         <ReviewGrid />
       </Container>
