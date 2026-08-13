@@ -29,10 +29,13 @@ export function Footer() {
             </div>
             <div className="ml-8 lg:w-64">
               <p className="text-base font-semibold text-gray-900">
-                App Store availability pending
+                <Link href="https://apps.apple.com/app/id6758022135">
+                  <span className="absolute inset-0 sm:rounded-2xl" />
+                  Get Stattie free
+                </Link>
               </p>
               <p className="mt-1 text-sm text-gray-700">
-                Version 1.0.1 is prepared for iPhone and iPad.
+                Available on the App Store for iPhone and iPad.
               </p>
             </div>
           </div>

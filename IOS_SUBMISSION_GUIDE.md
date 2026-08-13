@@ -21,7 +21,7 @@ This guide records the current release identifiers, uploaded build, and remainin
 
 The bundle ID and team ID above agree with the Xcode signing configuration and the exported archive. The numeric app ID was verified against the App Store Connect API for `com.stattie.app` on August 12, 2026.
 
-> **Free release configured:** The base App Store price is USD 0.00, with automatic equalized pricing across territories. Version 1.0.1 build 2 is processed as `VALID`; the 1.0.1 store-version record, metadata, review contact, and screenshots were uploaded on August 12, 2026. Confirm App Store validation and submit the version for review before restoring public download links.
+> **Free release configured:** The base App Store price is USD 0.00, with automatic equalized pricing across territories. The public App Store product page and website download links are live. Version 1.0.1 build 2 is processed as `VALID`, passed metadata precheck, and is `WAITING_FOR_REVIEW` with release-after-approval enabled.
 
 ## App Review contact
 
@@ -114,7 +114,7 @@ Private iCloud sync is optional for this review path. Reviewers do not need a se
 
 ### Upload
 
-Build 2, metadata, review information, and screenshots have been uploaded successfully. API keys and `.p8` files must remain outside the repository. Re-run App Store Connect validation and perform a TestFlight smoke test before review submission.
+Build 2, metadata, review information, and screenshots were uploaded successfully, and version 1.0.1 was submitted for review. API keys and `.p8` files must remain outside the repository.
 
 ## Post-release
 
