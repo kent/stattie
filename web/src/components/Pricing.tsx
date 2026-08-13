@@ -52,7 +52,7 @@ export function Pricing() {
             Simple pricing. No surprises.
           </h2>
           <p className="mt-2 text-lg text-gray-600">
-            One price. Yours forever. No subscriptions, no ads, no in-app purchases.
+            Free to use. No subscriptions, no ads, and no in-app purchases.
           </p>
         </div>
 
@@ -64,8 +64,8 @@ export function Pricing() {
                 <span className="ml-4 text-lg font-semibold text-gray-900">Stattie</span>
               </div>
               <div className="text-right">
-                <div className="text-4xl font-bold tracking-tight text-gray-900">$4.99</div>
-                <div className="text-sm text-gray-500">one-time purchase</div>
+                <div className="text-4xl font-bold tracking-tight text-gray-900">Free</div>
+                <div className="text-sm text-gray-500">no purchase required</div>
               </div>
             </div>
 
@@ -88,7 +88,7 @@ export function Pricing() {
             </div>
 
             <p className="mt-6 text-center text-sm text-gray-500">
-              No account required. No subscription. Just download and start tracking.
+              No account required. No payment required. Just download and start tracking.
             </p>
           </div>
         </div>

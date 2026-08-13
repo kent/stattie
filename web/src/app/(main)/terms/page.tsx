@@ -48,7 +48,7 @@ export default function TermsPage() {
             <ul className="mt-2 list-disc pl-6 space-y-2">
               <li>Use the app for any illegal purpose</li>
               <li>Attempt to reverse engineer or decompile the app</li>
-              <li>Share your purchase with others in violation of App Store terms</li>
+              <li>Redistribute the app in violation of App Store terms</li>
               <li>Use the app in any way that could damage or impair its functionality</li>
             </ul>
           </section>

@@ -27,7 +27,7 @@ const faqs = [
     {
       question: 'Is there a subscription?',
       answer:
-        'Nope! Stattie is a one-time purchase of $4.99. No subscriptions, no ads, no in-app purchases. You own it forever.',
+        'Nope! Stattie is free. No subscriptions, no ads, and no in-app purchases.',
     },
     {
       question: 'Can I edit or delete games later?',

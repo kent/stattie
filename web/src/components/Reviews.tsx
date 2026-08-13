@@ -58,7 +58,7 @@ const reviews: Array<Review> = [
   },
   {
     title: 'Better than the expensive ones',
-    body: 'I tried apps that cost $50+ per year. Stattie does everything I need for a one-time purchase. No brainer.',
+    body: 'I tried apps that cost $50+ per year. Stattie does everything I need without a subscription. No brainer.',
     author: 'SmartShopper',
     rating: 5,
   },
