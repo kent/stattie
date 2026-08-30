@@ -1,0 +1,19 @@
+---
+description: Deploy Stattie to TestFlight from a natural-language request
+globs:
+alwaysApply: true
+---
+
+# TestFlight deployment command
+
+When the repository owner says **deploy to TestFlight**, **ship to TestFlight**, **release to TestFlight**, or an obvious spelling variation, execute the complete deployment workflow. Do not ask the owner to restate the request as `/testflight`.
+
+1. Identify the PR for the current work. Get hosted `iOS CI / Build and test` green and merge the PR into `main`; never deploy an unmerged SHA.
+2. After merge, add a top-level comment with the exact body `/testflight` to that merged PR using the GitHub integration or `gh`.
+3. If no PR corresponds to the request, dispatch `.github/workflows/testflight.yml` on `main` instead.
+4. Watch the TestFlight run through completion. Confirm the hosted upload log reports App Store Connect processing `VALID`.
+5. If it fails, inspect the hosted logs, repair through a new PR and hosted CI, merge, and start a new deployment run. Never rerun a run that already uploaded because that build number is consumed.
+6. Never use local Xcode/signing or expose Apple credentials. They remain only in the protected GitHub `TestFlight` environment.
+7. Continue autonomously through routine steps; ask the owner only when permissions, account state, or an Apple outage creates a blocker you cannot resolve.
+
+The detailed workflow and recovery guide is in `MOBILE_TESTFLIGHT.md`.
