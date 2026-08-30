@@ -24,6 +24,8 @@ Cursor Mobile owns the coding and pull-request loop. GitHub Actions owns the mac
 
 The trigger accepts only an exact `/testflight` comment from a repository owner, member, or collaborator, and only on a PR already merged into `main`. A comment on an open PR or a PR targeting another branch will fail before Apple credentials are made available.
 
+App Store Connect group **Stattie Mobile CI** is an internal group with access to all builds. Kent's installed tester account is in that group, so each processed CI upload is distributed to the phone automatically.
+
 ## Manual recovery path
 
 If the PR comment event was missed, open **GitHub → `kent/stattie` → Actions → TestFlight → Run workflow**, select `main`, and run it. GitHub requires the workflow to exist on the default branch before this button appears.
