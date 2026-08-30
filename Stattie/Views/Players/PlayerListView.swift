@@ -8,6 +8,9 @@ struct PersonListView: View {
     @Query private var users: [User]
     @State private var showingAddPerson = false
     @State private var searchText = ""
+    @State private var path = NavigationPath()
+    @State private var pendingPlayerChoice: Person?
+    @State private var playerForTeamAdd: Person?
 
     private var currentUser: User? {
         users.resolvedCurrentUser
@@ -36,7 +39,7 @@ struct PersonListView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             Group {
                 if filteredPersons.isEmpty {
                     VStack(spacing: 24) {
@@ -80,9 +83,14 @@ struct PersonListView: View {
                 } else {
                     List {
                         ForEach(filteredPersons) { player in
-                            NavigationLink(value: player) {
+                            Button {
+                                pendingPlayerChoice = player
+                            } label: {
                                 PersonRowView(player: player)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .contentShape(Rectangle())
                             }
+                            .buttonStyle(.plain)
                         }
                         .onDelete(perform: deletePerson)
                     }
@@ -106,7 +114,44 @@ struct PersonListView: View {
             .sheet(isPresented: $showingAddPerson) {
                 AddPersonView()
             }
+            .confirmationDialog(
+                pendingPlayerChoice?.fullName ?? "Player",
+                isPresented: playerChoiceDialogBinding,
+                titleVisibility: .visible
+            ) {
+                Button("Add to a Team") {
+                    playerForTeamAdd = pendingPlayerChoice
+                    pendingPlayerChoice = nil
+                }
+                Button("Continue without a team") {
+                    if let player = pendingPlayerChoice {
+                        path.append(player)
+                    }
+                    pendingPlayerChoice = nil
+                }
+                Button("Cancel", role: .cancel) {
+                    pendingPlayerChoice = nil
+                }
+            } message: {
+                Text("Add this player to a team, or continue without one.")
+            }
+            .sheet(item: $playerForTeamAdd) { player in
+                AddPlayerToTeamView(player: player) {
+                    path.append(player)
+                }
+            }
         }
+    }
+
+    private var playerChoiceDialogBinding: Binding<Bool> {
+        Binding(
+            get: { pendingPlayerChoice != nil },
+            set: { isPresented in
+                if !isPresented {
+                    pendingPlayerChoice = nil
+                }
+            }
+        )
     }
 
     private func deletePerson(at offsets: IndexSet) {
@@ -125,6 +170,15 @@ struct PersonRowView: View {
         let firstInitial = player.firstName.trimmingCharacters(in: .whitespaces).first.map(String.init) ?? ""
         let lastInitial = player.lastName.trimmingCharacters(in: .whitespaces).first.map(String.init) ?? ""
         return (firstInitial + lastInitial).uppercased()
+    }
+
+    private var teamSummary: String? {
+        let teamNames = player.activeTeams.map(\.name)
+        guard !teamNames.isEmpty else { return nil }
+        if teamNames.count <= 2 {
+            return teamNames.joined(separator: ", ")
+        }
+        return "\(teamNames[0]), \(teamNames[1]) +\(teamNames.count - 2)"
     }
 
     var body: some View {
@@ -170,7 +224,12 @@ struct PersonRowView: View {
                 }
 
                 HStack(spacing: 8) {
-                    if !player.position.isEmpty {
+                    if let teamSummary {
+                        Text(teamSummary)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    } else if !player.position.isEmpty {
                         Text(player.positionShortText)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)

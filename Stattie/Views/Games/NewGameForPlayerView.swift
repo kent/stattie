@@ -159,7 +159,7 @@ struct NewGameForPersonView: View {
                                 .tag(nil as UUID?)
                             ForEach(activeMemberships) { membership in
                                 if let team = membership.team {
-                                    Text(team.name)
+                                    Text(teamDisplayName(for: team))
                                         .tag(membership.id as UUID?)
                                 }
                             }
@@ -273,6 +273,13 @@ struct NewGameForPersonView: View {
             modelContext.delete(game)
             saveError = error.localizedDescription
         }
+    }
+
+    private func teamDisplayName(for team: Team) -> String {
+        if let sportName = team.sport?.name, !sportName.isEmpty {
+            return "\(team.name) (\(sportName))"
+        }
+        return team.name
     }
 }
 

@@ -11,6 +11,7 @@ struct PersonDetailView: View {
     @State private var isEditing = false
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var showingNewGame = false
+    @State private var showingAddToTeam = false
     @State private var activeGameStats: PersonGameStats?
     @State private var newGameTrackingLaunch: NewGameTrackingLaunch?
     @State private var gameCountBeforeNew = 0
@@ -91,6 +92,38 @@ struct PersonDetailView: View {
                 }
             } header: {
                 Text("Player Info")
+            }
+
+            if !isEditing {
+                Section {
+                    if player.activeTeamMemberships.isEmpty {
+                        Text("Not on a team yet")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(player.activeTeamMemberships) { membership in
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(membership.team?.name ?? "Team")
+                                    Text(membership.team?.sportDisplayText ?? "No sport")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                            }
+                        }
+                        .onDelete(perform: removeMemberships)
+                    }
+
+                    Button {
+                        showingAddToTeam = true
+                    } label: {
+                        Label("Add to Team", systemImage: "person.badge.plus")
+                    }
+                } header: {
+                    Text("Teams")
+                } footer: {
+                    Text("Players can belong to more than one team.")
+                }
             }
 
             // Actions
@@ -262,6 +295,9 @@ struct PersonDetailView: View {
                 pendingStartingPosition = startingPosition
             }
         }
+        .sheet(isPresented: $showingAddToTeam) {
+            AddPlayerToTeamView(player: player)
+        }
         .fullScreenCover(item: $activeGameStats) { personGameStats in
             PlayerGameOverviewView(personGameStats: personGameStats)
         }
@@ -338,6 +374,14 @@ struct PersonDetailView: View {
         pendingGameDeletion = nil
 
         modelContext.delete(game)
+        try? modelContext.save()
+    }
+
+    private func removeMemberships(at offsets: IndexSet) {
+        let memberships = player.activeTeamMemberships
+        for index in offsets {
+            memberships[index].isActive = false
+        }
         try? modelContext.save()
     }
 

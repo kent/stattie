@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		B8004615F3AD8C6A57104A65 /* CanonicalStatModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208F798872C3486286D461A4 /* CanonicalStatModelTests.swift */; };
+		B8004615F3AD8C6A57104A66 /* TeamMembershipTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208F798872C3486286D461A5 /* TeamMembershipTests.swift */; };
 		D41AEE01896277DA537C7661 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B8D9E908A0524BDC7CCD3969 /* Foundation.framework */; };
 		E01000002B000001 /* StattieApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000001 /* StattieApp.swift */; };
 		E01000002B000002 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000002 /* AppState.swift */; };
@@ -40,6 +41,8 @@
 		E01000002B000029 /* PositionPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000029 /* PositionPickerView.swift */; };
 		E01000002B00002A /* Team.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00002A /* Team.swift */; };
 		E01000002B00002B /* TeamMembership.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00002B /* TeamMembership.swift */; };
+		E01000002B000040 /* AddPlayerToTeamView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000040 /* AddPlayerToTeamView.swift */; };
+		E01000002B000041 /* CreateTeamView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000041 /* CreateTeamView.swift */; };
 		E01000002B00002C /* Shift.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00002C /* Shift.swift */; };
 		E01000002B00002D /* ShiftStat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00002D /* ShiftStat.swift */; };
 		E01000002B00002E /* ShiftTrackingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00002E /* ShiftTrackingView.swift */; };
@@ -70,6 +73,7 @@
 
 /* Begin PBXFileReference section */
 		208F798872C3486286D461A4 /* CanonicalStatModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CanonicalStatModelTests.swift; sourceTree = "<group>"; };
+		208F798872C3486286D461A5 /* TeamMembershipTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TeamMembershipTests.swift; sourceTree = "<group>"; };
 		9B1A842DFB0B3585A4BB4990 /* StattieTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StattieTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B8D9E908A0524BDC7CCD3969 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		E00000002B000000 /* Stattie.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Stattie.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -105,6 +109,8 @@
 		E00000002B000029 /* PositionPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PositionPickerView.swift; sourceTree = "<group>"; };
 		E00000002B00002A /* Team.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Team.swift; sourceTree = "<group>"; };
 		E00000002B00002B /* TeamMembership.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamMembership.swift; sourceTree = "<group>"; };
+		E00000002B000040 /* AddPlayerToTeamView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddPlayerToTeamView.swift; sourceTree = "<group>"; };
+		E00000002B000041 /* CreateTeamView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateTeamView.swift; sourceTree = "<group>"; };
 		E00000002B00002C /* Shift.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shift.swift; sourceTree = "<group>"; };
 		E00000002B00002D /* ShiftStat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShiftStat.swift; sourceTree = "<group>"; };
 		E00000002B00002E /* ShiftTrackingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShiftTrackingView.swift; sourceTree = "<group>"; };
@@ -152,8 +158,10 @@
 		39F873E40C31845A01E4C332 /* Teams */ = {
 			isa = PBXGroup;
 			children = (
+				E00000002B000040 /* AddPlayerToTeamView.swift */,
+				E00000002B000041 /* CreateTeamView.swift */,
 			);
-			name = Teams;
+			path = Teams;
 			sourceTree = "<group>";
 		};
 		49CF6571D3962B08111F3B8A /* Views */ = {
@@ -412,6 +420,7 @@
 			isa = PBXGroup;
 			children = (
 				208F798872C3486286D461A4 /* CanonicalStatModelTests.swift */,
+				208F798872C3486286D461A5 /* TeamMembershipTests.swift */,
 			);
 			name = StattieTests;
 			path = StattieTests;
@@ -522,6 +531,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B8004615F3AD8C6A57104A65 /* CanonicalStatModelTests.swift in Sources */,
+				B8004615F3AD8C6A57104A66 /* TeamMembershipTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -559,6 +569,8 @@
 				E01000002B000029 /* PositionPickerView.swift in Sources */,
 				E01000002B00002A /* Team.swift in Sources */,
 				E01000002B00002B /* TeamMembership.swift in Sources */,
+				E01000002B000040 /* AddPlayerToTeamView.swift in Sources */,
+				E01000002B000041 /* CreateTeamView.swift in Sources */,
 				E01000002B00002C /* Shift.swift in Sources */,
 				E01000002B00002D /* ShiftStat.swift in Sources */,
 				E01000002B00002E /* ShiftTrackingView.swift in Sources */,

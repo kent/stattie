@@ -25,6 +25,20 @@ final class Person {
         (teamMemberships ?? []).compactMap { $0.team }
     }
 
+    var activeTeamMemberships: [TeamMembership] {
+        (teamMemberships ?? [])
+            .filter { $0.isActive && $0.team?.isActive == true }
+            .sorted { ($0.team?.name ?? "").localizedCaseInsensitiveCompare($1.team?.name ?? "") == .orderedAscending }
+    }
+
+    var activeTeams: [Team] {
+        activeTeamMemberships.compactMap(\.team)
+    }
+
+    func isMember(of team: Team) -> Bool {
+        activeTeamMemberships.contains { $0.team?.id == team.id }
+    }
+
     var fullName: String {
         if firstName.isEmpty && lastName.isEmpty {
             return "Person #\(jerseyNumber)"
