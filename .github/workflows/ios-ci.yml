@@ -1,0 +1,60 @@
+name: iOS CI
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "Stattie/**"
+      - "StattieTests/**"
+      - "Stattie.xcodeproj/**"
+      - ".github/workflows/ios-ci.yml"
+      - ".github/workflows/testflight.yml"
+      - "ci/ExportOptions.plist"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Build and test
+    runs-on: macos-26
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
+        with:
+          xcode-version: "~26.4.0"
+
+      - name: Run unit tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/ci
+          xcodebuild test \
+            -project Stattie.xcodeproj \
+            -scheme Stattie \
+            -configuration Debug \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' \
+            -resultBundlePath build/ci/StattieTests.xcresult \
+            CODE_SIGNING_ALLOWED=NO \
+            | tee build/ci/tests.log \
+            | xcbeautify --renderer github-actions
+
+      - name: Upload diagnostics
+        if: failure() || cancelled()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: ios-ci-diagnostics-${{ github.run_id }}
+          path: build/ci
+          if-no-files-found: warn
+          retention-days: 7

@@ -1,0 +1,186 @@
+name: TestFlight
+
+on:
+  issue_comment:
+    types:
+      - created
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: testflight
+  cancel-in-progress: false
+
+jobs:
+  authorize:
+    name: Authorize merged commit
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.issue.pull_request &&
+       github.event.comment.body == '/testflight' &&
+       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      target_sha: ${{ steps.target.outputs.sha }}
+      release_notes: ${{ steps.target.outputs.release_notes }}
+
+    steps:
+      - name: Resolve trusted deployment target
+        id: target
+        shell: bash
+        env:
+          DEFAULT_SHA: ${{ github.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            if [[ "$REF_NAME" != "main" ]]; then
+              echo "Manual TestFlight deployments must run from main." >&2
+              exit 1
+            fi
+            target_sha="$DEFAULT_SHA"
+            release_notes="Manual deployment of ${target_sha:0:7}"
+          else
+            pr_json="$(gh api "repos/$GH_REPO/pulls/$PR_NUMBER")"
+            merged_at="$(jq -r '.merged_at // empty' <<<"$pr_json")"
+            base_ref="$(jq -r '.base.ref' <<<"$pr_json")"
+            target_sha="$(jq -r '.merge_commit_sha // empty' <<<"$pr_json")"
+
+            if [[ -z "$merged_at" || "$base_ref" != "main" || -z "$target_sha" ]]; then
+              echo "PR #$PR_NUMBER must be merged into main before TestFlight deployment." >&2
+              exit 1
+            fi
+            release_notes="Merged PR #$PR_NUMBER"
+          fi
+
+          echo "sha=$target_sha" >>"$GITHUB_OUTPUT"
+          echo "release_notes=$release_notes" >>"$GITHUB_OUTPUT"
+
+  deploy:
+    name: Archive and upload
+    needs:
+      - authorize
+    if: needs.authorize.result == 'success'
+    environment: TestFlight
+    runs-on: macos-26
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out merged source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.authorize.outputs.target_sha }}
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
+        with:
+          xcode-version: "~26.4.0"
+
+      - name: Import distribution certificate
+        uses: apple-actions/import-codesign-certs@5142e029c445c10ffc7149d172e540235a065466 # v7.0.0
+        with:
+          p12-file-base64: ${{ secrets.APPSTORE_CERTIFICATES_FILE_BASE64 }}
+          p12-password: ${{ secrets.APPSTORE_CERTIFICATES_PASSWORD }}
+
+      - name: Download App Store provisioning profile
+        uses: apple-actions/download-provisioning-profiles@2126b5f86a0e2863cbf4d2d312112b22b943a594 # v6.1.0
+        with:
+          bundle-id: com.stattie.app
+          profile-type: IOS_APP_STORE
+          issuer-id: ${{ vars.APPSTORE_ISSUER_ID }}
+          api-key-id: ${{ vars.APPSTORE_API_KEY_ID }}
+          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+
+      - name: Assign TestFlight build number
+        id: version
+        shell: bash
+        env:
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          set -euo pipefail
+          build_number="$((RUN_NUMBER + 4))"
+          echo "build_number=$build_number" >>"$GITHUB_OUTPUT"
+          echo "Uploading Stattie build $build_number"
+
+      - name: Archive
+        shell: bash
+        env:
+          BUILD_NUMBER: ${{ steps.version.outputs.build_number }}
+        run: |
+          set -euo pipefail
+          mkdir -p build/ci
+          xcodebuild archive \
+            -project Stattie.xcodeproj \
+            -scheme Stattie \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/Stattie.xcarchive" \
+            CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM=PS5W7BFTQ2 \
+            'CODE_SIGN_IDENTITY=Apple Distribution' \
+            'PROVISIONING_PROFILE_SPECIFIER=AppStore com.stattie.app CI' \
+            | tee build/ci/archive.log \
+            | xcbeautify --renderer github-actions
+
+      - name: Verify archived compliance files
+        shell: bash
+        run: |
+          set -euo pipefail
+          app_path="$RUNNER_TEMP/Stattie.xcarchive/Products/Applications/Stattie.app"
+          encryption="$(plutil -extract ITSAppUsesNonExemptEncryption raw -o - "$app_path/Info.plist")"
+          if [[ "$encryption" != "false" ]]; then
+            echo "ITSAppUsesNonExemptEncryption must be false." >&2
+            exit 1
+          fi
+          plutil -lint "$app_path/PrivacyInfo.xcprivacy"
+
+      - name: Export IPA
+        id: export
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/Stattie-export"
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/Stattie.xcarchive" \
+            -exportPath "$RUNNER_TEMP/Stattie-export" \
+            -exportOptionsPlist ci/ExportOptions.plist \
+            | tee build/ci/export.log \
+            | xcbeautify --renderer github-actions
+
+          ipa_path="$(find "$RUNNER_TEMP/Stattie-export" -maxdepth 1 -name '*.ipa' -print -quit)"
+          if [[ -z "$ipa_path" ]]; then
+            echo "Xcode did not export an IPA." >&2
+            exit 1
+          fi
+          echo "ipa_path=$ipa_path" >>"$GITHUB_OUTPUT"
+
+      - name: Upload to TestFlight
+        uses: apple-actions/upload-testflight-build@5e75ff58276689011512ba87a381d93dc67dbcf8 # v5.3.0
+        with:
+          app-path: ${{ steps.export.outputs.ipa_path }}
+          app-type: ios
+          issuer-id: ${{ vars.APPSTORE_ISSUER_ID }}
+          api-key-id: ${{ vars.APPSTORE_API_KEY_ID }}
+          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+          release-notes: ${{ needs.authorize.outputs.release_notes }}
+          uses-non-exempt-encryption: "false"
+          wait-for-processing: "true"
+
+      - name: Upload failure diagnostics
+        if: failure() || cancelled()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: testflight-diagnostics-${{ github.run_id }}
+          path: build/ci
+          if-no-files-found: warn
+          retention-days: 7
