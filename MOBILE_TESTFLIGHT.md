@@ -30,7 +30,7 @@ Cursor Mobile owns the coding and pull-request loop. GitHub Actions owns the mac
 5. Follow the **TestFlight / Archive and upload** check. The workflow signs the merged `main` commit on a GitHub-hosted Mac and waits for App Store Connect to process the build.
 6. Open TestFlight on the iPhone when processing finishes. Internal testers normally see the build without Beta App Review; external groups can still require Apple's beta review.
 
-The trigger accepts only an exact `/testflight` comment from a repository owner, member, or collaborator, and only on a PR already merged into `main`. A comment on an open PR or a PR targeting another branch will fail before Apple credentials are made available.
+The trigger accepts an exact `/testflight` comment from a repository owner, member, collaborator, or `cursor[bot]`, and only on a PR already merged into `main`. A comment on an open PR or a PR targeting another branch will fail before Apple credentials are made available.
 
 App Store Connect group **Stattie Mobile CI** is an internal group with access to all builds. Kent's installed tester account is in that group, so each processed CI upload is distributed to the phone automatically.
 
@@ -63,7 +63,7 @@ The CI distribution certificate and profile expire on August 30, 2027. Rotate th
 ## If a deployment fails
 
 - **iOS CI fails:** ask the same Cursor agent to inspect the check and push a fix to the PR.
-- **Comment is ignored:** confirm the body is exactly `/testflight`, the PR is merged into `main`, and the workflow is present on `main`.
+- **Comment is ignored:** confirm the body is exactly `/testflight`, the PR is merged into `main`, the workflow on `main` allows the commenter (`OWNER` / `MEMBER` / `COLLABORATOR` or `cursor[bot]`), and the workflow file is present on `main`.
 - **Signing fails:** verify all five GitHub environment values exist and the profile is active for `com.stattie.app`.
 - **Duplicate build number:** start a new TestFlight workflow run; do not rerun the old attempt.
 - **Apple processing fails:** open the build in App Store Connect and use the uploaded diagnostics artifact from the GitHub run.

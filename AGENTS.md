@@ -34,7 +34,7 @@ gcloud run deploy stattie-web --region us-central1 --source web --allow-unauthen
 - Cursor Cloud agents run on Linux and cannot run Xcode or produce an iOS archive.
 - Use `.github/workflows/ios-ci.yml` for pull-request tests on a GitHub macOS runner.
 - TestFlight credentials belong only in the GitHub `TestFlight` environment. Never add Apple `.p8`, `.p12`, or provisioning-profile contents to Cursor secrets, commits, PR bodies, comments, or logs.
-- TestFlight deployments must build a commit already merged into `main`. Trigger one by commenting exactly `/testflight` on the merged PR, or use the workflow's manual `main`-branch dispatch as a fallback.
+- TestFlight deployments must build a commit already merged into `main`. Trigger one by commenting exactly `/testflight` on the merged PR (repository owner/member/collaborator or `cursor[bot]`), or use the workflow's manual `main`-branch dispatch as a fallback.
 - The deployment workflow assigns monotonically increasing build numbers. Feature agents should update `MARKETING_VERSION` when the public version changes, but should not guess or reuse a TestFlight build number.
 - See `MOBILE_TESTFLIGHT.md` for the phone workflow and recovery steps.
 
