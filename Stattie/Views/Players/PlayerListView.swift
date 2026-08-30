@@ -258,7 +258,7 @@ struct PersonRowView: View {
             Spacer()
 
             // Stats badge for players with games
-            if player.completedGamesCount > 0 {
+            if player.completedGamesCount > 0, player.averagePointsPerGame > 0 {
                 VStack(alignment: .trailing, spacing: 2) {
                     Text(String(format: "%.1f", player.averagePointsPerGame))
                         .font(.title3.bold())

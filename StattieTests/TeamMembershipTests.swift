@@ -171,4 +171,123 @@ final class TeamMembershipTests: XCTestCase {
         let player = Person(firstName: "Solo", lastName: "Player")
         XCTAssertNil(player.preferredMembership(from: player.activeTeamMemberships))
     }
+
+    func testIndividualSportNeverOffersOrDefaultsATeam() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+
+        let tennis = Sport(name: "Tennis", iconName: "tennisball.fill", isTeamSport: false)
+        let player = Person(firstName: "Sofia", lastName: "Reyes", prefersNoTeam: true)
+        let club = Team(name: "City Club", sport: tennis)
+        context.insert(tennis)
+        context.insert(player)
+        context.insert(club)
+
+        let membership = TeamMembership(person: player, team: club, role: "player", isActive: true)
+        context.insert(membership)
+        player.teamMemberships = [membership]
+        try context.save()
+
+        XCTAssertFalse(TeamAssociationPolicy.shouldOfferTeamPicker(sport: tennis, memberships: player.activeTeamMemberships))
+        XCTAssertNil(TeamAssociationPolicy.defaultMembership(for: tennis, player: player, from: player.activeTeamMemberships))
+    }
+
+    func testTeamSportOffersPickerOnlyForMatchingMemberships() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+
+        let basketball = Sport(name: "Basketball", iconName: "basketball.fill", isTeamSport: true)
+        let soccer = Sport(name: "Soccer", iconName: "soccerball", isTeamSport: true)
+        let player = Person(firstName: "Maya", lastName: "Chen")
+        let lions = Team(name: "Lions", sport: basketball)
+        context.insert(basketball)
+        context.insert(soccer)
+        context.insert(player)
+        context.insert(lions)
+
+        let membership = TeamMembership(person: player, team: lions, role: "player", isActive: true)
+        context.insert(membership)
+        player.teamMemberships = [membership]
+        try context.save()
+
+        XCTAssertTrue(TeamAssociationPolicy.shouldOfferTeamPicker(sport: basketball, memberships: player.activeTeamMemberships))
+        XCTAssertFalse(TeamAssociationPolicy.shouldOfferTeamPicker(sport: soccer, memberships: player.activeTeamMemberships))
+        XCTAssertEqual(
+            TeamAssociationPolicy.defaultMembership(for: basketball, player: player, from: player.activeTeamMemberships)?.id,
+            membership.id
+        )
+        XCTAssertNil(TeamAssociationPolicy.defaultMembership(for: soccer, player: player, from: player.activeTeamMemberships))
+    }
+
+    func testTennisGameCanBeTrackedWithoutATeam() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+
+        let user = User(displayName: "Parent")
+        let tennis = Sport(name: "Tennis", iconName: "tennisball.fill", isTeamSport: false)
+        let ace = StatDefinition(name: "Ace", shortName: "ACE", category: "serve", sport: tennis)
+        let player = Person(firstName: "Alex", lastName: "Kim", prefersNoTeam: true, owner: user)
+        context.insert(user)
+        context.insert(tennis)
+        context.insert(ace)
+        tennis.statDefinitions = [ace]
+        context.insert(player)
+
+        let game = Game(opponent: "Jordan", sport: tennis, trackedBy: user)
+        XCTAssertNil(game.team)
+        context.insert(game)
+
+        let personStats = PersonGameStats(person: player, game: game)
+        context.insert(personStats)
+        game.personStats = [personStats]
+        try context.save()
+
+        _ = try game.recordStat(
+            named: "ACE",
+            pointValue: 0,
+            mutation: .count,
+            personGameStats: personStats,
+            in: context
+        )
+        try context.save()
+
+        XCTAssertNil(game.team)
+        XCTAssertEqual(game.totalCount(forName: "ACE"), 1)
+        XCTAssertEqual(game.listSummaryValue, 1)
+        XCTAssertEqual(game.listSummaryLabel, "ace")
+        XCTAssertFalse(tennis.usesShiftTracking)
+        XCTAssertFalse(player.shouldPromptForTeamAssociation)
+    }
+
+    func testBasketballGameCanStartWithoutATeam() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+
+        let user = User(displayName: "Parent")
+        let basketball = Sport(name: "Basketball", iconName: "basketball.fill", isTeamSport: true)
+        let player = Person(firstName: "Jordan", lastName: "Lee", prefersNoTeam: true, owner: user)
+        context.insert(user)
+        context.insert(basketball)
+        context.insert(player)
+
+        let game = Game(opponent: "", sport: basketball, trackedBy: user)
+        context.insert(game)
+        let personStats = PersonGameStats(person: player, game: game)
+        context.insert(personStats)
+        game.personStats = [personStats]
+
+        _ = try game.recordStat(
+            named: "2PT",
+            pointValue: 2,
+            mutation: .made,
+            personGameStats: personStats,
+            in: context
+        )
+        try context.save()
+
+        XCTAssertNil(game.team)
+        XCTAssertEqual(game.totalPoints, 2)
+        XCTAssertTrue(basketball.usesShiftTracking)
+        XCTAssertFalse(TeamAssociationPolicy.shouldOfferTeamPicker(sport: basketball, memberships: []))
+    }
 }
