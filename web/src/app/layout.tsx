@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     default: 'Stattie - Track Every Game. Own Every Stat.',
   },
   description:
-    "A single-player basketball and soccer stat tracker made for parents. Track every shift, review the game, and choose when to share a post-game summary with friends and family.",
+    "A single-player stat tracker made for parents. Cover the major sports in Canada, the US, and Europe, track every shift, and choose when to share a post-game summary.",
   applicationName: 'Stattie',
   keywords: [
     'basketball stats',
@@ -33,6 +33,9 @@ export const metadata: Metadata = {
     'basketball app',
     'soccer stats',
     'soccer app',
+    'hockey stats',
+    'baseball stats',
+    'football stats',
     'multi sport tracker',
     'parent stat tracker',
     'game tracker',
@@ -61,7 +64,7 @@ export const metadata: Metadata = {
     siteName: 'Stattie',
     title: 'Stattie - Track Every Game. Own Every Stat.',
     description:
-      "Single-player basketball and soccer stat tracking for parents, with live shift tracking and parent-triggered post-game sharing.",
+      "Single-player stat tracking for parents across the major sports, with live shift tracking and parent-triggered post-game sharing.",
     images: [
       {
         url: '/og-image.png',
@@ -75,7 +78,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Stattie - Track Every Game. Own Every Stat.',
     description:
-      "Single-player basketball and soccer stat tracking for parents, with post-game summaries you choose to share.",
+      "Single-player stat tracking for parents across the major sports, with post-game summaries you choose to share.",
     images: ['/og-image.png'],
   },
   appleWebApp: {

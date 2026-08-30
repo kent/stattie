@@ -85,8 +85,10 @@ export function Hero() {
             </h1>
             <p className="mt-6 text-lg text-gray-600">
               A single-player stat tracker made for parents on the sidelines.
-              Follow your child&apos;s basketball or soccer game one tap at a
-              time, review every shift, and keep a clear personal game history.
+              Follow your child&apos;s game one tap at a time — basketball,
+              soccer, hockey, baseball, football, and the other major sports
+              across Canada, the US, and Europe. Review every shift and keep a
+              clear personal game history.
             </p>
             <div className="mt-8 flex flex-wrap gap-x-6 gap-y-4">
               <AppStoreLink />

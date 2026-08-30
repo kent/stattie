@@ -27,6 +27,10 @@ struct GameDetailView: View {
         game.sport?.name == "Soccer"
     }
 
+    private var isBasketball: Bool {
+        game.sport?.name == "Basketball"
+    }
+
     private struct GameStatLine: Identifiable {
         let id: String
         let title: String
@@ -34,11 +38,16 @@ struct GameDetailView: View {
     }
 
     private var primaryScoreValue: Int {
-        isSoccer ? game.totalCount(forName: "GOL") : game.totalPoints
+        game.listSummaryValue
     }
 
     private var primaryScoreLabel: String {
-        isSoccer ? "Goals" : "Total Points"
+        if isSoccer { return "Goals" }
+        if isBasketball { return "Total Points" }
+        if let profile = SportCatalog.profile(named: game.sport?.name) {
+            return profile.primaryScoreLabel
+        }
+        return "Total"
     }
 
     private var gameStatLines: [GameStatLine] {
@@ -70,7 +79,7 @@ struct GameDetailView: View {
                     lines.append(GameStatLine(id: code, title: title, value: "\(value)"))
                 }
             }
-        } else {
+        } else if isBasketball {
             let shootingStats: [(String, String)] = [
                 ("2PT", "2-Pointers"),
                 ("3PT", "3-Pointers"),
@@ -106,6 +115,29 @@ struct GameDetailView: View {
                     lines.append(GameStatLine(id: code, title: title, value: "\(value)"))
                 }
             }
+        } else {
+            for definition in game.sport?.sortedStatDefinitions ?? [] {
+                if definition.hasMadeAndMissed {
+                    let made = game.totalMade(forName: definition.shortName)
+                    let attempts = made + game.totalMissed(forName: definition.shortName)
+                    if attempts > 0 {
+                        lines.append(GameStatLine(
+                            id: definition.shortName,
+                            title: definition.name,
+                            value: "\(made)/\(attempts)"
+                        ))
+                    }
+                } else {
+                    let value = game.totalCount(forName: definition.shortName)
+                    if value > 0 {
+                        lines.append(GameStatLine(
+                            id: definition.shortName,
+                            title: definition.name,
+                            value: "\(value)"
+                        ))
+                    }
+                }
+            }
         }
 
         return lines
@@ -125,7 +157,14 @@ struct GameDetailView: View {
                         .foregroundStyle(.secondary)
 
                     // Quick stats row
-                    if !isSoccer {
+                    if isSoccer {
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 60), spacing: 16)], spacing: 12) {
+                            QuickStatPill(value: game.totalCount(forName: "AST"), label: "AST")
+                            QuickStatPill(value: game.totalCount(forName: "SAV"), label: "SAV")
+                            QuickStatPill(value: game.totalMade(forName: "SOT"), label: "SOT")
+                        }
+                        .padding(.top, 8)
+                    } else if isBasketball {
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 60), spacing: 16)], spacing: 12) {
                             QuickStatPill(value: game.totalCount(forName: "DREB") + game.totalCount(forName: "OREB"), label: "REB")
                             QuickStatPill(value: game.totalCount(forName: "AST"), label: "AST")
@@ -133,11 +172,17 @@ struct GameDetailView: View {
                             QuickStatPill(value: game.totalCount(forName: "TO"), label: "TO")
                         }
                         .padding(.top, 8)
-                    } else {
+                    } else if let profile = SportCatalog.profile(named: game.sport?.name) {
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 60), spacing: 16)], spacing: 12) {
-                            QuickStatPill(value: game.totalCount(forName: "AST"), label: "AST")
-                            QuickStatPill(value: game.totalCount(forName: "SAV"), label: "SAV")
-                            QuickStatPill(value: game.totalMade(forName: "SOT"), label: "SOT")
+                            ForEach(profile.highlightShortNames, id: \.self) { shortName in
+                                if let spec = profile.spec(shortName: shortName) {
+                                    if spec.hasMadeAndMissed {
+                                        QuickStatPill(value: game.totalMade(forName: shortName), label: shortName)
+                                    } else {
+                                        QuickStatPill(value: game.totalCount(forName: shortName), label: shortName)
+                                    }
+                                }
+                            }
                         }
                         .padding(.top, 8)
                     }

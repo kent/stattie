@@ -177,7 +177,7 @@ struct NewGameForPersonView: View {
                     } header: {
                         Text("Team (Optional)")
                     } footer: {
-                        Text("Team is optional. Individual sports like tennis and golf can start without one.")
+                        Text("Team is optional. Individual sports like tennis, golf, and wrestling can start without one.")
                     }
                 }
 

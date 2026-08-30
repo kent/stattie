@@ -25,7 +25,7 @@ function CheckIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
 
 const features = [
   'Unlimited games for one player at a time',
-  'Basketball + Soccer support',
+  'Major sports across Canada, the US, and Europe',
   'Parent-friendly game setup',
   'Shift-based live tracking',
   'Sport-specific stat presets',
@@ -70,8 +70,9 @@ export function Pricing() {
             </div>
 
             <p className="mt-6 text-gray-700">
-              Everything a parent needs to follow one player&apos;s basketball or
-              soccer games, with all future updates included.
+              Everything a parent needs to follow one player&apos;s games across
+              basketball, soccer, and the other major sports, with all future
+              updates included.
             </p>
 
             <ul role="list" className="mt-8 space-y-3">

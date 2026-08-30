@@ -246,6 +246,70 @@ final class SeedDataService {
         seedSoccerIfNeeded(context: context)
         seedTennisIfNeeded(context: context)
         seedGolfIfNeeded(context: context)
+        seedCatalogSportsIfNeeded(context: context)
+    }
+
+    func seedSelectedSports(_ names: Set<String>, context: ModelContext) {
+        for name in names {
+            seedSport(named: name, context: context)
+        }
+    }
+
+    func seedSport(named name: String, context: ModelContext) {
+        switch name {
+        case "Basketball":
+            seedBasketballIfNeeded(context: context)
+        case "Soccer":
+            seedSoccerIfNeeded(context: context)
+        case "Tennis":
+            seedTennisIfNeeded(context: context)
+        case "Golf":
+            seedGolfIfNeeded(context: context)
+        default:
+            guard let profile = SportCatalog.profile(named: name), !profile.usesCustomSeed else { return }
+            seedCatalogSport(profile, context: context)
+        }
+    }
+
+    func seedCatalogSportsIfNeeded(context: ModelContext) {
+        for profile in SportCatalog.seedableSports {
+            seedCatalogSport(profile, context: context)
+        }
+    }
+
+    private func seedCatalogSport(_ profile: SportProfile, context: ModelContext) {
+        let sport = fetchSport(named: profile.name, context: context) ?? {
+            let created = Sport(
+                name: profile.name,
+                iconName: profile.iconName,
+                isBuiltIn: true,
+                isTeamSport: profile.isTeamSport
+            )
+            context.insert(created)
+            return created
+        }()
+
+        sport.iconName = profile.iconName
+        sport.isBuiltIn = true
+        sport.isTeamSport = profile.isTeamSport
+        ensureStatDefinitions(for: sport, from: profile.stats.map { spec in
+            (
+                name: spec.name,
+                shortName: spec.shortName,
+                category: spec.category,
+                hasMadeAndMissed: spec.hasMadeAndMissed,
+                pointValue: spec.pointValue,
+                sortOrder: spec.sortOrder,
+                iconName: spec.iconName
+            )
+        }, context: context)
+
+        do {
+            try context.save()
+            print("\(profile.name) sport seeded successfully")
+        } catch {
+            print("Failed to save \(profile.name) sport: \(error)")
+        }
     }
 
     // MARK: - Showcase Data for Screenshots

@@ -7,6 +7,8 @@ struct PersonStatsOverTimeView: View {
     let player: Person
 
     @State private var selectedStat: StatType = .points
+    @State private var selectedSportName: String = "Basketball"
+    @State private var selectedCatalogShortName: String = ""
     @State private var timeRange: TimeRange = .all
 
     enum StatType: String, CaseIterable {
@@ -99,9 +101,51 @@ struct PersonStatsOverTimeView: View {
         }
     }
 
+    private var availableSportNames: [String] {
+        let names = (player.gameStats ?? []).compactMap { $0.game?.sport?.name }
+        let unique = Array(Set(names)).sorted()
+        return unique.isEmpty ? ["Basketball"] : unique
+    }
+
+    private var selectedSportProfile: SportProfile? {
+        SportCatalog.profile(named: selectedSportName)
+    }
+
+    private var usesBasketballChart: Bool {
+        selectedSportName == "Basketball"
+    }
+
+    private var chartStatTitle: String {
+        if usesBasketballChart { return selectedStat.rawValue }
+        if selectedCatalogShortName == "+/-" { return "Plus/Minus" }
+        return selectedSportProfile?.spec(shortName: selectedCatalogShortName)?.name
+            ?? selectedSportProfile?.primaryScoreLabel
+            ?? "Stat"
+    }
+
+    private var catalogChartStats: [CatalogStatSpec] {
+        guard let profile = selectedSportProfile else { return [] }
+        if !profile.stats.isEmpty {
+            return profile.stats.filter { profile.highlightShortNames.contains($0.shortName) }
+        }
+        return profile.highlightShortNames.enumerated().map { index, shortName in
+            CatalogStatSpec(
+                name: shortName,
+                shortName: shortName,
+                category: "highlight",
+                sortOrder: index,
+                iconName: "chart.bar.fill"
+            )
+        }
+    }
+
     var sortedGameStats: [PersonGameStats] {
         let allStats = (player.gameStats ?? [])
             .filter { $0.game != nil && $0.game?.isCompleted == true }
+            .filter { stats in
+                guard let sportName = stats.game?.sport?.name else { return true }
+                return sportName == selectedSportName
+            }
             .sorted { ($0.game?.gameDate ?? .distantPast) < ($1.game?.gameDate ?? .distantPast) }
 
         if let minDate = timeRange.dateFilter {
@@ -112,7 +156,18 @@ struct PersonStatsOverTimeView: View {
 
     var chartData: [(date: Date, value: Int, gameNumber: Int)] {
         sortedGameStats.enumerated().map { index, pgs in
-            let value: Int = statValue(for: selectedStat, from: pgs)
+            let value: Int
+            if usesBasketballChart {
+                value = statValue(for: selectedStat, from: pgs)
+            } else if selectedCatalogShortName == "+/-" {
+                value = pgs.totalPlusMinus
+            } else if let spec = selectedSportProfile?.spec(shortName: selectedCatalogShortName) {
+                value = spec.hasMadeAndMissed
+                    ? pgs.aggregatedMade(forName: spec.shortName)
+                    : pgs.aggregatedCount(forName: spec.shortName)
+            } else {
+                value = pgs.totalPoints
+            }
             return (date: pgs.game?.gameDate ?? Date(), value: value, gameNumber: index + 1)
         }
     }
@@ -156,27 +211,65 @@ struct PersonStatsOverTimeView: View {
         ScrollView {
             VStack(spacing: 20) {
                 // Stat type dropdown
+                if availableSportNames.count > 1 {
+                    Picker("Sport", selection: $selectedSportName) {
+                        ForEach(availableSportNames, id: \.self) { name in
+                            Text(name).tag(name)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.horizontal)
+                    .onChange(of: selectedSportName) { _, newValue in
+                        selectedCatalogShortName = SportCatalog.profile(named: newValue)?.highlightShortNames.first ?? ""
+                    }
+                }
+
                 HStack {
                     Text("Stat:")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
 
                     Menu {
-                        ForEach(StatType.allCases, id: \.self) { stat in
+                        if usesBasketballChart {
+                            ForEach(StatType.allCases, id: \.self) { stat in
+                                Button {
+                                    selectedStat = stat
+                                } label: {
+                                    HStack {
+                                        Text(stat.rawValue)
+                                        if selectedStat == stat {
+                                            Image(systemName: "checkmark")
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
                             Button {
-                                selectedStat = stat
+                                selectedCatalogShortName = "+/-"
                             } label: {
                                 HStack {
-                                    Text(stat.rawValue)
-                                    if selectedStat == stat {
+                                    Text("Plus/Minus")
+                                    if selectedCatalogShortName == "+/-" {
                                         Image(systemName: "checkmark")
+                                    }
+                                }
+                            }
+                            ForEach(catalogChartStats) { spec in
+                                Button {
+                                    selectedCatalogShortName = spec.shortName
+                                } label: {
+                                    HStack {
+                                        Text(spec.name)
+                                        if selectedCatalogShortName == spec.shortName {
+                                            Image(systemName: "checkmark")
+                                        }
                                     }
                                 }
                             }
                         }
                     } label: {
                         HStack {
-                            Text(selectedStat.rawValue)
+                            Text(chartStatTitle)
                                 .fontWeight(.semibold)
                             Image(systemName: "chevron.down")
                                 .font(.caption)
@@ -211,7 +304,7 @@ struct PersonStatsOverTimeView: View {
                 } else {
                     // Main chart
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(selectedStat.rawValue)
+                        Text(chartStatTitle)
                             .font(.headline)
                             .padding(.horizontal)
 
@@ -307,6 +400,14 @@ struct PersonStatsOverTimeView: View {
         }
         .navigationTitle("Stats Over Time")
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            if let first = availableSportNames.first {
+                selectedSportName = first
+                if first != "Basketball" {
+                    selectedCatalogShortName = SportCatalog.profile(named: first)?.highlightShortNames.first ?? "+/-"
+                }
+            }
+        }
     }
 }
 
