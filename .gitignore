@@ -28,6 +28,13 @@ Pods/
 # Service account keys
 *.gcp-sa.json
 *.service-account.json
+
+# Apple signing credentials and profiles
+*.p8
+*.p12
+*.mobileprovision
+signing/
+
 # Local release inputs and generated submission artifacts
 .env
 **/.env
