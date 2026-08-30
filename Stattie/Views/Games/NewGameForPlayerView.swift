@@ -19,6 +19,7 @@ struct NewGameForPersonView: View {
     @State private var selectedMembershipID: UUID?
     @State private var selectedSportID: UUID?
     @State private var selectedPositionID: String?
+    @State private var didApplyDefaultMembership = false
     @State private var saveError: String?
 
     private var currentUser: User? { users.resolvedCurrentUser }
@@ -214,6 +215,12 @@ struct NewGameForPersonView: View {
             .onAppear {
                 if selectedSportID == nil {
                     selectedSportID = sports.first?.id
+                }
+                if !didApplyDefaultMembership {
+                    didApplyDefaultMembership = true
+                    if selectedMembershipID == nil {
+                        selectedMembershipID = player.preferredMembership(from: activeMemberships)?.id
+                    }
                 }
             }
             .onChange(of: selectedSportID) { _, _ in

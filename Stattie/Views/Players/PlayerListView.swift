@@ -84,7 +84,7 @@ struct PersonListView: View {
                     List {
                         ForEach(filteredPersons) { player in
                             Button {
-                                pendingPlayerChoice = player
+                                selectPlayer(player)
                             } label: {
                                 PersonRowView(player: player)
                                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -125,6 +125,8 @@ struct PersonListView: View {
                 }
                 Button("Continue without a team") {
                     if let player = pendingPlayerChoice {
+                        player.prefersNoTeam = true
+                        try? modelContext.save()
                         path.append(player)
                     }
                     pendingPlayerChoice = nil
@@ -152,6 +154,14 @@ struct PersonListView: View {
                 }
             }
         )
+    }
+
+    private func selectPlayer(_ player: Person) {
+        if player.shouldPromptForTeamAssociation {
+            pendingPlayerChoice = player
+        } else {
+            path.append(player)
+        }
     }
 
     private func deletePerson(at offsets: IndexSet) {
