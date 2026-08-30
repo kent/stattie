@@ -37,6 +37,7 @@ gcloud run deploy stattie-web --region us-central1 --source web --allow-unauthen
 - TestFlight deployments must build a commit already merged into `main`. Trigger one by commenting exactly `/testflight` on the merged PR, or use the workflow's manual `main`-branch dispatch as a fallback.
 - The deployment workflow assigns monotonically increasing build numbers. Feature agents should update `MARKETING_VERSION` when the public version changes, but should not guess or reuse a TestFlight build number.
 - See `MOBILE_TESTFLIGHT.md` for the phone workflow and recovery steps.
+
 ## Natural-language TestFlight deployment command
 - When the repository owner says **deploy to TestFlight**, **ship to TestFlight**, or an obvious spelling variation, treat that as authorization to complete the entire deployment workflow without asking them to translate it into CI commands.
 - If the current work has a PR, get hosted `iOS CI / Build and test` green and merge it into `main`. Never deploy an unmerged commit.
