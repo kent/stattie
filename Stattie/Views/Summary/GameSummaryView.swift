@@ -45,24 +45,46 @@ struct GameSummaryView: View {
         game.sport?.name == "Soccer"
     }
 
+    private var isBasketball: Bool {
+        game.sport?.name == "Basketball"
+    }
+
     private var summaryPrimaryValue: Int {
-        isSoccer ? game.totalCount(forName: "GOL") : game.totalPoints
+        if isSoccer { return game.totalCount(forName: "GOL") }
+        if isBasketball { return game.totalPoints }
+        if let definition = game.sport?.sortedStatDefinitions.first {
+            if definition.hasMadeAndMissed {
+                return game.totalMade(forName: definition.shortName)
+            }
+            return game.totalCount(forName: definition.shortName)
+        }
+        return game.totalPoints
     }
 
     private var summaryPrimaryLabel: String {
-        isSoccer ? "Total Goals" : "Total Points"
+        if isSoccer { return "Total Goals" }
+        if isBasketball { return "Total Points" }
+        if let definition = game.sport?.sortedStatDefinitions.first {
+            return definition.name
+        }
+        return "Total"
     }
 
     private var shootingStatConfigs: [ShootingStatConfig] {
         if isSoccer {
             return [ShootingStatConfig(id: "SOT", title: "Shots On Target", pointValue: 0)]
         }
+        if isBasketball {
+            return [
+                ShootingStatConfig(id: "2PT", title: "2-Pointers", pointValue: 2),
+                ShootingStatConfig(id: "3PT", title: "3-Pointers", pointValue: 3),
+                ShootingStatConfig(id: "FT", title: "Free Throws", pointValue: 1),
+            ]
+        }
 
-        return [
-            ShootingStatConfig(id: "2PT", title: "2-Pointers", pointValue: 2),
-            ShootingStatConfig(id: "3PT", title: "3-Pointers", pointValue: 3),
-            ShootingStatConfig(id: "FT", title: "Free Throws", pointValue: 1),
-        ]
+        return (game.sport?.sortedStatDefinitions ?? [])
+            .filter(\.hasMadeAndMissed)
+            .map { ShootingStatConfig(id: $0.shortName, title: $0.name, pointValue: $0.pointValue) }
     }
 
     private var countStatConfigs: [CountStatConfig] {
@@ -80,21 +102,26 @@ struct GameSummaryView: View {
                 CountStatConfig(id: "RC", title: "Red Cards"),
             ]
         }
+        if isBasketball {
+            return [
+                CountStatConfig(id: "DREB", title: "Defensive Rebounds"),
+                CountStatConfig(id: "OREB", title: "Offensive Rebounds"),
+                CountStatConfig(id: "AST", title: "Assists"),
+                CountStatConfig(id: "STL", title: "Steals"),
+                CountStatConfig(id: "PF", title: "Fouls"),
+                CountStatConfig(id: "TO", title: "Turnovers"),
+                CountStatConfig(id: "MD", title: "Missed Drive"),
+                CountStatConfig(id: "SD", title: "Successful Drive"),
+                CountStatConfig(id: "BPO", title: "Bad Offense"),
+                CountStatConfig(id: "BPD", title: "Bad Defense"),
+                CountStatConfig(id: "GPO", title: "Great Offense"),
+                CountStatConfig(id: "GPD", title: "Great Defense"),
+            ]
+        }
 
-        return [
-            CountStatConfig(id: "DREB", title: "Defensive Rebounds"),
-            CountStatConfig(id: "OREB", title: "Offensive Rebounds"),
-            CountStatConfig(id: "AST", title: "Assists"),
-            CountStatConfig(id: "STL", title: "Steals"),
-            CountStatConfig(id: "PF", title: "Fouls"),
-            CountStatConfig(id: "TO", title: "Turnovers"),
-            CountStatConfig(id: "MD", title: "Missed Drive"),
-            CountStatConfig(id: "SD", title: "Successful Drive"),
-            CountStatConfig(id: "BPO", title: "Bad Offense"),
-            CountStatConfig(id: "BPD", title: "Bad Defense"),
-            CountStatConfig(id: "GPO", title: "Great Offense"),
-            CountStatConfig(id: "GPD", title: "Great Defense"),
-        ]
+        return (game.sport?.sortedStatDefinitions ?? [])
+            .filter { !$0.hasMadeAndMissed }
+            .map { CountStatConfig(id: $0.shortName, title: $0.name) }
     }
 
     private var totalRebounds: Int {
@@ -123,6 +150,7 @@ struct GameSummaryView: View {
 
     // Plus/minus data from player shifts
     private var hasShiftData: Bool {
+        (game.sport?.usesShiftTracking ?? true) &&
         (game.personStats ?? []).contains { !$0.completedShifts.isEmpty }
     }
 
@@ -173,7 +201,7 @@ struct GameSummaryView: View {
                     // Shooting Stats Table
                     if hasShootingData {
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("SHOOTING")
+                            Text(isSoccer || isBasketball ? "SHOOTING" : "ACCURACY")
                                 .font(.caption.bold())
                                 .foregroundStyle(.secondary)
                                 .padding(.horizontal)
@@ -395,19 +423,15 @@ struct GameSummaryView: View {
     }
 
     private func generateShareText() -> String {
-        var text = isSoccer ? "⚽ Game Stats\n" : "🏀 Game Stats\n"
+        var text = "\(game.sport?.name ?? "Game") Stats\n"
         if !game.opponent.isEmpty {
             text += "vs \(game.opponent)\n"
         }
-        if isSoccer {
-            text += "📊 \(summaryPrimaryValue) Goals\n"
-        } else {
-            text += "📊 \(summaryPrimaryValue) Points\n"
-        }
+        text += "📊 \(summaryPrimaryValue) \(summaryPrimaryLabel)\n"
         text += "\(game.formattedDate)\n\n"
 
         if hasShootingData {
-            text += "SHOOTING\n"
+            text += isSoccer || isBasketball ? "SHOOTING\n" : "ACCURACY\n"
             for config in shootingStatConfigs {
                 let made = game.totalMade(forName: config.id)
                 let attempts = made + game.totalMissed(forName: config.id)

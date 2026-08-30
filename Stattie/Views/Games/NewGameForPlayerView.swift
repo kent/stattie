@@ -19,13 +19,16 @@ struct NewGameForPersonView: View {
     @State private var selectedMembershipID: UUID?
     @State private var selectedSportID: UUID?
     @State private var selectedPositionID: String?
+    @State private var didApplyDefaultMembership = false
     @State private var saveError: String?
 
     private var currentUser: User? { users.resolvedCurrentUser }
     private var selectedSport: Sport? {
+        if let selectedSportID, let match = sports.first(where: { $0.id == selectedSportID }) {
+            return match
+        }
         if let teamSport = selectedTeam?.sport { return teamSport }
-        guard let selectedSportID else { return sports.first }
-        return sports.first { $0.id == selectedSportID }
+        return sports.first
     }
 
     private var activeMemberships: [TeamMembership] {
@@ -47,8 +50,16 @@ struct NewGameForPersonView: View {
         selectedMembership?.team
     }
 
-    private var hasActiveTeamMembership: Bool {
-        !activeMemberships.isEmpty
+    private var shouldOfferTeamPicker: Bool {
+        TeamAssociationPolicy.shouldOfferTeamPicker(
+            sport: selectedSport,
+            memberships: activeMemberships
+        )
+    }
+
+    private var membershipsForSelectedSport: [TeamMembership] {
+        guard let selectedSport else { return [] }
+        return TeamAssociationPolicy.membershipsMatching(sport: selectedSport, from: activeMemberships)
     }
 
     private var availablePositionAssignments: [PositionAssignment] {
@@ -140,24 +151,23 @@ struct NewGameForPersonView: View {
                     Text("Person")
                 }
 
-                if sports.count > 1 && selectedTeam == nil {
+                if sports.count > 1 {
                     Section("Sport") {
                         Picker("Sport", selection: $selectedSportID) {
                             ForEach(sports) { sport in
-                                Label(sport.name, systemImage: sport.iconName)
+                                Label(sport.name, systemImage: sport.iconName.isEmpty ? "sportscourt" : sport.iconName)
                                     .tag(sport.id as UUID?)
                             }
                         }
-                        .pickerStyle(.segmented)
                     }
                 }
 
-                if hasActiveTeamMembership {
+                if shouldOfferTeamPicker {
                     Section {
                         Picker("Team", selection: $selectedMembershipID) {
                             Text("No team")
                                 .tag(nil as UUID?)
-                            ForEach(activeMemberships) { membership in
+                            ForEach(membershipsForSelectedSport) { membership in
                                 if let team = membership.team {
                                     Text(teamDisplayName(for: team))
                                         .tag(membership.id as UUID?)
@@ -167,7 +177,7 @@ struct NewGameForPersonView: View {
                     } header: {
                         Text("Team (Optional)")
                     } footer: {
-                        Text("Team information is optional and does not add other players to the game.")
+                        Text("Team is optional. Individual sports like tennis and golf can start without one.")
                     }
                 }
 
@@ -213,11 +223,16 @@ struct NewGameForPersonView: View {
             }
             .onAppear {
                 if selectedSportID == nil {
-                    selectedSportID = sports.first?.id
+                    selectedSportID = lastPlayedSportID ?? sports.first?.id
                 }
+                applyDefaultTeamIfNeeded()
             }
             .onChange(of: selectedSportID) { _, _ in
                 selectedPositionID = nil
+                if let selectedMembership, selectedMembership.team?.sport?.id != selectedSportID {
+                    selectedMembershipID = nil
+                }
+                applyDefaultTeamIfNeeded(force: selectedMembershipID == nil)
             }
             .onChange(of: selectedMembershipID) { _, _ in
                 selectedPositionID = nil
@@ -231,6 +246,28 @@ struct NewGameForPersonView: View {
                 Text(saveError ?? "Please try again.")
             }
         }
+    }
+
+    private var lastPlayedSportID: UUID? {
+        (player.gameStats ?? [])
+            .compactMap { stats -> (Date, UUID)? in
+                guard let game = stats.game, let sportID = game.sport?.id else { return nil }
+                return (game.gameDate, sportID)
+            }
+            .max(by: { $0.0 < $1.0 })?
+            .1
+    }
+
+    private func applyDefaultTeamIfNeeded(force: Bool = false) {
+        if didApplyDefaultMembership && !force { return }
+        didApplyDefaultMembership = true
+
+        guard selectedMembershipID == nil else { return }
+        selectedMembershipID = TeamAssociationPolicy.defaultMembership(
+            for: selectedSport,
+            player: player,
+            from: activeMemberships
+        )?.id
     }
 
     private func createGame() {
@@ -253,7 +290,7 @@ struct NewGameForPersonView: View {
             trackedBy: currentUser
         )
 
-        if let selectedTeam {
+        if sportToUse.isTeamSport, let selectedTeam {
             game.team = selectedTeam
         }
         modelContext.insert(game)

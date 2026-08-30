@@ -115,6 +115,26 @@ final class SeedDataService {
         ("Corner", "CRN", "other", false, 0, 10, "arrow.turn.up.right"),
     ]
 
+    private let tennisStatDefinitions: [StatSeed] = [
+        ("Ace", "ACE", "serve", false, 0, 0, "bolt.fill"),
+        ("Double Fault", "DF", "serve", false, 0, 1, "exclamationmark.triangle.fill"),
+        ("First Serve", "FS", "serve", true, 0, 2, "arrow.up.circle.fill"),
+        ("Winner", "WIN", "offense", false, 0, 3, "star.fill"),
+        ("Unforced Error", "UE", "other", false, 0, 4, "xmark.circle.fill"),
+        ("Break Point", "BP", "other", false, 0, 5, "flag.fill"),
+    ]
+
+    private let golfStatDefinitions: [StatSeed] = [
+        ("Fairway Hit", "FWY", "tee", true, 0, 0, "arrow.right.circle.fill"),
+        ("Green in Regulation", "GIR", "approach", true, 0, 1, "flag.fill"),
+        ("Putt", "PUT", "green", false, 0, 2, "circle.fill"),
+        ("Sand Save", "SND", "short", true, 0, 3, "square.fill"),
+        ("Penalty", "PEN", "other", false, 0, 4, "exclamationmark.octagon.fill"),
+        ("Birdie", "BRD", "scoring", false, 0, 5, "arrow.down.circle.fill"),
+        ("Par", "PAR", "scoring", false, 0, 6, "equal.circle.fill"),
+        ("Bogey", "BOG", "scoring", false, 0, 7, "arrow.up.circle.fill"),
+    ]
+
     var shouldSeedShowcaseData: Bool {
         #if targetEnvironment(simulator)
         true
@@ -134,6 +154,7 @@ final class SeedDataService {
 
         basketball.iconName = "basketball.fill"
         basketball.isBuiltIn = true
+        basketball.isTeamSport = true
         ensureStatDefinitions(for: basketball, from: basketballStatDefinitions, context: context)
 
         do {
@@ -153,6 +174,7 @@ final class SeedDataService {
 
         soccer.iconName = "soccerball"
         soccer.isBuiltIn = true
+        soccer.isTeamSport = true
         ensureStatDefinitions(for: soccer, from: soccerStatDefinitions, context: context)
 
         do {
@@ -160,6 +182,46 @@ final class SeedDataService {
             print("Soccer sport seeded successfully")
         } catch {
             print("Failed to save soccer sport: \(error)")
+        }
+    }
+
+    func seedTennisIfNeeded(context: ModelContext) {
+        let tennis = fetchSport(named: "Tennis", context: context) ?? {
+            let created = Sport(name: "Tennis", iconName: "tennisball.fill", isBuiltIn: true, isTeamSport: false)
+            context.insert(created)
+            return created
+        }()
+
+        tennis.iconName = "tennisball.fill"
+        tennis.isBuiltIn = true
+        tennis.isTeamSport = false
+        ensureStatDefinitions(for: tennis, from: tennisStatDefinitions, context: context)
+
+        do {
+            try context.save()
+            print("Tennis sport seeded successfully")
+        } catch {
+            print("Failed to save tennis sport: \(error)")
+        }
+    }
+
+    func seedGolfIfNeeded(context: ModelContext) {
+        let golf = fetchSport(named: "Golf", context: context) ?? {
+            let created = Sport(name: "Golf", iconName: "figure.golf", isBuiltIn: true, isTeamSport: false)
+            context.insert(created)
+            return created
+        }()
+
+        golf.iconName = "figure.golf"
+        golf.isBuiltIn = true
+        golf.isTeamSport = false
+        ensureStatDefinitions(for: golf, from: golfStatDefinitions, context: context)
+
+        do {
+            try context.save()
+            print("Golf sport seeded successfully")
+        } catch {
+            print("Failed to save golf sport: \(error)")
         }
     }
 
@@ -171,9 +233,19 @@ final class SeedDataService {
         fetchSport(named: "Soccer", context: context)
     }
 
+    func getTennis(context: ModelContext) -> Sport? {
+        fetchSport(named: "Tennis", context: context)
+    }
+
+    func getGolf(context: ModelContext) -> Sport? {
+        fetchSport(named: "Golf", context: context)
+    }
+
     func seedAllSportsIfNeeded(context: ModelContext) {
         seedBasketballIfNeeded(context: context)
         seedSoccerIfNeeded(context: context)
+        seedTennisIfNeeded(context: context)
+        seedGolfIfNeeded(context: context)
     }
 
     // MARK: - Showcase Data for Screenshots

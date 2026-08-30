@@ -4,6 +4,8 @@ import SwiftData
 enum SportSelection: String, CaseIterable, Identifiable {
     case basketball = "Basketball"
     case soccer = "Soccer"
+    case tennis = "Tennis"
+    case golf = "Golf"
 
     var id: String { rawValue }
 
@@ -11,6 +13,8 @@ enum SportSelection: String, CaseIterable, Identifiable {
         switch self {
         case .basketball: return "basketball.fill"
         case .soccer: return "soccerball"
+        case .tennis: return "tennisball.fill"
+        case .golf: return "figure.golf"
         }
     }
 
@@ -18,6 +22,8 @@ enum SportSelection: String, CaseIterable, Identifiable {
         switch self {
         case .basketball: return "Track shots, rebounds, assists & more"
         case .soccer: return "Track goals, saves, passes & more"
+        case .tennis: return "Track aces, winners & errors — no team needed"
+        case .golf: return "Track fairways, greens & putts — no team needed"
         }
     }
 }
@@ -62,11 +68,17 @@ struct OnboardingView: View {
                 VStack(spacing: 16) {
                     HStack(spacing: 8) {
                         Image(systemName: "basketball.fill")
-                            .scaledFont(size: 40, relativeTo: .largeTitle)
+                            .scaledFont(size: 32, relativeTo: .largeTitle)
                             .foregroundStyle(.orange)
                         Image(systemName: "soccerball")
-                            .scaledFont(size: 40, relativeTo: .largeTitle)
+                            .scaledFont(size: 32, relativeTo: .largeTitle)
                             .foregroundStyle(.green)
+                        Image(systemName: "tennisball.fill")
+                            .scaledFont(size: 32, relativeTo: .largeTitle)
+                            .foregroundStyle(.yellow)
+                        Image(systemName: "figure.golf")
+                            .scaledFont(size: 32, relativeTo: .largeTitle)
+                            .foregroundStyle(.mint)
                     }
 
                     Text("Welcome to Stattie")
@@ -110,7 +122,7 @@ struct OnboardingView: View {
                                 sportCards
                             }
                         } else {
-                            HStack(spacing: 16) {
+                            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                                 sportCards
                             }
                         }
@@ -164,6 +176,12 @@ struct OnboardingView: View {
         }
         if selectedSports.contains(.soccer) {
             SeedDataService.shared.seedSoccerIfNeeded(context: modelContext)
+        }
+        if selectedSports.contains(.tennis) {
+            SeedDataService.shared.seedTennisIfNeeded(context: modelContext)
+        }
+        if selectedSports.contains(.golf) {
+            SeedDataService.shared.seedGolfIfNeeded(context: modelContext)
         }
 
         // Request notification permission

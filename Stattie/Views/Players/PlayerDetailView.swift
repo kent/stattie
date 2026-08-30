@@ -157,7 +157,8 @@ struct PersonDetailView: View {
                     }
 
                     // Career Highs Section
-                    if player.completedGamesCount > 0 {
+                    if player.completedGamesCount > 0,
+                       player.careerHighPoints > 0 || player.careerHighRebounds > 0 || player.careerHighAssists > 0 {
                         Section("Career Highs") {
                             LazyVGrid(columns: [GridItem(.adaptive(minimum: 90), spacing: 16)], spacing: 16) {
                                 CareerHighCard(value: player.careerHighPoints, label: "Points", icon: "flame.fill", color: .orange)
@@ -437,11 +438,11 @@ struct PersonGameRow: View {
             Spacer()
 
             VStack(alignment: .trailing) {
-                Text("\(game.totalPoints)")
+                Text("\(game.listSummaryValue)")
                     .font(.title2.bold())
                     .foregroundStyle(.accent)
 
-                Text("points")
+                Text(game.listSummaryLabel)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -600,6 +601,10 @@ struct PlayerGameOverviewView: View {
         game?.sport?.name == "Soccer"
     }
 
+    private var usesShiftTracking: Bool {
+        game?.sport?.usesShiftTracking ?? true
+    }
+
     private var hasActiveShift: Bool {
         personGameStats.currentShift != nil
     }
@@ -613,6 +618,9 @@ struct PlayerGameOverviewView: View {
     }
 
     private var scoreSubtitle: String {
+        guard usesShiftTracking else {
+            return game?.sport?.name ?? "Individual sport"
+        }
         if let activeShift = personGameStats.currentShift {
             return "Shift \(activeShift.shiftNumber) in progress • \(activeShift.startingTeamScore)-\(activeShift.startingOpponentScore) at start"
         }
@@ -645,6 +653,25 @@ struct PlayerGameOverviewView: View {
             ]
         }
 
+        if game?.sport?.isTeamSport == false {
+            return (game?.sport?.sortedStatDefinitions ?? []).prefix(6).map { definition in
+                if definition.hasMadeAndMissed {
+                    let made = personGameStats.aggregatedMade(forName: definition.shortName)
+                    let missed = personGameStats.aggregatedMissed(forName: definition.shortName)
+                    return OverviewMetric(
+                        id: definition.shortName,
+                        title: definition.name,
+                        value: "\(made)/\(made + missed)"
+                    )
+                }
+                return OverviewMetric(
+                    id: definition.shortName,
+                    title: definition.name,
+                    value: "\(personGameStats.aggregatedCount(forName: definition.shortName))"
+                )
+            }
+        }
+
         return [
             OverviewMetric(id: "points", title: "Points", value: "\(personGameStats.totalPoints)"),
             OverviewMetric(id: "rebounds", title: "Rebounds", value: "\(personGameStats.aggregatedCount(forName: "DREB") + personGameStats.aggregatedCount(forName: "OREB"))"),
@@ -661,8 +688,10 @@ struct PlayerGameOverviewView: View {
         NavigationStack {
             List {
                 statusSection
-                currentShiftSection
-                shiftsSection
+                if usesShiftTracking {
+                    currentShiftSection
+                    shiftsSection
+                }
                 totalsSection
                 snapshotSection
             }
@@ -732,6 +761,14 @@ struct PlayerGameOverviewView: View {
                     Text("\(teamName) • \(sportName)")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
+                } else if let sportName = game?.sport?.name, !sportName.isEmpty {
+                    Text(sportName)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                } else if let teamName = game?.team?.name, !teamName.isEmpty {
+                    Text(teamName)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
                 }
 
                 Text(scoreSubtitle)
@@ -787,27 +824,44 @@ struct PlayerGameOverviewView: View {
     @ViewBuilder
     private var totalsSection: some View {
         Section("Totals") {
-            LabeledContent("Shifts", value: "\(totalShiftCount)")
-            LabeledContent("Time on court", value: personGameStats.formattedTotalShiftTime)
-            LabeledContent("Points", value: "\(personGameStats.totalPoints)")
+            if usesShiftTracking {
+                LabeledContent("Shifts", value: "\(totalShiftCount)")
+                LabeledContent("Time on court", value: personGameStats.formattedTotalShiftTime)
+                LabeledContent("Points", value: "\(personGameStats.totalPoints)")
 
-            HStack {
-                Text("Plus/Minus")
-                Spacer()
-                Text(personGameStats.formattedTotalPlusMinus)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(totalPlusMinusColor)
+                HStack {
+                    Text("Plus/Minus")
+                    Spacer()
+                    Text(personGameStats.formattedTotalPlusMinus)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(totalPlusMinusColor)
+                }
+            } else if let definition = game?.sport?.sortedStatDefinitions.first {
+                LabeledContent(
+                    definition.name,
+                    value: definition.hasMadeAndMissed
+                        ? "\(personGameStats.aggregatedMade(forName: definition.shortName))"
+                        : "\(personGameStats.aggregatedCount(forName: definition.shortName))"
+                )
             }
         }
     }
 
     @ViewBuilder
     private var snapshotSection: some View {
-        Section(isSoccer ? "Soccer Snapshot" : "Basketball Snapshot") {
+        Section(snapshotSectionTitle) {
             ForEach(snapshotMetrics) { metric in
                 LabeledContent(metric.title, value: metric.value)
             }
         }
+    }
+
+    private var snapshotSectionTitle: String {
+        if isSoccer { return "Soccer Snapshot" }
+        if game?.sport?.isTeamSport == false {
+            return "\(game?.sport?.name ?? "Game") Snapshot"
+        }
+        return "Basketball Snapshot"
     }
 
     @ViewBuilder
@@ -817,7 +871,7 @@ struct PlayerGameOverviewView: View {
                 Button {
                     openTracker()
                 } label: {
-                    Label(hasActiveShift ? "Continue Shift Tracking" : "Start New Shift", systemImage: hasActiveShift ? "waveform.path.ecg" : "play.fill")
+                    Label(trackingActionTitle, systemImage: trackingActionIcon)
                         .font(.headline)
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
@@ -842,6 +896,20 @@ struct PlayerGameOverviewView: View {
             .padding(.bottom, 4)
             .background(.ultraThinMaterial)
         }
+    }
+
+    private var trackingActionTitle: String {
+        if usesShiftTracking {
+            return hasActiveShift ? "Continue Shift Tracking" : "Start New Shift"
+        }
+        return "Track Stats"
+    }
+
+    private var trackingActionIcon: String {
+        if usesShiftTracking {
+            return hasActiveShift ? "waveform.path.ecg" : "play.fill"
+        }
+        return "chart.bar.fill"
     }
 
     @ViewBuilder

@@ -11,6 +11,8 @@ final class Person {
     var positionAssignmentsJSON: String?  // JSON-encoded PositionAssignments for structured positions
     var photoData: Data?
     var isActive: Bool = true
+    /// True after the player chose to keep tracking without joining a team.
+    var prefersNoTeam: Bool = false
     var createdAt: Date = Date()
 
     var owner: User?
@@ -37,6 +39,33 @@ final class Person {
 
     func isMember(of team: Team) -> Bool {
         activeTeamMemberships.contains { $0.team?.id == team.id }
+    }
+
+    /// Ask about joining a team only when this player is not on a team
+    /// and has not already chosen to continue without one.
+    var shouldPromptForTeamAssociation: Bool {
+        activeTeams.isEmpty && !prefersNoTeam
+    }
+
+    /// Membership to preselect when starting a game.
+    /// Prefers the team from the most recent game when the player is still on that team.
+    func preferredMembership(from memberships: [TeamMembership]) -> TeamMembership? {
+        guard !memberships.isEmpty else { return nil }
+
+        let lastUsedTeamID = (gameStats ?? [])
+            .compactMap { stats -> (Date, UUID)? in
+                guard let game = stats.game, let teamID = game.team?.id else { return nil }
+                return (game.gameDate, teamID)
+            }
+            .max(by: { $0.0 < $1.0 })?
+            .1
+
+        if let lastUsedTeamID,
+           let match = memberships.first(where: { $0.team?.id == lastUsedTeamID }) {
+            return match
+        }
+
+        return memberships.first
     }
 
     var fullName: String {
@@ -101,6 +130,7 @@ final class Person {
         positionAssignments: PositionAssignments? = nil,
         photoData: Data? = nil,
         isActive: Bool = true,
+        prefersNoTeam: Bool = false,
         owner: User? = nil
     ) {
         self.id = UUID()
@@ -111,6 +141,7 @@ final class Person {
         self.positionAssignmentsJSON = positionAssignments?.toJSON()
         self.photoData = photoData
         self.isActive = isActive
+        self.prefersNoTeam = prefersNoTeam
         self.owner = owner
         self.createdAt = Date()
 

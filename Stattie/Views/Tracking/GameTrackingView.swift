@@ -79,6 +79,10 @@ struct GameTrackingView: View {
         game.sport?.name == "Soccer"
     }
 
+    private var isBasketball: Bool {
+        game.sport?.name == "Basketball"
+    }
+
     private var shiftTrackablePersonStats: [PersonGameStats] {
         (game.personStats ?? [])
             .filter { $0.person != nil }
@@ -108,7 +112,7 @@ struct GameTrackingView: View {
     }
 
     private var hasShiftTracking: Bool {
-        !shiftTrackablePersonStats.isEmpty
+        (game.sport?.usesShiftTracking ?? true) && !shiftTrackablePersonStats.isEmpty
     }
 
     private var totalShiftCount: Int {
@@ -251,8 +255,10 @@ struct GameTrackingView: View {
 
                 if isSoccer {
                     soccerTrackingView
-                } else {
+                } else if isBasketball {
                     basketballTrackingView
+                } else {
+                    genericTrackingView
                 }
             }
             .navigationTitle(game.opponent.isEmpty ? "Track Game" : "vs \(game.opponent)")
@@ -653,6 +659,78 @@ struct GameTrackingView: View {
             .padding(.horizontal)
             .padding(.bottom, 8)
         }
+    }
+
+    // MARK: - Individual / Generic Sports
+
+    private var genericShootingDefinitions: [StatDefinition] {
+        (game.sport?.sortedStatDefinitions ?? []).filter(\.hasMadeAndMissed)
+    }
+
+    private var genericCountDefinitions: [StatDefinition] {
+        (game.sport?.sortedStatDefinitions ?? []).filter { !$0.hasMadeAndMissed }
+    }
+
+    private var genericPrimaryDefinition: StatDefinition? {
+        game.sport?.sortedStatDefinitions.first
+    }
+
+    private var genericPrimaryValue: Int {
+        guard let definition = genericPrimaryDefinition else { return game.totalPoints }
+        if definition.hasMadeAndMissed {
+            return currentStat(named: definition.shortName)?.made ?? game.totalMade(forName: definition.shortName)
+        }
+        return currentStat(named: definition.shortName)?.count ?? game.totalCount(forName: definition.shortName)
+    }
+
+    private var genericTrackingView: some View {
+        ScrollView {
+            VStack(spacing: 12) {
+                if let definition = genericPrimaryDefinition {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text("\(genericPrimaryValue)")
+                            .scaledFont(size: 56, weight: .bold, relativeTo: .largeTitle)
+                            .foregroundStyle(.blue)
+                        Text(definition.name.uppercased())
+                            .font(.title3.bold())
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                    }
+                    .padding(.horizontal)
+                }
+
+                ForEach(genericShootingDefinitions, id: \.id) { definition in
+                    ShootingStatButton(
+                        definition: definition,
+                        stat: currentStat(named: definition.shortName),
+                        onMade: { recordMade(definition.shortName, points: definition.pointValue) },
+                        onMissed: { recordMiss(definition.shortName, points: definition.pointValue) }
+                    )
+                    .padding(.horizontal)
+                }
+
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                    ForEach(genericCountDefinitions, id: \.id) { definition in
+                        CountStatButton(
+                            definition: definition,
+                            stat: currentStat(named: definition.shortName),
+                            onTap: { recordCount(definition.shortName) }
+                        )
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 8)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func currentStat(named name: String) -> Stat? {
+        game.statRecord(
+            named: name,
+            personGameStats: currentStatPersonAttribution,
+            shift: activeShift
+        )
     }
 
     // MARK: - Timer

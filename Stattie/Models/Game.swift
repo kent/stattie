@@ -99,6 +99,26 @@ final class Game {
         stats(named: name).reduce(0) { $0 + $1.count }
     }
 
+    /// Compact value shown on player game lists. Uses goals for soccer and the
+    /// primary stat for individual sports instead of basketball points.
+    var listSummaryValue: Int {
+        if sport?.name == "Soccer" { return totalCount(forName: "GOL") }
+        if sport?.isTeamSport == false, let definition = sport?.sortedStatDefinitions.first {
+            return definition.hasMadeAndMissed
+                ? totalMade(forName: definition.shortName)
+                : totalCount(forName: definition.shortName)
+        }
+        return totalPoints
+    }
+
+    var listSummaryLabel: String {
+        if sport?.name == "Soccer" { return "goals" }
+        if sport?.isTeamSport == false, let definition = sport?.sortedStatDefinitions.first {
+            return definition.shortName.lowercased()
+        }
+        return "points"
+    }
+
     var formattedDate: String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
