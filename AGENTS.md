@@ -39,6 +39,7 @@ gcloud run deploy stattie-web --region us-central1 --source web --allow-unauthen
 - See `MOBILE_TESTFLIGHT.md` for the phone workflow and recovery steps.
 
 ## Natural-language TestFlight deployment command
+
 - When the repository owner says **deploy to TestFlight**, **ship to TestFlight**, or an obvious spelling variation, treat that as authorization to complete the entire deployment workflow without asking them to translate it into CI commands.
 - If the current work has a PR, get hosted `iOS CI / Build and test` green and merge it into `main`. Never deploy an unmerged commit.
 - For a merged PR, use the GitHub integration or `gh` to add an exact `/testflight` comment to that merged PR. If there is no relevant PR and the request is to deploy the current `main`, manually dispatch `.github/workflows/testflight.yml` on `main`.
