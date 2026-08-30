@@ -27,6 +27,10 @@ final class Team {
         members.filter { $0.isActive }
     }
 
+    var sportDisplayText: String {
+        sport?.name ?? "No sport"
+    }
+
     init(
         name: String = "",
         iconName: String = "",
