@@ -94,7 +94,36 @@ struct PersonDetailView: View {
                 Text("Player Info")
             }
 
-            if !isEditing {
+            if isEditing {
+                Section {
+                    if player.activeTeamMemberships.isEmpty {
+                        Text("Add this player to a team to set sport-specific positions.")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(player.activeTeamMemberships) { membership in
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text(membership.team?.name ?? "Team")
+                                    .font(.headline)
+                                Text(membership.team?.sportDisplayText ?? "No sport")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                PositionPickerView(
+                                    assignments: Binding(
+                                        get: { membership.positionAssignments },
+                                        set: { membership.positionAssignments = $0 }
+                                    ),
+                                    sportName: membership.team?.sport?.name
+                                )
+                            }
+                            .padding(.vertical, 4)
+                        }
+                    }
+                } header: {
+                    Text("Team Positions")
+                } footer: {
+                    Text("Players can have more than one position. Goalies, pitchers, and other specialist roles get different stat buttons.")
+                }
+            } else {
                 Section {
                     if player.activeTeamMemberships.isEmpty {
                         Text("Not on a team yet")
@@ -107,6 +136,11 @@ struct PersonDetailView: View {
                                     Text(membership.team?.sportDisplayText ?? "No sport")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
+                                    if !membership.positionDisplayText.isEmpty && membership.positionDisplayText != "No position" {
+                                        Text(membership.positionDisplayText)
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
                                 }
                                 Spacer()
                             }
@@ -653,8 +687,8 @@ struct PlayerGameOverviewView: View {
             ]
         }
 
-        if game?.sport?.isTeamSport == false {
-            return (game?.sport?.sortedStatDefinitions ?? []).prefix(6).map { definition in
+        if game?.sport?.isTeamSport == false || SportCatalog.profile(named: game?.sport?.name)?.usesCustomTracking == false {
+            return (game?.sport?.sortedStatDefinitions ?? []).prefix(8).map { definition in
                 if definition.hasMadeAndMissed {
                     let made = personGameStats.aggregatedMade(forName: definition.shortName)
                     let missed = personGameStats.aggregatedMissed(forName: definition.shortName)
@@ -858,10 +892,8 @@ struct PlayerGameOverviewView: View {
 
     private var snapshotSectionTitle: String {
         if isSoccer { return "Soccer Snapshot" }
-        if game?.sport?.isTeamSport == false {
-            return "\(game?.sport?.name ?? "Game") Snapshot"
-        }
-        return "Basketball Snapshot"
+        if game?.sport?.name == "Basketball" { return "Basketball Snapshot" }
+        return "\(game?.sport?.name ?? "Game") Snapshot"
     }
 
     @ViewBuilder

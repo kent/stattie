@@ -4,9 +4,9 @@ import { Container } from '@/components/Container'
 
 const features = [
   {
-    name: 'Basketball + Soccer',
+    name: 'Major Sports Coverage',
     description:
-      'Choose the sport for each game and get stat buttons that adapt to basketball or soccer automatically.',
+      'Track basketball, soccer, hockey, baseball, football, lacrosse, volleyball, rugby, and other major sports in Canada, the US, and Europe.',
     icon: DeviceTargetIcon,
   },
   {
@@ -24,7 +24,7 @@ const features = [
   {
     name: 'Sport-Specific Stat Presets',
     description:
-      'Use basketball actions for shooting and impact, or soccer actions for goals, saves, passes, tackles, and cards.',
+      'Basketball and soccer keep their customized buttons. Other sports show position-aware stats — goalies, pitchers, quarterbacks, and more.',
     icon: DeviceCalendarIcon,
   },
   {

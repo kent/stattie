@@ -1,7 +1,7 @@
 {
   "name": "Stattie",
   "short_name": "Stattie",
-  "description": "Track Every Game. Own Every Stat. Team-first basketball and soccer tracking with shift flow and game management.",
+  "description": "Track Every Game. Own Every Stat. Parent-friendly tracking for the major sports in Canada, the US, and Europe.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f9fafb",

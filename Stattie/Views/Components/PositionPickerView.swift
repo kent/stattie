@@ -108,7 +108,7 @@ struct SimplePositionSelectionSheet: View {
             List {
                 ForEach(availableCategories) { category in
                     Section(category.rawValue) {
-                        ForEach(category.positions) { position in
+                        ForEach(category.positions.filter { availablePositions.contains($0) }) { position in
                             Button {
                                 togglePosition(position)
                             } label: {

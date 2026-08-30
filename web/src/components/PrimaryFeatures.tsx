@@ -28,14 +28,14 @@ const features = [
   {
     name: 'One-Player Game Setup',
     description:
-      'Set up a basketball or soccer game around the child you are watching, then start tracking with a quick, focused workflow.',
+      'Set up a game around the child you are watching — basketball, soccer, hockey, baseball, football, and more — then start tracking with a quick, focused workflow.',
     icon: DeviceShareIcon,
     screen: PlayerGameSetupScreen,
   },
   {
     name: 'Sport-Specific Live Tracking',
     description:
-      'Track fast with buttons built for each sport. Use basketball actions like Missed Drive and Great Play, or soccer actions like Goals, Saves, Passes, and Cards.',
+      'Track fast with buttons built for each sport. Basketball and soccer keep their customized actions. Other sports adapt by position, so a hockey goalie or baseball pitcher sees the stats that match the role.',
     icon: DeviceChartIcon,
     screen: StatTrackingScreen,
   },

@@ -5,7 +5,7 @@ const faqs = [
     {
       question: 'What sports can I track?',
       answer:
-        'Stattie supports basketball and soccer. Pick the sport for each game and the stat buttons adapt automatically.',
+        'Stattie covers the major sports in Canada, the US, and Europe — including basketball, soccer, ice hockey, baseball, softball, American and Canadian football, lacrosse, volleyball, rugby, handball, field hockey, cricket, water polo, tennis, golf, wrestling, and curling. Pick the sport for each game and the stat buttons adapt automatically.',
     },
     {
       question: 'Does each game focus on one player?',
@@ -15,7 +15,7 @@ const faqs = [
     {
       question: 'What stats can I track?',
       answer:
-        'Basketball includes shooting, rebounds, assists, steals, and impact actions. Soccer includes goals, shots, assists, saves, passes, tackles, interceptions, corners, fouls, and cards.',
+        'Basketball and soccer keep their customized buttons. Other sports use position-aware presets — for example hockey goalies track saves, baseball pitchers track outs and strikeouts, and everyone on a baseball team can still bat.',
     },
   ],
   [

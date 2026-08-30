@@ -118,9 +118,19 @@ struct ActivityRow: View {
         if let sportName = game.sport?.name.lowercased() {
             switch sportName {
             case "basketball": return .orange
-            case "soccer", "football": return .green
-            case "hockey": return .blue
-            case "baseball": return .red
+            case "soccer": return .green
+            case "ice hockey", "hockey": return .blue
+            case "baseball", "softball": return .red
+            case "american football", "canadian football": return .brown
+            case "lacrosse": return .purple
+            case "volleyball": return .yellow
+            case "rugby": return .mint
+            case "handball", "field hockey", "water polo": return .teal
+            case "cricket": return .indigo
+            case "tennis": return .green
+            case "golf": return .mint
+            case "wrestling": return .orange
+            case "curling": return .cyan
             default: return .accentColor
             }
         }

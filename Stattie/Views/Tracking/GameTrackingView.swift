@@ -663,16 +663,47 @@ struct GameTrackingView: View {
 
     // MARK: - Individual / Generic Sports
 
+    private var trackingPositions: [SoccerPosition] {
+        if let selectedGamePosition {
+            return [selectedGamePosition]
+        }
+        if let selectedShiftPersonStats {
+            let assignments = selectedShiftPersonStats.person.flatMap { person in
+                (person.teamMemberships ?? []).first { $0.team?.id == game.team?.id }?.positionAssignments
+            } ?? selectedShiftPersonStats.person?.positionAssignments ?? PositionAssignments()
+            let sport = SoccerPosition.supportedSport(for: game.sport?.name)
+            return assignments.assignments.map(\.position).filter { $0.supportedSports.contains(sport) }
+        }
+        return []
+    }
+
+    private var genericVisibleDefinitions: [StatDefinition] {
+        SportCatalog.visibleDefinitions(
+            sportName: game.sport?.name,
+            definitions: game.sport?.sortedStatDefinitions ?? [],
+            positions: trackingPositions
+        )
+    }
+
     private var genericShootingDefinitions: [StatDefinition] {
-        (game.sport?.sortedStatDefinitions ?? []).filter(\.hasMadeAndMissed)
+        genericVisibleDefinitions.filter(\.hasMadeAndMissed)
     }
 
     private var genericCountDefinitions: [StatDefinition] {
-        (game.sport?.sortedStatDefinitions ?? []).filter { !$0.hasMadeAndMissed }
+        genericVisibleDefinitions.filter { !$0.hasMadeAndMissed }
     }
 
     private var genericPrimaryDefinition: StatDefinition? {
-        game.sport?.sortedStatDefinitions.first
+        if let profile = SportCatalog.profile(named: game.sport?.name) {
+            switch profile.primaryScore {
+            case .count(let shortName), .made(let shortName):
+                return genericVisibleDefinitions.first { $0.shortName == shortName }
+                    ?? game.sport?.sortedStatDefinitions.first { $0.shortName == shortName }
+            case .points:
+                break
+            }
+        }
+        return genericVisibleDefinitions.first ?? game.sport?.sortedStatDefinitions.first
     }
 
     private var genericPrimaryValue: Int {
@@ -1192,6 +1223,10 @@ struct ShiftGameOverviewSheet: View {
         game.sport?.name == "Soccer"
     }
 
+    private var isBasketball: Bool {
+        game.sport?.name == "Basketball"
+    }
+
     private var plusMinusColor: Color {
         guard let plusMinus = shift.plusMinus else { return .secondary }
         if plusMinus > 0 { return .green }
@@ -1221,16 +1256,35 @@ struct ShiftGameOverviewSheet: View {
             ]
         }
 
-        return [
-            SummaryMetric(title: "Points", value: "\(shift.totalPoints)", icon: "basketball.fill", tint: .blue),
-            SummaryMetric(title: "Rebounds", value: "\(shift.totalCount(forName: "DREB") + shift.totalCount(forName: "OREB"))", icon: "arrow.up.circle.fill", tint: .green),
-            SummaryMetric(title: "Assists", value: "\(shift.totalCount(forName: "AST"))", icon: "arrow.triangle.branch", tint: .mint),
-            SummaryMetric(title: "Steals", value: "\(shift.totalCount(forName: "STL"))", icon: "hand.raised.fill", tint: .indigo),
-            SummaryMetric(title: "Fouls", value: "\(shift.totalCount(forName: "PF"))", icon: "exclamationmark.triangle.fill", tint: .red),
-            SummaryMetric(title: "Turnovers", value: "\(shift.totalCount(forName: "TO"))", icon: "arrow.uturn.backward.circle.fill", tint: .brown),
-            SummaryMetric(title: "Missed Drive", value: "\(shift.totalCount(forName: "MD"))", icon: "xmark.circle.fill", tint: .orange),
-            SummaryMetric(title: "Successful Drive", value: "\(shift.totalCount(forName: "SD"))", icon: "checkmark.circle.fill", tint: .green),
-        ]
+        if isBasketball {
+            return [
+                SummaryMetric(title: "Points", value: "\(shift.totalPoints)", icon: "basketball.fill", tint: .blue),
+                SummaryMetric(title: "Rebounds", value: "\(shift.totalCount(forName: "DREB") + shift.totalCount(forName: "OREB"))", icon: "arrow.up.circle.fill", tint: .green),
+                SummaryMetric(title: "Assists", value: "\(shift.totalCount(forName: "AST"))", icon: "arrow.triangle.branch", tint: .mint),
+                SummaryMetric(title: "Steals", value: "\(shift.totalCount(forName: "STL"))", icon: "hand.raised.fill", tint: .indigo),
+                SummaryMetric(title: "Fouls", value: "\(shift.totalCount(forName: "PF"))", icon: "exclamationmark.triangle.fill", tint: .red),
+                SummaryMetric(title: "Turnovers", value: "\(shift.totalCount(forName: "TO"))", icon: "arrow.uturn.backward.circle.fill", tint: .brown),
+                SummaryMetric(title: "Missed Drive", value: "\(shift.totalCount(forName: "MD"))", icon: "xmark.circle.fill", tint: .orange),
+                SummaryMetric(title: "Successful Drive", value: "\(shift.totalCount(forName: "SD"))", icon: "checkmark.circle.fill", tint: .green),
+            ]
+        }
+
+        return (game.sport?.sortedStatDefinitions ?? []).prefix(8).map { definition in
+            let value: String
+            if definition.hasMadeAndMissed {
+                let made = shift.totalMade(forName: definition.shortName)
+                let missed = shift.totalMissed(forName: definition.shortName)
+                value = "\(made)/\(made + missed)"
+            } else {
+                value = "\(shift.totalCount(forName: definition.shortName))"
+            }
+            return SummaryMetric(
+                title: definition.name,
+                value: value,
+                icon: definition.iconName.isEmpty ? "sportscourt" : definition.iconName,
+                tint: .accentColor
+            )
+        }
     }
 
     private var completedShiftsNewestFirst: [Shift] {
@@ -1288,7 +1342,7 @@ struct ShiftGameOverviewSheet: View {
                     .background(Color(.secondarySystemBackground))
                     .clipShape(RoundedRectangle(cornerRadius: 14))
 
-                    Text(isSoccer ? "Soccer Snapshot" : "Basketball Snapshot")
+                    Text(isSoccer ? "Soccer Snapshot" : isBasketball ? "Basketball Snapshot" : "\(game.sport?.name ?? "Game") Snapshot")
                         .font(.headline)
 
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {

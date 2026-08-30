@@ -103,6 +103,15 @@ final class Game {
     /// primary stat for individual sports instead of basketball points.
     var listSummaryValue: Int {
         if sport?.name == "Soccer" { return totalCount(forName: "GOL") }
+        if sport?.name == "Basketball" { return totalPoints }
+        if let value = SportCatalog.primaryScoreValue(
+            sportName: sport?.name,
+            points: totalPoints,
+            made: { totalMade(forName: $0) },
+            count: { totalCount(forName: $0) }
+        ) {
+            return value
+        }
         if sport?.isTeamSport == false, let definition = sport?.sortedStatDefinitions.first {
             return definition.hasMadeAndMissed
                 ? totalMade(forName: definition.shortName)
@@ -113,8 +122,12 @@ final class Game {
 
     var listSummaryLabel: String {
         if sport?.name == "Soccer" { return "goals" }
+        if sport?.name == "Basketball" { return "points" }
         if sport?.isTeamSport == false, let definition = sport?.sortedStatDefinitions.first {
             return definition.shortName.lowercased()
+        }
+        if let profile = SportCatalog.profile(named: sport?.name) {
+            return profile.primaryScoreLabel.lowercased()
         }
         return "points"
     }

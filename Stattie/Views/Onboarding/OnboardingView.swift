@@ -1,29 +1,16 @@
 import SwiftUI
 import SwiftData
 
-enum SportSelection: String, CaseIterable, Identifiable {
-    case basketball = "Basketball"
-    case soccer = "Soccer"
-    case tennis = "Tennis"
-    case golf = "Golf"
+struct SportSelection: Identifiable, Hashable {
+    let name: String
+    let iconName: String
+    let description: String
 
-    var id: String { rawValue }
+    var id: String { name }
 
-    var iconName: String {
-        switch self {
-        case .basketball: return "basketball.fill"
-        case .soccer: return "soccerball"
-        case .tennis: return "tennisball.fill"
-        case .golf: return "figure.golf"
-        }
-    }
-
-    var description: String {
-        switch self {
-        case .basketball: return "Track shots, rebounds, assists & more"
-        case .soccer: return "Track goals, saves, passes & more"
-        case .tennis: return "Track aces, winners & errors — no team needed"
-        case .golf: return "Track fairways, greens & putts — no team needed"
+    static var allCases: [SportSelection] {
+        SportCatalog.all.map {
+            SportSelection(name: $0.name, iconName: $0.iconName, description: $0.summary)
         }
     }
 }
@@ -31,7 +18,7 @@ enum SportSelection: String, CaseIterable, Identifiable {
 struct OnboardingView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var displayName = ""
-    @State private var selectedSports: Set<SportSelection> = [.basketball]
+    @State private var selectedSports: Set<String> = ["Basketball"]
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var isCreating = false
     @State private var currentPage = 0
@@ -47,12 +34,12 @@ struct OnboardingView: View {
         ForEach(SportSelection.allCases) { sport in
             SportSelectionCard(
                 sport: sport,
-                isSelected: selectedSports.contains(sport)
+                isSelected: selectedSports.contains(sport.name)
             ) {
-                if selectedSports.contains(sport) {
-                    selectedSports.remove(sport)
+                if selectedSports.contains(sport.name) {
+                    selectedSports.remove(sport.name)
                 } else {
-                    selectedSports.insert(sport)
+                    selectedSports.insert(sport.name)
                 }
             }
         }
@@ -68,17 +55,17 @@ struct OnboardingView: View {
                 VStack(spacing: 16) {
                     HStack(spacing: 8) {
                         Image(systemName: "basketball.fill")
-                            .scaledFont(size: 32, relativeTo: .largeTitle)
+                            .scaledFont(size: 28, relativeTo: .largeTitle)
                             .foregroundStyle(.orange)
                         Image(systemName: "soccerball")
-                            .scaledFont(size: 32, relativeTo: .largeTitle)
+                            .scaledFont(size: 28, relativeTo: .largeTitle)
                             .foregroundStyle(.green)
-                        Image(systemName: "tennisball.fill")
-                            .scaledFont(size: 32, relativeTo: .largeTitle)
-                            .foregroundStyle(.yellow)
-                        Image(systemName: "figure.golf")
-                            .scaledFont(size: 32, relativeTo: .largeTitle)
-                            .foregroundStyle(.mint)
+                        Image(systemName: "figure.hockey")
+                            .scaledFont(size: 28, relativeTo: .largeTitle)
+                            .foregroundStyle(.blue)
+                        Image(systemName: "figure.baseball")
+                            .scaledFont(size: 28, relativeTo: .largeTitle)
+                            .foregroundStyle(.red)
                     }
 
                     Text("Welcome to Stattie")
@@ -170,19 +157,8 @@ struct OnboardingView: View {
         let user = User(displayName: displayName.trimmingCharacters(in: .whitespaces))
         modelContext.insert(user)
 
-        // Seed all selected sports
-        if selectedSports.contains(.basketball) {
-            SeedDataService.shared.seedBasketballIfNeeded(context: modelContext)
-        }
-        if selectedSports.contains(.soccer) {
-            SeedDataService.shared.seedSoccerIfNeeded(context: modelContext)
-        }
-        if selectedSports.contains(.tennis) {
-            SeedDataService.shared.seedTennisIfNeeded(context: modelContext)
-        }
-        if selectedSports.contains(.golf) {
-            SeedDataService.shared.seedGolfIfNeeded(context: modelContext)
-        }
+        SeedDataService.shared.seedSelectedSports(selectedSports, context: modelContext)
+        SeedDataService.shared.seedAllSportsIfNeeded(context: modelContext)
 
         // Request notification permission
         Task {
@@ -266,7 +242,7 @@ struct SportSelectionCard: View {
                     .scaledFont(size: 36, relativeTo: .title1)
                     .foregroundStyle(isSelected ? .white : .accent)
 
-                Text(sport.rawValue)
+                Text(sport.name)
                     .font(.headline)
                     .foregroundStyle(isSelected ? .white : .primary)
 
@@ -293,7 +269,7 @@ struct SportSelectionCard: View {
             }
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(sport.rawValue)
+        .accessibilityLabel(sport.name)
         .accessibilityValue(isSelected ? "Selected" : "Not selected")
         .accessibilityHint("Double tap to toggle this sport")
     }
