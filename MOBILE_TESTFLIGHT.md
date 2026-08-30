@@ -1,4 +1,5 @@
 # Ship Stattie to TestFlight from a phone
+
 ## One-line Cursor command
 
 In Cursor Mobile, open `kent/stattie` and say:
@@ -6,6 +7,7 @@ In Cursor Mobile, open `kent/stattie` and say:
 > Deploy to TestFlight
 
 An always-applied Cursor project rule treats this phrase—and obvious spelling variations—as authorization to finish the full workflow: pass hosted iOS CI, merge the relevant PR into `main`, issue the trusted `/testflight` trigger, monitor App Store Connect processing, and repair failures. If there is no relevant PR, it deploys the current `main` through manual workflow dispatch.
+
 Cursor Mobile owns the coding and pull-request loop. GitHub Actions owns the macOS-only archive, signing, and upload loop. Apple signing credentials are deliberately not available to Cursor's Linux cloud agents.
 
 ## One-time phone setup
