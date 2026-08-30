@@ -123,11 +123,11 @@ final class Game {
     var listSummaryLabel: String {
         if sport?.name == "Soccer" { return "goals" }
         if sport?.name == "Basketball" { return "points" }
-        if let profile = SportCatalog.profile(named: sport?.name) {
-            return profile.primaryScoreLabel.lowercased()
-        }
         if sport?.isTeamSport == false, let definition = sport?.sortedStatDefinitions.first {
             return definition.shortName.lowercased()
+        }
+        if let profile = SportCatalog.profile(named: sport?.name) {
+            return profile.primaryScoreLabel.lowercased()
         }
         return "points"
     }
