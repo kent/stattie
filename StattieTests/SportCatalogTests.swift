@@ -15,7 +15,7 @@ final class SportCatalogTests: XCTestCase {
         ]))
     }
 
-    func testBasketballAndSoccerStayCustomized() {
+    func testBasketballAndSoccerStayCustomized() throws {
         let basketball = try XCTUnwrap(SportCatalog.profile(named: "Basketball"))
         let soccer = try XCTUnwrap(SportCatalog.profile(named: "Soccer"))
         XCTAssertTrue(basketball.usesCustomTracking)
@@ -50,7 +50,7 @@ final class SportCatalogTests: XCTestCase {
         XCTAssertEqual(SoccerPosition.SupportedSport.from(sportName: "Baseball"), .baseball)
     }
 
-    func testHockeyGoalieSeesSavesAndNotSkaterHits() {
+    func testHockeyGoalieSeesSavesAndNotSkaterHits() throws {
         let hockey = try XCTUnwrap(SportCatalog.profile(named: "Ice Hockey"))
         let goalie = Set(hockey.visibleStats(for: [.goalie]).map(\.shortName))
         let skater = Set(hockey.visibleStats(for: [.skater]).map(\.shortName))
@@ -67,7 +67,7 @@ final class SportCatalogTests: XCTestCase {
         XCTAssertFalse(skater.contains("SV"))
     }
 
-    func testBaseballPitcherAndBatterHaveDifferentCoreStats() {
+    func testBaseballPitcherAndBatterHaveDifferentCoreStats() throws {
         let baseball = try XCTUnwrap(SportCatalog.profile(named: "Baseball"))
         let pitcher = Set(baseball.visibleStats(for: [.pitcher, .batter]).map(\.shortName))
         let batter = Set(baseball.visibleStats(for: [.batter, .fielder]).map(\.shortName))
@@ -97,7 +97,7 @@ final class SportCatalogTests: XCTestCase {
         XCTAssertTrue(baseballPositions.contains(.baseballDesignatedHitter))
     }
 
-    func testCanadianFootballIncludesSlotbackAndRouge() {
+    func testCanadianFootballIncludesSlotbackAndRouge() throws {
         let canadian = try XCTUnwrap(SportCatalog.profile(named: "Canadian Football"))
         let american = try XCTUnwrap(SportCatalog.profile(named: "American Football"))
         XCTAssertTrue(canadian.stats.contains { $0.shortName == "RG" })
@@ -107,7 +107,7 @@ final class SportCatalogTests: XCTestCase {
         XCTAssertTrue(SoccerPosition.positions(for: .americanFootball).contains(.footballTE))
     }
 
-    func testMultiplePositionsUnionStatRoles() {
+    func testMultiplePositionsUnionStatRoles() throws {
         let assignments = PositionAssignments(assignments: [
             PositionAssignment(position: .hockeyGoalie, percentage: 60),
             PositionAssignment(position: .hockeyForward, percentage: 40),
