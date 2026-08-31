@@ -69,47 +69,12 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    HStack {
-                        Label("iCloud Status", systemImage: "icloud")
-                        Spacer()
-                        if syncManager.isCheckingStatus {
-                            ProgressView()
-                        } else {
-                            Text(syncManager.syncHealthDescription)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-
-                    if syncManager.isSignedIntoiCloud {
-                        if let lastOperation = syncManager.lastSyncOperation {
-                            LabeledContent("Last Sync Operation") {
-                                Text(lastOperation)
-                            }
-                        }
-                        if let lastSync = syncManager.lastSyncDate {
-                            LabeledContent("Last Sync") {
-                                Text(lastSync, style: .relative)
-                            }
-                        }
-                        if let syncErrorMessage = syncManager.lastSyncErrorMessage, !syncErrorMessage.isEmpty {
-                            Text(syncErrorMessage)
-                                .font(.caption)
-                                .foregroundStyle(.orange)
-                            Button("Try Sync Again") {
-                                Task {
-                                    await syncManager.retrySync()
-                                }
-                            }
-                        }
-                    } else {
-                        Text("Sign in to iCloud in Settings to sync data across devices")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
+                    iCloudSyncStatusCard(syncManager: syncManager)
+                        .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
                 } header: {
                     Text("Sync")
                 } footer: {
-                    Text("Your data is stored locally and optionally synced via iCloud")
+                    Text("Players, games, and settings stay on this iPhone and copy to iCloud when you’re signed in.")
                 }
 
                 NotificationsPromptSection()

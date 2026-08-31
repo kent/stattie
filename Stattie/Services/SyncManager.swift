@@ -13,9 +13,12 @@ final class SyncManager {
     private(set) var isCheckingStatus = false
     private(set) var lastSyncDate: Date?
     private(set) var syncError: Error?
-    private(set) var isSyncInProgress = false
     private(set) var lastSyncOperation: String?
     private(set) var lastSyncErrorMessage: String?
+    private(set) var inFlightPhases: Set<SyncPipelinePhase> = []
+    private(set) var completedPhaseDates: [SyncPipelinePhase: Date] = [:]
+    private(set) var failedPhase: SyncPipelinePhase?
+    private(set) var isRetryPending = false
 
     private var accountChangeObserver: NSObjectProtocol?
     private var cloudKitEventObserver: NSObjectProtocol?
@@ -23,6 +26,7 @@ final class SyncManager {
     private let lastSyncDateKey = "cloudKitLastSuccessfulSyncDate"
     private let lastSyncOperationKey = "cloudKitLastSyncOperation"
     private let lastSyncErrorMessageKey = "cloudKitLastSyncErrorMessage"
+    private let failedPhaseKey = "cloudKitLastFailedPhase"
 
     var isSignedIntoiCloud: Bool {
         iCloudStatus == .available
@@ -46,36 +50,39 @@ final class SyncManager {
     }
 
     var syncHealthDescription: String {
-        if !SharedModelContainer.isCloudKitBacked {
-            return "Local only (CloudKit unavailable)"
-        }
+        progress.headline
+    }
 
-        if iCloudStatus != .available {
-            return statusDescription
-        }
+    var progress: SyncProgress {
+        SyncProgress.snapshot(
+            isCloudKitBacked: SharedModelContainer.isCloudKitBacked,
+            accountStatus: iCloudStatus,
+            isCheckingStatus: isCheckingStatus,
+            isRetryPending: isRetryPending,
+            inFlightPhases: inFlightPhases,
+            completedDates: completedPhaseDates,
+            failedPhase: failedPhase,
+            errorMessage: lastSyncErrorMessage,
+            lastSyncDate: lastSyncDate
+        )
+    }
 
-        if isSyncInProgress {
-            if let lastSyncOperation {
-                return "Syncing \(lastSyncOperation.lowercased())..."
-            }
-            return "Syncing..."
-        }
-
-        if let lastSyncErrorMessage, !lastSyncErrorMessage.isEmpty {
-            return "Sync issue"
-        }
-
-        if lastSyncDate != nil {
-            return "Healthy"
-        }
-
-        return "Waiting for first sync"
+    var isSyncInProgress: Bool {
+        isRetryPending || !inFlightPhases.isEmpty
     }
 
     private init() {
         lastSyncDate = defaults.object(forKey: lastSyncDateKey) as? Date
         lastSyncOperation = defaults.string(forKey: lastSyncOperationKey)
+        if lastSyncOperation == "Retry" {
+            lastSyncOperation = nil
+            defaults.removeObject(forKey: lastSyncOperationKey)
+        }
         lastSyncErrorMessage = defaults.string(forKey: lastSyncErrorMessageKey)
+        completedPhaseDates = loadCompletedPhaseDates()
+        if let rawFailedPhase = defaults.string(forKey: failedPhaseKey) {
+            failedPhase = SyncPipelinePhase(rawValue: rawFailedPhase)
+        }
 
         if let lastSyncErrorMessage, !lastSyncErrorMessage.isEmpty {
             syncError = NSError(
@@ -85,7 +92,6 @@ final class SyncManager {
             )
         }
 
-        // Start observing account changes
         startObservingAccountChanges()
         startObservingCloudKitEvents()
     }
@@ -146,32 +152,53 @@ final class SyncManager {
 
     @MainActor
     private func handleCloudKitEvent(_ event: NSPersistentCloudKitContainer.Event) {
-        let operation = syncOperationName(for: event.type)
-        lastSyncOperation = operation
-        defaults.set(operation, forKey: lastSyncOperationKey)
+        let phase = SyncPipelinePhase(eventType: event.type)
+        if let phase {
+            lastSyncOperation = phase.title
+            defaults.set(phase.title, forKey: lastSyncOperationKey)
+        }
+        isRetryPending = false
 
         if event.endDate == nil {
-            isSyncInProgress = true
+            if let phase {
+                inFlightPhases.insert(phase)
+                if failedPhase == phase {
+                    failedPhase = nil
+                    defaults.removeObject(forKey: failedPhaseKey)
+                }
+            }
             return
         }
 
-        isSyncInProgress = false
+        if let phase {
+            inFlightPhases.remove(phase)
+        }
 
         if let error = event.error {
             syncError = error
             let message = CloudKitErrorFormatter.userFacingMessage(for: error)
             lastSyncErrorMessage = message
             defaults.set(message, forKey: lastSyncErrorMessageKey)
+            if let phase {
+                failedPhase = phase
+                defaults.set(phase.rawValue, forKey: failedPhaseKey)
+            }
             return
         }
 
         syncError = nil
         lastSyncErrorMessage = nil
+        failedPhase = nil
         defaults.removeObject(forKey: lastSyncErrorMessageKey)
+        defaults.removeObject(forKey: failedPhaseKey)
 
         let eventDate = event.endDate ?? Date()
         lastSyncDate = eventDate
         defaults.set(eventDate, forKey: lastSyncDateKey)
+        if let phase {
+            completedPhaseDates[phase] = eventDate
+            defaults.set(eventDate, forKey: completedDateKey(for: phase))
+        }
 
         // Import is the only event that can bring new SwiftData rows. Export and
         // setup must not rewrite preference records or they dirty CloudKit again.
@@ -184,10 +211,10 @@ final class SyncManager {
     func retrySync() async {
         lastSyncErrorMessage = nil
         syncError = nil
+        failedPhase = nil
         defaults.removeObject(forKey: lastSyncErrorMessageKey)
-        isSyncInProgress = true
-        lastSyncOperation = "Retry"
-        defaults.set(lastSyncOperation, forKey: lastSyncOperationKey)
+        defaults.removeObject(forKey: failedPhaseKey)
+        isRetryPending = true
 
         if let context = SharedModelContainer.container?.mainContext {
             do {
@@ -198,24 +225,33 @@ final class SyncManager {
             } catch {
                 lastSyncErrorMessage = error.localizedDescription
                 defaults.set(error.localizedDescription, forKey: lastSyncErrorMessageKey)
+                isRetryPending = false
+                return
             }
         }
 
         await checkiCloudStatus()
-        isSyncInProgress = false
+
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(8))
+            if inFlightPhases.isEmpty {
+                isRetryPending = false
+            }
+        }
     }
 
-    private func syncOperationName(for type: NSPersistentCloudKitContainer.EventType) -> String {
-        switch type {
-        case .setup:
-            return "Setup"
-        case .import:
-            return "Import"
-        case .export:
-            return "Export"
-        @unknown default:
-            return "Sync"
+    private func completedDateKey(for phase: SyncPipelinePhase) -> String {
+        "cloudKitPhaseCompletedDate.\(phase.rawValue)"
+    }
+
+    private func loadCompletedPhaseDates() -> [SyncPipelinePhase: Date] {
+        var dates: [SyncPipelinePhase: Date] = [:]
+        for phase in SyncPipelinePhase.allCases {
+            if let date = defaults.object(forKey: completedDateKey(for: phase)) as? Date {
+                dates[phase] = date
+            }
         }
+        return dates
     }
 
     // MARK: - Status Checking
