@@ -23,12 +23,12 @@ struct StattieApp: App {
             SyncedAchievementState.self
         ])
 
-        // Bind explicitly to the production container so diagnostics and
-        // NSPersistentCloudKitContainer export the same private database.
+        // `.automatic` uses iCloud.com.stattie.app from entitlements in signed
+        // builds. An explicit `.private` identifier traps in unsigned XCTest.
         let cloudKitConfig = ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: false,
-            cloudKitDatabase: .private(CloudKitContainerProvider.shared.containerIdentifier)
+            cloudKitDatabase: .automatic
         )
 
         do {
