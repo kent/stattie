@@ -607,6 +607,12 @@ struct PositionAssignments: Codable, Equatable {
         assignments.max(by: { $0.percentage < $1.percentage })?.position
     }
 
+    /// Positions that belong to the given sport, preserving assignment order.
+    func positions(for sportName: String?) -> [SoccerPosition] {
+        let sport = SoccerPosition.supportedSport(for: sportName)
+        return assignments.map(\.position).filter { $0.supportedSports.contains(sport) }
+    }
+
     /// Check if this is a goalie (any percentage as a keeper-style position)
     var includesGoalkeeper: Bool {
         assignments.contains { $0.position.isGoalkeeperRole }

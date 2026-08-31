@@ -194,7 +194,7 @@ struct NewGameForPersonView: View {
                     } header: {
                         Text("Position")
                     } footer: {
-                        Text("Choose the position this player will start the game in.")
+                        Text("Choose the starting position. You can change it for each shift.")
                     }
                 }
 

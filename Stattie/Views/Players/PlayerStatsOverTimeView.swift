@@ -9,6 +9,7 @@ struct PersonStatsOverTimeView: View {
     @State private var selectedStat: StatType = .points
     @State private var selectedSportName: String = "Basketball"
     @State private var selectedCatalogShortName: String = ""
+    @State private var selectedPositionID: String = "all"
     @State private var timeRange: TimeRange = .all
 
     enum StatType: String, CaseIterable {
@@ -139,6 +140,18 @@ struct PersonStatsOverTimeView: View {
         }
     }
 
+    private var seasonPositionTotals: [PositionStatTotals] {
+        PositionStatAggregator.seasonTotals(from: sortedGameStats)
+    }
+
+    private var availableSeasonPositions: [SoccerPosition] {
+        seasonPositionTotals.compactMap(\.position)
+    }
+
+    private var selectedSeasonPosition: SoccerPosition? {
+        SoccerPosition(rawValue: selectedPositionID)
+    }
+
     var sortedGameStats: [PersonGameStats] {
         let allStats = (player.gameStats ?? [])
             .filter { $0.game != nil && $0.game?.isCompleted == true }
@@ -155,7 +168,17 @@ struct PersonStatsOverTimeView: View {
     }
 
     var chartData: [(date: Date, value: Int, gameNumber: Int)] {
-        sortedGameStats.enumerated().map { index, pgs in
+        sortedGameStats.enumerated().compactMap { index, pgs in
+            if selectedSeasonPosition != nil {
+                let shifts = (pgs.shifts ?? []).filter { $0.recordedPosition == selectedSeasonPosition }
+                guard !shifts.isEmpty else { return nil }
+                return (
+                    date: pgs.game?.gameDate ?? Date(),
+                    value: positionFilteredValue(from: shifts),
+                    gameNumber: index + 1
+                )
+            }
+
             let value: Int
             if usesBasketballChart {
                 value = statValue(for: selectedStat, from: pgs)
@@ -170,6 +193,40 @@ struct PersonStatsOverTimeView: View {
             }
             return (date: pgs.game?.gameDate ?? Date(), value: value, gameNumber: index + 1)
         }
+    }
+
+    private func positionFilteredValue(from shifts: [Shift]) -> Int {
+        let totals = PositionStatAggregator.totals(from: shifts).first
+        if usesBasketballChart {
+            switch selectedStat {
+            case .points: return totals?.points ?? 0
+            case .plusMinus: return totals?.plusMinus ?? 0
+            case .rebounds: return (totals?.count(forName: "DREB") ?? 0) + (totals?.count(forName: "OREB") ?? 0)
+            case .assists: return totals?.count(forName: "AST") ?? 0
+            case .steals: return totals?.count(forName: "STL") ?? 0
+            case .fouls: return totals?.count(forName: "PF") ?? 0
+            case .turnovers: return totals?.count(forName: "TO") ?? 0
+            case .missedDrives: return totals?.count(forName: "MD") ?? 0
+            case .badPlaysOffense: return totals?.count(forName: "BPO") ?? 0
+            case .badPlaysDefense: return totals?.count(forName: "BPD") ?? 0
+            case .greatPlaysOffense: return totals?.count(forName: "GPO") ?? 0
+            case .greatPlaysDefense: return totals?.count(forName: "GPD") ?? 0
+            case .twoPointers: return totals?.madeCount(forName: "2PT") ?? 0
+            case .threePointers: return totals?.madeCount(forName: "3PT") ?? 0
+            case .freeThrows: return totals?.madeCount(forName: "FT") ?? 0
+            case .offensiveRebounds: return totals?.count(forName: "OREB") ?? 0
+            case .defensiveRebounds: return totals?.count(forName: "DREB") ?? 0
+            }
+        }
+        if selectedCatalogShortName == "+/-" {
+            return totals?.plusMinus ?? 0
+        }
+        if let spec = selectedSportProfile?.spec(shortName: selectedCatalogShortName) {
+            return spec.hasMadeAndMissed
+                ? (totals?.madeCount(forName: spec.shortName) ?? 0)
+                : (totals?.count(forName: spec.shortName) ?? 0)
+        }
+        return totals?.points ?? 0
     }
 
     private func statValue(for stat: StatType, from pgs: PersonGameStats) -> Int {
@@ -221,6 +278,34 @@ struct PersonStatsOverTimeView: View {
                     .padding(.horizontal)
                     .onChange(of: selectedSportName) { _, newValue in
                         selectedCatalogShortName = SportCatalog.profile(named: newValue)?.highlightShortNames.first ?? ""
+                        selectedPositionID = "all"
+                    }
+                }
+
+                if !availableSeasonPositions.isEmpty {
+                    Picker("Position", selection: $selectedPositionID) {
+                        Text("All Positions").tag("all")
+                        ForEach(availableSeasonPositions) { position in
+                            Text(position.displayName).tag(position.rawValue)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .padding(.horizontal)
+                }
+
+                if !seasonPositionTotals.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("By Position")
+                            .font(.headline)
+                            .padding(.horizontal)
+
+                        ForEach(seasonPositionTotals) { totals in
+                            PositionBreakdownCard(
+                                totals: totals,
+                                sportName: selectedSportName
+                            )
+                            .padding(.horizontal)
+                        }
                     }
                 }
 

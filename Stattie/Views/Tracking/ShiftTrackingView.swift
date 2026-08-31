@@ -67,11 +67,14 @@ struct ShiftTrackingView: View {
                 StartShiftScoreSheet(
                     teamScore: $teamScore,
                     opponentScore: $opponentScore,
+                    sportName: personGameStats.game?.sport?.name,
+                    assignedPositions: playerPositionAssignments.positions(for: personGameStats.game?.sport?.name),
+                    selectedPosition: $selectedShiftPosition,
                     onStart: {
                         startNewShift()
                     }
                 )
-                .presentationDetents([.medium])
+                .presentationDetents([.large])
             }
             .sheet(isPresented: $showingEndShiftSheet) {
                 EndShiftScoreSheet(
@@ -94,16 +97,17 @@ struct ShiftTrackingView: View {
                 Text(persistenceError ?? "The change could not be saved.")
             }
             .sheet(isPresented: $showingPositionConfirmation) {
-                PositionConfirmationSheet(
-                    positionAssignments: playerPositionAssignments,
+                ShiftPositionPickerSheet(
+                    sportName: personGameStats.game?.sport?.name,
+                    assignedPositions: playerPositionAssignments.positions(for: personGameStats.game?.sport?.name),
                     playerName: personGameStats.person?.displayName ?? "Player",
+                    confirmTitle: "Continue",
                     selectedPosition: $selectedShiftPosition,
                     onConfirm: {
                         showingPositionConfirmation = false
                         showingStartShiftSheet = true
                     }
                 )
-                .presentationDetents([.medium])
             }
         }
     }
@@ -313,7 +317,8 @@ struct ShiftTrackingView: View {
     private func startNewShift() {
         let shift = personGameStats.startNewShift(
             teamScore: teamScore,
-            opponentScore: opponentScore
+            opponentScore: opponentScore,
+            position: selectedShiftPosition ?? playerPositionAssignments.primaryPosition
         )
         modelContext.insert(shift)
         saveOrSurfaceError()
@@ -479,6 +484,9 @@ struct ShiftSummaryRow: View {
                 Text("Shift \(shift.shiftNumber)")
                     .font(.headline)
                 HStack(spacing: 8) {
+                    if let position = shift.recordedPosition {
+                        Label(position.shortName, systemImage: position.iconName)
+                    }
                     Text(shift.formattedDuration)
                     if shift.plusMinus != nil {
                         let endingTeam = shift.endingTeamScore ?? shift.startingTeamScore
@@ -512,7 +520,20 @@ struct StartShiftScoreSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var teamScore: Int
     @Binding var opponentScore: Int
+    var sportName: String? = nil
+    var assignedPositions: [SoccerPosition] = []
+    @Binding var selectedPosition: SoccerPosition?
     let onStart: () -> Void
+
+    @State private var showingPositionPicker = false
+
+    private var resolvedPosition: SoccerPosition? {
+        selectedPosition
+    }
+
+    private var hasPositionChoices: Bool {
+        !SoccerPosition.positions(for: SoccerPosition.supportedSport(for: sportName)).isEmpty
+    }
 
     var body: some View {
         NavigationStack {
@@ -529,6 +550,42 @@ struct StartShiftScoreSheet: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
+                if hasPositionChoices {
+                    Button {
+                        showingPositionPicker = true
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: resolvedPosition?.iconName ?? "figure.run")
+                                .font(.title3)
+                                .foregroundStyle(.accent)
+                                .frame(width: 36)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Position this shift")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                Text(resolvedPosition?.displayName ?? "Choose a position")
+                                    .font(.headline)
+                                    .foregroundStyle(.primary)
+                            }
+
+                            Spacer()
+
+                            Image(systemName: "chevron.up.chevron.down")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding()
+                        .background(Color(.secondarySystemBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal)
+                    .accessibilityLabel("Position this shift")
+                    .accessibilityValue(resolvedPosition?.displayName ?? "None selected")
+                    .accessibilityHint("Double tap to choose a different position")
+                }
+
                 ScoreInputPairView(teamScore: $teamScore, opponentScore: $opponentScore)
                     .padding(.horizontal)
 
@@ -538,7 +595,7 @@ struct StartShiftScoreSheet: View {
                     onStart()
                     dismiss()
                 } label: {
-                    Text("Start Shift")
+                    Text(resolvedPosition.map { "Start Shift as \($0.displayName)" } ?? "Start Shift")
                         .font(.headline)
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
@@ -567,6 +624,20 @@ struct StartShiftScoreSheet: View {
                             for: nil
                         )
                     }
+                }
+            }
+            .sheet(isPresented: $showingPositionPicker) {
+                ShiftPositionPickerSheet(
+                    sportName: sportName,
+                    assignedPositions: assignedPositions,
+                    playerName: "This shift",
+                    confirmTitle: "Use Position",
+                    selectedPosition: $selectedPosition
+                )
+            }
+            .onAppear {
+                if selectedPosition == nil {
+                    selectedPosition = assignedPositions.first
                 }
             }
         }
