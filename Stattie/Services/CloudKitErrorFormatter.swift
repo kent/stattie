@@ -1,5 +1,6 @@
 import Foundation
 import CloudKit
+import CoreData
 
 enum CloudKitErrorFormatter {
     static func userFacingMessage(for error: Error) -> String {
