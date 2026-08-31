@@ -1,3 +1,4 @@
+import Foundation
 import SwiftData
 
 enum SharedModelContainer {
@@ -6,6 +7,9 @@ enum SharedModelContainer {
 
     static func makeContext() -> ModelContext? {
         guard let container else { return nil }
+        if Thread.isMainThread {
+            return container.mainContext
+        }
         return ModelContext(container)
     }
 }

@@ -92,7 +92,7 @@ struct AddPersonView: View {
             .onChange(of: selectedPhoto) { _, newValue in
                 Task {
                     if let data = try? await newValue?.loadTransferable(type: Data.self) {
-                        photoData = data
+                        photoData = PlayerPhotoStore.preparedData(from: data)
                     }
                 }
             }
@@ -104,7 +104,7 @@ struct AddPersonView: View {
             firstName: firstName.trimmingCharacters(in: .whitespaces),
             lastName: lastName.trimmingCharacters(in: .whitespaces),
             jerseyNumber: 0,
-            photoData: photoData,
+            photoData: PlayerPhotoStore.preparedData(from: photoData),
             isActive: true,
             owner: currentUser
         )

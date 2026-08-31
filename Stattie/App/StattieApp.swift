@@ -23,11 +23,12 @@ struct StattieApp: App {
             SyncedAchievementState.self
         ])
 
-        // Try CloudKit first, fall back to local-only if not available
+        // Bind explicitly to the production container so diagnostics and
+        // NSPersistentCloudKitContainer export the same private database.
         let cloudKitConfig = ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: false,
-            cloudKitDatabase: .automatic
+            cloudKitDatabase: .private(CloudKitContainerProvider.shared.containerIdentifier)
         )
 
         do {
@@ -64,8 +65,15 @@ struct StattieApp: App {
             // migration could not be committed.
             print("Stat attribution migration failed: \(error.localizedDescription)")
         }
+        do {
+            _ = try PlayerPhotoStore.migrateOversizedPhotos(
+                in: sharedModelContainer.mainContext
+            )
+        } catch {
+            print("Player photo compression failed: \(error.localizedDescription)")
+        }
         CloudSyncedPreferences.bootstrapIfNeeded(force: true)
-        AchievementManager.shared.synchronizeFromCloud(force: true)
+        AchievementManager.shared.synchronizeFromCloud()
     }
 
     var body: some Scene {

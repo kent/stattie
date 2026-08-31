@@ -25,7 +25,7 @@ struct ContentView: View {
         .onAppear {
             CloudSyncedPreferences.bootstrapIfNeeded(force: true)
             AppState.shared.synchronizeFromCloud()
-            AchievementManager.shared.synchronizeFromCloud(force: true)
+            AchievementManager.shared.synchronizeFromCloud()
         }
     }
 }

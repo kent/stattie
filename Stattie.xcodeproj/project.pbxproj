@@ -12,6 +12,7 @@
 		B8004615F3AD8C6A57104A67 /* SportCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208F798872C3486286D461A6 /* SportCatalogTests.swift */; };
 		B8004615F3AD8C6A57104A68 /* PositionTrackingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208F798872C3486286D461A7 /* PositionTrackingTests.swift */; };
 		B8004615F3AD8C6A57104A69 /* AchievementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208F798872C3486286D461A8 /* AchievementTests.swift */; };
+		B8004615F3AD8C6A57104A6A /* CloudKitSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208F798872C3486286D461A9 /* CloudKitSyncTests.swift */; };
 		D41AEE01896277DA537C7661 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B8D9E908A0524BDC7CCD3969 /* Foundation.framework */; };
 		E01000002B000001 /* StattieApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000001 /* StattieApp.swift */; };
 		E01000002B000002 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000002 /* AppState.swift */; };
@@ -63,6 +64,8 @@
 		E01000002B00003C /* SyncedAppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00003C /* SyncedAppSettings.swift */; };
 		E01000002B00003D /* SyncedAchievementState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00003D /* SyncedAchievementState.swift */; };
 		E01000002B00003F /* CloudSyncedPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00003F /* CloudSyncedPreferences.swift */; };
+		E01000002B000060 /* PlayerPhotoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000060 /* PlayerPhotoStore.swift */; };
+		E01000002B000061 /* CloudKitErrorFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000061 /* CloudKitErrorFormatter.swift */; };
 		ED23180261715630D5B7E8DB /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E6B07DDEB1324F07934F0292 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
@@ -82,6 +85,7 @@
 		208F798872C3486286D461A6 /* SportCatalogTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SportCatalogTests.swift; sourceTree = "<group>"; };
 		208F798872C3486286D461A7 /* PositionTrackingTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PositionTrackingTests.swift; sourceTree = "<group>"; };
 		208F798872C3486286D461A8 /* AchievementTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AchievementTests.swift; sourceTree = "<group>"; };
+		208F798872C3486286D461A9 /* CloudKitSyncTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudKitSyncTests.swift; sourceTree = "<group>"; };
 		9B1A842DFB0B3585A4BB4990 /* StattieTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StattieTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B8D9E908A0524BDC7CCD3969 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		E00000002B000000 /* Stattie.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Stattie.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -136,6 +140,8 @@
 		E00000002B00003C /* SyncedAppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncedAppSettings.swift; sourceTree = "<group>"; };
 		E00000002B00003D /* SyncedAchievementState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncedAchievementState.swift; sourceTree = "<group>"; };
 		E00000002B00003F /* CloudSyncedPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncedPreferences.swift; sourceTree = "<group>"; };
+		E00000002B000060 /* PlayerPhotoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerPhotoStore.swift; sourceTree = "<group>"; };
+		E00000002B000061 /* CloudKitErrorFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitErrorFormatter.swift; sourceTree = "<group>"; };
 		E6B07DDEB1324F07934F0292 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -309,6 +315,7 @@
 				E00000002B000015 /* SyncManager.swift */,
 				E00000002B000016 /* LockManager.swift */,
 				E00000002B00003F /* CloudSyncedPreferences.swift */,
+				E00000002B000061 /* CloudKitErrorFormatter.swift */,
 				E00000002B000018 /* SeedDataService.swift */,
 				E00000002B000036 /* NotificationManager.swift */,
 				E00000002B000037 /* ReviewManager.swift */,
@@ -321,6 +328,7 @@
 			children = (
 				E03000002B000010 /* Extensions */,
 				E03000002B000014 /* Accessibility */,
+				E00000002B000060 /* PlayerPhotoStore.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -436,6 +444,7 @@
 				208F798872C3486286D461A6 /* SportCatalogTests.swift */,
 				208F798872C3486286D461A7 /* PositionTrackingTests.swift */,
 				208F798872C3486286D461A8 /* AchievementTests.swift */,
+				208F798872C3486286D461A9 /* CloudKitSyncTests.swift */,
 			);
 			name = StattieTests;
 			path = StattieTests;
@@ -550,6 +559,7 @@
 				B8004615F3AD8C6A57104A67 /* SportCatalogTests.swift in Sources */,
 				B8004615F3AD8C6A57104A68 /* PositionTrackingTests.swift in Sources */,
 				B8004615F3AD8C6A57104A69 /* AchievementTests.swift in Sources */,
+				B8004615F3AD8C6A57104A6A /* CloudKitSyncTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -606,6 +616,8 @@
 				E01000002B00003C /* SyncedAppSettings.swift in Sources */,
 				E01000002B00003D /* SyncedAchievementState.swift in Sources */,
 				E01000002B00003F /* CloudSyncedPreferences.swift in Sources */,
+				E01000002B000060 /* PlayerPhotoStore.swift in Sources */,
+				E01000002B000061 /* CloudKitErrorFormatter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -806,7 +818,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.2.0;
+				MARKETING_VERSION = 1.2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.stattie.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -840,7 +852,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.2.0;
+				MARKETING_VERSION = 1.2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.stattie.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

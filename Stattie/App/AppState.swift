@@ -34,7 +34,7 @@ final class AppState {
         set {
             UserDefaults.standard.set(newValue?.uuidString, forKey: "currentUserID")
             CloudSyncedPreferences.notifyLocalMutation()
-            AchievementManager.shared.synchronizeFromCloud(force: true)
+            AchievementManager.shared.synchronizeFromCloud()
         }
     }
 
@@ -55,7 +55,7 @@ final class AppState {
 
     func synchronizeFromCloud() {
         CloudSyncedPreferences.synchronizeFromCloudIfAvailable()
-        AchievementManager.shared.synchronizeFromCloud(force: true)
+        AchievementManager.shared.synchronizeFromCloud()
     }
 
     func completeOnboarding(userID: UUID) {

@@ -210,13 +210,15 @@ class AchievementManager {
         let localUpdatedAt = UserDefaults.standard.double(forKey: localUpdatedAtKey(for: ownerUserID))
         let remoteUpdatedAt = state.updatedAt.timeIntervalSince1970
 
-        if remoteUpdatedAt > localUpdatedAt || force {
+        if remoteUpdatedAt > localUpdatedAt {
             applyRemoteStateToDefaults(state)
             UserDefaults.standard.set(remoteUpdatedAt, forKey: localUpdatedAtKey(for: ownerUserID))
             return
         }
 
-        pushLocalStateToCloud(ownerUserID: ownerUserID, context: context)
+        if force || localUpdatedAt > remoteUpdatedAt {
+            pushLocalStateToCloud(ownerUserID: ownerUserID, context: context)
+        }
     }
 
     func isUnlocked(_ achievement: AchievementType) -> Bool {
@@ -276,26 +278,55 @@ class AchievementManager {
 
         let created = SyncedAchievementState(ownerUserID: ownerUserID)
         context.insert(created)
+        _ = writeLocalStateIfNeeded(to: created, ownerUserID: ownerUserID)
         save(context: context)
         return created
     }
 
     private func pushLocalStateToCloud(ownerUserID: UUID?, context: ModelContext) {
         let state = fetchOrCreateState(ownerUserID: ownerUserID, context: context)
+        guard writeLocalStateIfNeeded(to: state, ownerUserID: ownerUserID) else { return }
+        save(context: context)
+    }
+
+    @discardableResult
+    private func writeLocalStateIfNeeded(
+        to state: SyncedAchievementState,
+        ownerUserID: UUID?
+    ) -> Bool {
+        var changed = false
 
         let unlockedData = UserDefaults.standard.data(forKey: unlockedKey)
         let unlockedIDs = (try? JSONDecoder().decode(Set<String>.self, from: unlockedData ?? Data())) ?? []
-        state.unlockedAchievementIDsJSON = (try? String(data: JSONEncoder().encode(Array(unlockedIDs)), encoding: .utf8)) ?? "[]"
-        state.totalPoints = UserDefaults.standard.integer(forKey: totalPointsKey)
+        let encoded = (try? String(data: JSONEncoder().encode(Array(unlockedIDs).sorted()), encoding: .utf8)) ?? "[]"
+        if state.unlockedAchievementIDsJSON != encoded {
+            state.unlockedAchievementIDsJSON = encoded
+            changed = true
+        }
+
+        let points = UserDefaults.standard.integer(forKey: totalPointsKey)
+        if state.totalPoints != points {
+            state.totalPoints = points
+            changed = true
+        }
+
+        if state.ownerUserID != ownerUserID {
+            state.ownerUserID = ownerUserID
+            changed = true
+        }
 
         let localUpdatedAt = UserDefaults.standard.double(forKey: localUpdatedAtKey(for: ownerUserID))
         if localUpdatedAt > 0 {
-            state.updatedAt = Date(timeIntervalSince1970: localUpdatedAt)
-        } else {
+            let localDate = Date(timeIntervalSince1970: localUpdatedAt)
+            if state.updatedAt != localDate {
+                state.updatedAt = localDate
+                changed = true
+            }
+        } else if changed {
             state.updatedAt = Date()
         }
 
-        save(context: context)
+        return changed
     }
 
     private func applyRemoteStateToDefaults(_ state: SyncedAchievementState) {
@@ -309,6 +340,7 @@ class AchievementManager {
     }
 
     private func save(context: ModelContext) {
+        guard context.hasChanges else { return }
         do {
             try context.save()
         } catch {

@@ -43,7 +43,7 @@ enum CloudSyncedPreferences {
     static func pushLocalStateToCloudIfAvailable() {
         guard let context = SharedModelContainer.makeContext() else { return }
         let state = fetchOrCreateState(in: context)
-        applyLocalDefaults(to: state)
+        guard applyLocalDefaultsIfNeeded(to: state) else { return }
         save(context: context)
     }
 
@@ -57,31 +57,55 @@ enum CloudSyncedPreferences {
 
         let created = SyncedAppSettings()
         context.insert(created)
+        _ = applyLocalDefaultsIfNeeded(to: created)
         save(context: context)
         return created
     }
 
-    private static func applyLocalDefaults(to state: SyncedAppSettings) {
-        state.hasCompletedOnboarding = defaults.bool(forKey: "hasCompletedOnboarding")
+    @discardableResult
+    private static func applyLocalDefaultsIfNeeded(to state: SyncedAppSettings) -> Bool {
+        var changed = false
 
-        if let currentUserRaw = defaults.string(forKey: "currentUserID"),
-           let currentUserID = UUID(uuidString: currentUserRaw) {
-            state.currentUserID = currentUserID
+        let hasCompletedOnboarding = defaults.bool(forKey: "hasCompletedOnboarding")
+        if state.hasCompletedOnboarding != hasCompletedOnboarding {
+            state.hasCompletedOnboarding = hasCompletedOnboarding
+            changed = true
+        }
+
+        let currentUserID: UUID?
+        if let currentUserRaw = defaults.string(forKey: "currentUserID") {
+            currentUserID = UUID(uuidString: currentUserRaw)
         } else {
-            state.currentUserID = nil
+            currentUserID = nil
+        }
+        if state.currentUserID != currentUserID {
+            state.currentUserID = currentUserID
+            changed = true
         }
 
         // Legacy fields remain in the SwiftData schema for lightweight migration,
         // but remote coaching is disabled and its configuration is actively cleared.
-        state.aiCoachEndpointURL = ""
-        state.aiCoachProxyToken = ""
+        if !state.aiCoachEndpointURL.isEmpty {
+            state.aiCoachEndpointURL = ""
+            changed = true
+        }
+        if !state.aiCoachProxyToken.isEmpty {
+            state.aiCoachProxyToken = ""
+            changed = true
+        }
 
         let localUpdatedAt = defaults.double(forKey: localUpdatedAtKey)
         if localUpdatedAt > 0 {
-            state.updatedAt = Date(timeIntervalSince1970: localUpdatedAt)
-        } else {
+            let localDate = Date(timeIntervalSince1970: localUpdatedAt)
+            if state.updatedAt != localDate {
+                state.updatedAt = localDate
+                changed = true
+            }
+        } else if changed {
             state.updatedAt = Date()
         }
+
+        return changed
     }
 
     private static func apply(state: SyncedAppSettings) {
@@ -92,6 +116,7 @@ enum CloudSyncedPreferences {
     }
 
     private static func save(context: ModelContext) {
+        guard context.hasChanges else { return }
         do {
             try context.save()
         } catch {

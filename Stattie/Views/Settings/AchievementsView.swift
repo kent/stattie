@@ -58,7 +58,7 @@ struct AchievementsView: View {
         .navigationTitle("Achievements")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
-            AchievementManager.shared.synchronizeFromCloud(force: true)
+            AchievementManager.shared.synchronizeFromCloud()
             unlockedAchievements = AchievementManager.shared.unlockedAchievements
             totalPoints = AchievementManager.shared.totalPoints
         }
