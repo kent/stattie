@@ -107,44 +107,7 @@ struct SettingsView: View {
                     Text("Your data is stored locally and optionally synced via iCloud")
                 }
 
-                // Streak Section
-                if let user = currentUser, user.currentStreak > 0 {
-                    Section {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "flame.fill")
-                                        .foregroundStyle(.orange)
-                                    Text("\(user.currentStreak) day streak!")
-                                        .font(.headline)
-                                }
-
-                                if user.streakAtRisk {
-                                    Text("Track a game today to keep it going!")
-                                        .font(.caption)
-                                        .foregroundStyle(.orange)
-                                } else {
-                                    Text("Longest: \(user.longestStreak) days")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-
-                            Spacer()
-
-                            Text("🔥")
-                                .font(.largeTitle)
-                        }
-                    }
-                }
-
-                // Notifications
-                Section {
-                    StreakReminderToggle()
-                    NotificationPermissionCard()
-                        .listRowInsets(EdgeInsets())
-                        .listRowBackground(Color.clear)
-                }
+                NotificationsPromptSection()
 
                 // Achievements
                 Section {
@@ -163,7 +126,7 @@ struct SettingsView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Achievements")
                                     .font(.body)
-                                Text("\(AchievementManager.shared.unlockedAchievements.filter { $0 != .sharedPlayer }.count)/\(AchievementType.allCases.filter { $0 != .sharedPlayer }.count) unlocked")
+                                Text("\(AchievementManager.shared.unlockedAchievements.filter(\.isVisibleInCatalog).count)/\(AchievementType.visibleCases.count) unlocked")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }

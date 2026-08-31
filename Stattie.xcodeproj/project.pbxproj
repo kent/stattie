@@ -11,6 +11,7 @@
 		B8004615F3AD8C6A57104A66 /* TeamMembershipTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208F798872C3486286D461A5 /* TeamMembershipTests.swift */; };
 		B8004615F3AD8C6A57104A67 /* SportCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208F798872C3486286D461A6 /* SportCatalogTests.swift */; };
 		B8004615F3AD8C6A57104A68 /* PositionTrackingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208F798872C3486286D461A7 /* PositionTrackingTests.swift */; };
+		B8004615F3AD8C6A57104A69 /* AchievementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208F798872C3486286D461A8 /* AchievementTests.swift */; };
 		D41AEE01896277DA537C7661 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B8D9E908A0524BDC7CCD3969 /* Foundation.framework */; };
 		E01000002B000001 /* StattieApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000001 /* StattieApp.swift */; };
 		E01000002B000002 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000002 /* AppState.swift */; };
@@ -80,6 +81,7 @@
 		208F798872C3486286D461A5 /* TeamMembershipTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TeamMembershipTests.swift; sourceTree = "<group>"; };
 		208F798872C3486286D461A6 /* SportCatalogTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SportCatalogTests.swift; sourceTree = "<group>"; };
 		208F798872C3486286D461A7 /* PositionTrackingTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PositionTrackingTests.swift; sourceTree = "<group>"; };
+		208F798872C3486286D461A8 /* AchievementTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AchievementTests.swift; sourceTree = "<group>"; };
 		9B1A842DFB0B3585A4BB4990 /* StattieTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StattieTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B8D9E908A0524BDC7CCD3969 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		E00000002B000000 /* Stattie.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Stattie.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -433,6 +435,7 @@
 				208F798872C3486286D461A5 /* TeamMembershipTests.swift */,
 				208F798872C3486286D461A6 /* SportCatalogTests.swift */,
 				208F798872C3486286D461A7 /* PositionTrackingTests.swift */,
+				208F798872C3486286D461A8 /* AchievementTests.swift */,
 			);
 			name = StattieTests;
 			path = StattieTests;
@@ -546,6 +549,7 @@
 				B8004615F3AD8C6A57104A66 /* TeamMembershipTests.swift in Sources */,
 				B8004615F3AD8C6A57104A67 /* SportCatalogTests.swift in Sources */,
 				B8004615F3AD8C6A57104A68 /* PositionTrackingTests.swift in Sources */,
+				B8004615F3AD8C6A57104A69 /* AchievementTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -802,7 +806,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.stattie.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -836,7 +840,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.stattie.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

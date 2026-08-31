@@ -266,19 +266,23 @@ final class CanonicalStatModelTests: XCTestCase {
         XCTAssertTrue([first, duplicateActive, second].allSatisfy {
             $0.endingTeamScore == 20 && $0.endingOpponentScore == 15
         })
-        XCTAssertEqual(user.currentStreak, 1)
+        XCTAssertEqual(user.currentStreak, 0)
+        XCTAssertEqual(user.longestStreak, 0)
+        XCTAssertNil(user.lastGameDate)
 
         XCTAssertEqual(try game.finalize(in: context, save: { saves += 1 }), .alreadyFinalized)
         XCTAssertEqual(saves, 1)
-        XCTAssertEqual(user.currentStreak, 1)
+        XCTAssertEqual(user.currentStreak, 0)
     }
 
-    func testFinalizingOlderGameDoesNotRewindTrackerStreak() throws {
+    func testFinalizeDoesNotMutateLegacyStreakFields() throws {
         let container = try makeContainer()
         let context = container.mainContext
         let user = User(displayName: "Tracker")
+        user.currentStreak = 4
+        user.longestStreak = 9
+        user.lastGameDate = Date(timeIntervalSince1970: 200_000)
         context.insert(user)
-        user.recordGameCompletion(on: Date(timeIntervalSince1970: 200_000))
         try context.save()
 
         let game = Game(gameDate: Date(timeIntervalSince1970: 100_000), opponent: "Older")
@@ -286,11 +290,12 @@ final class CanonicalStatModelTests: XCTestCase {
         context.insert(game)
 
         XCTAssertEqual(try game.finalize(in: context), .finalized)
-        XCTAssertEqual(user.currentStreak, 1)
+        XCTAssertEqual(user.currentStreak, 4)
+        XCTAssertEqual(user.longestStreak, 9)
         XCTAssertEqual(user.lastGameDate, Date(timeIntervalSince1970: 200_000))
     }
 
-    func testFinalizeFailureRollsBackCompletionShiftsAndTrackerStreak() throws {
+    func testFinalizeFailureRollsBackCompletionAndShifts() throws {
         let container = try makeContainer()
         let context = container.mainContext
         let user = User(displayName: "Tracker")

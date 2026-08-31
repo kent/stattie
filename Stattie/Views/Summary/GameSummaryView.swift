@@ -5,7 +5,6 @@ import StoreKit
 struct GameSummaryView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.requestReview) private var requestReview
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let game: Game
 
@@ -16,6 +15,8 @@ struct GameSummaryView: View {
     @State private var newAchievements: [AchievementType] = []
     @State private var showingAchievement = false
     @State private var currentAchievementIndex = 0
+    @State private var pendingShareAchievement = false
+    @State private var didEvaluateAchievements = false
 
     private var currentUser: User? { users.resolvedCurrentUser }
 
@@ -432,30 +433,94 @@ struct GameSummaryView: View {
 
                 ToolbarItem(placement: .primaryAction) {
                     Button {
+                        if AchievementManager.shared.unlock(.firstShare) {
+                            pendingShareAchievement = true
+                        }
                         showingShareSheet = true
                     } label: {
                         Image(systemName: "square.and.arrow.up")
                     }
                 }
             }
-            .sheet(isPresented: $showingShareSheet) {
+            .sheet(isPresented: $showingShareSheet, onDismiss: {
+                presentPendingShareAchievement()
+            }) {
                 ShareSheet(items: [generateShareText()])
             }
+            .onAppear {
+                evaluateAchievements()
+            }
+            .overlay {
+                achievementOverlay
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var achievementOverlay: some View {
+        if showingAchievement, newAchievements.indices.contains(currentAchievementIndex) {
+            ZStack {
+                Color.black.opacity(0.35)
+                    .ignoresSafeArea()
+                    .onTapGesture { dismissCurrentAchievement() }
+
+                AchievementUnlockedView(achievement: newAchievements[currentAchievementIndex])
+                    .onTapGesture { dismissCurrentAchievement() }
+            }
+            .transition(.opacity)
+            .accessibilityAddTraits(.isModal)
+            .accessibilityLabel("Achievement unlocked")
+        }
+    }
+
+    private func evaluateAchievements() {
+        guard game.isCompleted, !didEvaluateAchievements else { return }
+        didEvaluateAchievements = true
+
+        let completedCount = currentUser?.trackedGames?.filter(\.isCompleted).count
+            ?? 1
+
+        let unlocked = AchievementManager.shared.checkGameAchievements(
+            completedGamesCount: completedCount,
+            points: game.totalPoints,
+            rebounds: totalRebounds,
+            assists: game.totalCount(forName: "AST"),
+            steals: game.totalCount(forName: "STL"),
+            goals: game.totalCount(forName: "GOL")
+        )
+        presentNewAchievements(unlocked)
+    }
+
+    private func presentNewAchievements(_ unlocked: [AchievementType]) {
+        guard !unlocked.isEmpty else { return }
+        newAchievements.append(contentsOf: unlocked)
+        if !showingAchievement {
+            currentAchievementIndex = 0
+            showingAchievement = true
+        }
+        ReviewManager.shared.trackAchievementUnlocked()
+    }
+
+    private func presentPendingShareAchievement() {
+        guard pendingShareAchievement else { return }
+        pendingShareAchievement = false
+        presentNewAchievements([.firstShare])
+    }
+
+    private func dismissCurrentAchievement() {
+        let next = currentAchievementIndex + 1
+        if next < newAchievements.count {
+            currentAchievementIndex = next
+        } else {
+            showingAchievement = false
+            newAchievements = []
+            currentAchievementIndex = 0
         }
     }
 
     private func handleDismiss() {
         // Increment completed games count
         completedGamesCount += 1
-
-        // Update user streak
-        if let user = currentUser {
-            user.recordGameCompletion(on: game.gameDate)
-            try? modelContext.save()
-
-            // Schedule streak reminder if enabled
-            NotificationManager.shared.scheduleStreakReminder(currentStreak: user.currentStreak)
-        }
 
         // Track for smart review prompting
         ReviewManager.shared.trackGameCompleted()

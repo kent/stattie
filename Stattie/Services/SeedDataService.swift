@@ -788,13 +788,6 @@ final class SeedDataService {
             )
         }
 
-        if let currentUser,
-           currentUser.currentStreak == 0 {
-            currentUser.currentStreak = 6
-            currentUser.longestStreak = 9
-            currentUser.lastGameDate = showcaseDate(daysAgo: 0, hour: 19, minute: 5)
-        }
-
         do {
             try context.save()
             print("Showcase data seeded successfully")

@@ -135,6 +135,21 @@ enum AchievementType: String, CaseIterable, Codable {
         case .sharedPlayer: return 50
         }
     }
+
+    /// Streak and legacy types stay in storage so already-unlocked IDs still decode,
+    /// but they are hidden from the achievements catalog.
+    var isVisibleInCatalog: Bool {
+        switch self {
+        case .sharedPlayer, .threeDayStreak, .sevenDayStreak, .thirtyDayStreak:
+            return false
+        default:
+            return true
+        }
+    }
+
+    static var visibleCases: [AchievementType] {
+        allCases.filter(\.isVisibleInCatalog)
+    }
 }
 
 // MARK: - Achievement Manager
@@ -234,16 +249,6 @@ class AchievementManager {
 
         // Soccer
         if goals >= 3 && unlock(.hatTrick) { newAchievements.append(.hatTrick) }
-
-        return newAchievements
-    }
-
-    func checkStreakAchievements(currentStreak: Int) -> [AchievementType] {
-        var newAchievements: [AchievementType] = []
-
-        if currentStreak >= 3 && unlock(.threeDayStreak) { newAchievements.append(.threeDayStreak) }
-        if currentStreak >= 7 && unlock(.sevenDayStreak) { newAchievements.append(.sevenDayStreak) }
-        if currentStreak >= 30 && unlock(.thirtyDayStreak) { newAchievements.append(.thirtyDayStreak) }
 
         return newAchievements
     }
