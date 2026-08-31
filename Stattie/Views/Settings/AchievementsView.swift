@@ -5,11 +5,11 @@ struct AchievementsView: View {
     @State private var totalPoints = AchievementManager.shared.totalPoints
 
     var unlockedCount: Int {
-        unlockedAchievements.count
+        unlockedAchievements.filter(\.isVisibleInCatalog).count
     }
 
     private var visibleAchievements: [AchievementType] {
-        AchievementType.allCases.filter { $0 != .sharedPlayer }
+        AchievementType.visibleCases
     }
 
     var totalCount: Int {
@@ -42,8 +42,6 @@ struct AchievementsView: View {
                 // Achievement categories
                 VStack(alignment: .leading, spacing: 16) {
                     AchievementSection(title: "Game Milestones", achievements: [.firstGame, .tenGames, .fiftyGames, .hundredGames], unlocked: unlockedAchievements)
-
-                    AchievementSection(title: "Streaks", achievements: [.threeDayStreak, .sevenDayStreak, .thirtyDayStreak], unlocked: unlockedAchievements)
 
                     AchievementSection(title: "Performance", achievements: [.twentyPoints, .thirtyPoints, .fiftyPoints, .doubleDouble, .tripleDouble], unlocked: unlockedAchievements)
 

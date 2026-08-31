@@ -8,7 +8,8 @@ final class User {
     var cloudKitUserID: String?
     var createdAt: Date = Date()
 
-    // Streak tracking
+    // Legacy streak fields are unused in the UI. They stay on the model so
+    // existing SwiftData/CloudKit stores do not need a schema migration.
     var currentStreak: Int = 0
     var longestStreak: Int = 0
     var lastGameDate: Date?
@@ -29,47 +30,5 @@ final class User {
         self.createdAt = Date()
         self.currentStreak = 0
         self.longestStreak = 0
-    }
-
-    /// Update streak when a game is completed
-    func recordGameCompletion(on date: Date = Date()) {
-        let calendar = Calendar.current
-
-        if let lastDate = lastGameDate {
-            let daysBetween = calendar.dateComponents([.day], from: calendar.startOfDay(for: lastDate), to: calendar.startOfDay(for: date)).day ?? 0
-
-            // Completing or importing an older game must not rewind the current
-            // streak anchor or corrupt a newer completion.
-            if daysBetween < 0 {
-                return
-            } else if daysBetween == 0 {
-                // Same day, no change
-                return
-            } else if daysBetween == 1 {
-                // Consecutive day - extend streak
-                currentStreak += 1
-            } else {
-                // Gap - reset streak
-                currentStreak = 1
-            }
-        } else {
-            // First game ever
-            currentStreak = 1
-        }
-
-        // Update longest streak
-        if currentStreak > longestStreak {
-            longestStreak = currentStreak
-        }
-
-        lastGameDate = date
-    }
-
-    /// Check if streak is at risk (no game today, had game yesterday)
-    var streakAtRisk: Bool {
-        guard let lastDate = lastGameDate, currentStreak > 0 else { return false }
-        let calendar = Calendar.current
-        let daysSince = calendar.dateComponents([.day], from: calendar.startOfDay(for: lastDate), to: calendar.startOfDay(for: Date())).day ?? 0
-        return daysSince == 1
     }
 }

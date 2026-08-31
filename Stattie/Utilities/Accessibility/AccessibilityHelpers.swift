@@ -153,15 +153,6 @@ struct A11yLabels {
         }
         return "\(title), locked. \(description). Worth \(points) points when unlocked."
     }
-
-    // Streaks
-    static func streak(days: Int, atRisk: Bool) -> String {
-        var label = "\(days) day streak"
-        if atRisk {
-            label += ". At risk! Track a game today to continue."
-        }
-        return label
-    }
 }
 
 // MARK: - View Modifiers

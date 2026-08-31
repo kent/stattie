@@ -11,16 +11,15 @@ class NotificationManager: ObservableObject {
 
     private let defaults = UserDefaults.standard
     private let permissionRequestedKey = "notificationPermissionRequested"
-    private let streakReminderEnabledKey = "streakReminderEnabled"
 
-    var streakReminderEnabled: Bool {
-        get { defaults.bool(forKey: streakReminderEnabledKey) }
-        set { defaults.set(newValue, forKey: streakReminderEnabledKey) }
+    var needsPermissionPrompt: Bool {
+        !hasRequestedPermission || (!isAuthorized && hasRequestedPermission)
     }
 
     init() {
         hasRequestedPermission = defaults.bool(forKey: permissionRequestedKey)
         checkAuthorizationStatus()
+        cancelLegacyStreakReminders()
     }
 
     func checkAuthorizationStatus() {
@@ -46,33 +45,8 @@ class NotificationManager: ObservableObject {
         }
     }
 
-    // MARK: - Streak Reminder
-
-    func scheduleStreakReminder(currentStreak: Int) {
-        guard isAuthorized && streakReminderEnabled && currentStreak > 0 else { return }
-
-        // Cancel existing streak reminders
-        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["streak_reminder"])
-
-        // Schedule for 6 PM local time
-        var dateComponents = DateComponents()
-        dateComponents.hour = 18
-        dateComponents.minute = 0
-
-        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
-
-        let content = UNMutableNotificationContent()
-        content.title = "Don't break your streak! 🔥"
-        content.body = "You're on a \(currentStreak)-day tracking streak. Record a game today to keep it going!"
-        content.sound = .default
-        content.categoryIdentifier = "STREAK_REMINDER"
-
-        let request = UNNotificationRequest(identifier: "streak_reminder", content: content, trigger: trigger)
-
-        UNUserNotificationCenter.current().add(request)
-    }
-
-    func cancelStreakReminder() {
+    /// Clears daily streak reminders scheduled by earlier app versions.
+    func cancelLegacyStreakReminders() {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["streak_reminder"])
     }
 
@@ -112,88 +86,73 @@ class NotificationManager: ObservableObject {
 
 // MARK: - Notification Permission View
 
-struct NotificationPermissionCard: View {
+struct NotificationsPromptSection: View {
     @StateObject private var notificationManager = NotificationManager.shared
-    @State private var showingSettings = false
 
     var body: some View {
-        if !notificationManager.hasRequestedPermission || (!notificationManager.isAuthorized && notificationManager.hasRequestedPermission) {
-            VStack(spacing: 12) {
-                HStack {
-                    Image(systemName: "bell.badge.fill")
-                        .font(.title2)
-                        .foregroundStyle(.blue)
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Stay on Track")
-                            .font(.headline)
-                        Text("Get reminders to keep your streak going")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    Spacer()
-                }
-
-                if notificationManager.hasRequestedPermission && !notificationManager.isAuthorized {
-                    Button {
-                        if let url = URL(string: UIApplication.openSettingsURLString) {
-                            UIApplication.shared.open(url)
-                        }
-                    } label: {
-                        Text("Enable in Settings")
-                            .font(.subheadline.bold())
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 10)
-                            .background(Color.blue)
-                            .foregroundStyle(.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    }
-                } else {
-                    Button {
-                        Task {
-                            await notificationManager.requestPermission()
-                        }
-                    } label: {
-                        Text("Enable Notifications")
-                            .font(.subheadline.bold())
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 10)
-                            .background(Color.blue)
-                            .foregroundStyle(.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    }
-                }
+        if notificationManager.needsPermissionPrompt {
+            Section {
+                NotificationPermissionCard()
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
             }
-            .padding()
-            .background(Color(.secondarySystemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 12))
         }
     }
 }
 
-// MARK: - Streak Reminder Toggle
-
-struct StreakReminderToggle: View {
+struct NotificationPermissionCard: View {
     @StateObject private var notificationManager = NotificationManager.shared
 
     var body: some View {
-        if notificationManager.isAuthorized {
-            Toggle(isOn: Binding(
-                get: { notificationManager.streakReminderEnabled },
-                set: { newValue in
-                    notificationManager.streakReminderEnabled = newValue
-                    if !newValue {
-                        notificationManager.cancelStreakReminder()
-                    }
+        VStack(spacing: 12) {
+            HStack {
+                Image(systemName: "bell.badge.fill")
+                    .font(.title2)
+                    .foregroundStyle(.blue)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Stay in the Loop")
+                        .font(.headline)
+                    Text("Get notified when you unlock a badge")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
-            )) {
-                HStack {
-                    Image(systemName: "bell.fill")
-                        .foregroundStyle(.blue)
-                    Text("Daily Streak Reminder")
+
+                Spacer()
+            }
+
+            if notificationManager.hasRequestedPermission && !notificationManager.isAuthorized {
+                Button {
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(url)
+                    }
+                } label: {
+                    Text("Enable in Settings")
+                        .font(.subheadline.bold())
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(Color.blue)
+                        .foregroundStyle(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                }
+            } else {
+                Button {
+                    Task {
+                        await notificationManager.requestPermission()
+                    }
+                } label: {
+                    Text("Enable Notifications")
+                        .font(.subheadline.bold())
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(Color.blue)
+                        .foregroundStyle(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
             }
         }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }

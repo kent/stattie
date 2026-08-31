@@ -279,9 +279,6 @@ final class Game {
             (shift: $0, endTime: $0.endTime, teamScore: $0.endingTeamScore, opponentScore: $0.endingOpponentScore)
         }
         let completionSnapshot = (isCompleted: isCompleted, completedAt: completedAt)
-        let userSnapshot = trackedBy.map {
-            (user: $0, currentStreak: $0.currentStreak, longestStreak: $0.longestStreak, lastGameDate: $0.lastGameDate)
-        }
 
         for shift in activeShifts {
             shift.endShift(
@@ -290,7 +287,6 @@ final class Game {
                 at: date
             )
         }
-        trackedBy?.recordGameCompletion(on: gameDate)
         isCompleted = true
         completedAt = date
 
@@ -313,11 +309,6 @@ final class Game {
                 snapshot.shift.endTime = snapshot.endTime
                 snapshot.shift.endingTeamScore = snapshot.teamScore
                 snapshot.shift.endingOpponentScore = snapshot.opponentScore
-            }
-            if let snapshot = userSnapshot {
-                snapshot.user.currentStreak = snapshot.currentStreak
-                snapshot.user.longestStreak = snapshot.longestStreak
-                snapshot.user.lastGameDate = snapshot.lastGameDate
             }
             throw error
         }
