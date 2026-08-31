@@ -164,6 +164,21 @@ struct GameSummaryView: View {
             .sorted { $0.1 > $1.1 } // Sort by plus/minus descending
     }
 
+    private var positionBreakdownsByPlayer: [(person: Person, totals: [PositionStatTotals])] {
+        (game.personStats ?? []).compactMap { pgs in
+            guard let person = pgs.person else { return nil }
+            let totals = PositionStatAggregator.totals(from: pgs.shifts ?? [])
+            guard !totals.isEmpty else { return nil }
+            return (person, totals)
+        }
+    }
+
+    private var hasPositionBreakdown: Bool {
+        positionBreakdownsByPlayer.contains { entry in
+            entry.totals.contains { $0.position != nil }
+        }
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -334,6 +349,32 @@ struct GameSummaryView: View {
                         }
                     }
 
+                    if hasPositionBreakdown {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("BY POSITION")
+                                .font(.caption.bold())
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal)
+
+                            ForEach(positionBreakdownsByPlayer, id: \.person.id) { entry in
+                                VStack(alignment: .leading, spacing: 10) {
+                                    if positionBreakdownsByPlayer.count > 1 {
+                                        Text(entry.person.displayName)
+                                            .font(.subheadline.weight(.semibold))
+                                            .padding(.horizontal, 4)
+                                    }
+
+                                    ForEach(entry.totals) { totals in
+                                        PositionBreakdownCard(
+                                            totals: totals,
+                                            sportName: game.sport?.name
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     // Plus/Minus Section (when shift data available)
                     if hasShiftData {
                         VStack(alignment: .leading, spacing: 12) {
@@ -446,6 +487,21 @@ struct GameSummaryView: View {
             text += "ALL STATS\n"
             for line in allStatLines {
                 text += "\(line.title): \(line.value)\n"
+            }
+        }
+
+        if hasPositionBreakdown {
+            text += "\nBY POSITION\n"
+            for entry in positionBreakdownsByPlayer {
+                if positionBreakdownsByPlayer.count > 1 {
+                    text += "\(entry.person.displayName)\n"
+                }
+                for totals in entry.totals {
+                    text += "\(totals.displayName): \(totals.shiftCount) shifts, \(totals.formattedDuration), \(totals.formattedPlusMinus)\n"
+                    for line in PositionStatAggregator.highlightLines(for: totals, sportName: game.sport?.name) {
+                        text += "  \(line.title): \(line.value)\n"
+                    }
+                }
             }
         }
 
@@ -589,6 +645,65 @@ struct PlusMinusRow: View {
             .padding(.horizontal)
             .padding(.vertical, 12)
         }
+    }
+}
+
+struct PositionBreakdownCard: View {
+    let totals: PositionStatTotals
+    let sportName: String?
+
+    private var highlightLines: [(title: String, value: String)] {
+        PositionStatAggregator.highlightLines(for: totals, sportName: sportName)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
+                Image(systemName: totals.iconName)
+                    .font(.title3)
+                    .foregroundStyle(.accent)
+                    .frame(width: 28)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(totals.displayName)
+                        .font(.headline)
+                    Text("\(totals.shiftCount) \(totals.shiftCount == 1 ? "shift" : "shifts") • \(totals.formattedDuration)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Text(totals.formattedPlusMinus)
+                    .font(.headline)
+                    .foregroundStyle(plusMinusColor)
+            }
+
+            if !highlightLines.isEmpty {
+                HStack(spacing: 8) {
+                    ForEach(Array(highlightLines.prefix(4).enumerated()), id: \.offset) { _, line in
+                        VStack(spacing: 2) {
+                            Text(line.value)
+                                .font(.subheadline.bold())
+                            Text(line.title)
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                }
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    private var plusMinusColor: Color {
+        if totals.plusMinus > 0 { return .green }
+        if totals.plusMinus < 0 { return .red }
+        return .secondary
     }
 }
 

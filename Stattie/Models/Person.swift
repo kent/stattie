@@ -122,6 +122,17 @@ final class Person {
         positionAssignments.assignments.count > 1
     }
 
+    /// Team membership positions for this game, falling back to the person's defaults.
+    func positionAssignments(for game: Game?) -> PositionAssignments {
+        if let game,
+           let team = game.team,
+           let membership = (team.memberships ?? []).first(where: { $0.person?.id == id && $0.isActive }),
+           !membership.positionAssignments.isEmpty {
+            return membership.positionAssignments
+        }
+        return positionAssignments
+    }
+
     init(
         firstName: String = "",
         lastName: String = "",

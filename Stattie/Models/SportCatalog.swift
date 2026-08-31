@@ -136,12 +136,31 @@ enum SportCatalog {
         definitions: [StatDefinition],
         positions: [SoccerPosition]
     ) -> [StatDefinition] {
-        guard let profile = profile(named: sportName), !profile.usesCustomTracking else {
-            return definitions
-        }
-        let roles = roles(for: positions)
-        let allowed = Set(profile.visibleStats(for: roles).map(\.shortName))
+        let allowed = visibleShortNames(sportName: sportName, positions: positions)
+        guard !allowed.isEmpty else { return definitions }
         return definitions.filter { allowed.contains($0.shortName) }
+    }
+
+    /// Short names visible for the given positions. Empty when the sport has no
+    /// role filter (or no position is selected), which means "show every stat."
+    static func visibleShortNames(
+        sportName: String?,
+        positions: [SoccerPosition]
+    ) -> Set<String> {
+        guard let profile = profile(named: sportName), !profile.stats.isEmpty else {
+            return []
+        }
+        guard !positions.isEmpty else { return [] }
+        return Set(profile.visibleStats(for: roles(for: positions)).map(\.shortName))
+    }
+
+    static func showsStat(
+        _ shortName: String,
+        sportName: String?,
+        positions: [SoccerPosition]
+    ) -> Bool {
+        let allowed = visibleShortNames(sportName: sportName, positions: positions)
+        return allowed.isEmpty || allowed.contains(shortName)
     }
 
     static func primaryScoreValue(
@@ -190,7 +209,19 @@ private extension SportCatalog {
         primaryScore: .count("GOL"),
         primaryScoreLabel: "Goals",
         highlightShortNames: ["GOL", "AST", "SAV"],
-        stats: []
+        stats: [
+            CatalogStatSpec(name: "Goal", shortName: "GOL", category: "shooting", pointValue: 1, sortOrder: 0, iconName: "soccerball", roles: [.attack, .midfield, .defense, .goalie]),
+            CatalogStatSpec(name: "Shot on Target", shortName: "SOT", category: "shooting", hasMadeAndMissed: true, sortOrder: 1, iconName: "scope", roles: [.attack, .midfield, .defense]),
+            CatalogStatSpec(name: "Assist", shortName: "AST", category: "offense", sortOrder: 2, iconName: "arrow.triangle.branch", roles: [.attack, .midfield, .defense]),
+            CatalogStatSpec(name: "Pass", shortName: "PAS", category: "offense", sortOrder: 3, iconName: "arrow.right", roles: [.shared]),
+            CatalogStatSpec(name: "Tackle", shortName: "TKL", category: "defense", sortOrder: 4, iconName: "figure.fall", roles: [.defense, .midfield]),
+            CatalogStatSpec(name: "Interception", shortName: "INT", category: "defense", sortOrder: 5, iconName: "hand.raised.fill", roles: [.defense, .midfield]),
+            CatalogStatSpec(name: "Save", shortName: "SAV", category: "goalie", sortOrder: 6, iconName: "hand.raised.square.fill", roles: [.goalie]),
+            CatalogStatSpec(name: "Foul", shortName: "FLS", category: "other", sortOrder: 7, iconName: "exclamationmark.triangle.fill", roles: [.shared]),
+            CatalogStatSpec(name: "Yellow Card", shortName: "YC", category: "other", sortOrder: 8, iconName: "rectangle.fill", roles: [.shared]),
+            CatalogStatSpec(name: "Red Card", shortName: "RC", category: "other", sortOrder: 9, iconName: "rectangle.fill", roles: [.shared]),
+            CatalogStatSpec(name: "Corner", shortName: "CRN", category: "other", sortOrder: 10, iconName: "arrow.turn.up.right", roles: [.attack, .midfield]),
+        ]
     )
 
     static let tennis = SportProfile(

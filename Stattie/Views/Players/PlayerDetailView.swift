@@ -44,6 +44,16 @@ struct PersonDetailView: View {
         playerGames.filter { $0.game?.isCompleted == true }
     }
 
+    private var playerSeasonPositionTotals: [PositionStatTotals] {
+        PositionStatAggregator.seasonTotals(from: completedGames).filter { $0.position != nil }
+    }
+
+    private var playerSeasonSportName: String? {
+        let names = completedGames.compactMap { $0.game?.sport?.name }
+        let counted = Dictionary(grouping: names, by: { $0 }).mapValues(\.count)
+        return counted.max(by: { $0.value < $1.value })?.key
+    }
+
     var body: some View {
         List {
             // Player Header
@@ -187,6 +197,27 @@ struct PersonDetailView: View {
                             PersonStatsOverTimeView(player: player)
                         } label: {
                             Label("View Stats & Trends", systemImage: "chart.line.uptrend.xyaxis")
+                        }
+                    }
+
+                    if !playerSeasonPositionTotals.isEmpty {
+                        Section("Season by Position") {
+                            ForEach(playerSeasonPositionTotals) { totals in
+                                VStack(alignment: .leading, spacing: 6) {
+                                    HStack {
+                                        Label(totals.displayName, systemImage: totals.iconName)
+                                            .font(.subheadline.weight(.semibold))
+                                        Spacer()
+                                        Text("\(totals.shiftCount) \(totals.shiftCount == 1 ? "shift" : "shifts")")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    Text(PositionStatAggregator.highlightLines(for: totals, sportName: playerSeasonSportName).map { "\($0.title) \($0.value)" }.joined(separator: "  •  "))
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                .padding(.vertical, 4)
+                            }
                         }
                     }
 
@@ -727,6 +758,7 @@ struct PlayerGameOverviewView: View {
                     shiftsSection
                 }
                 totalsSection
+                positionBreakdownSection
                 snapshotSection
             }
             .navigationTitle("Game Overview")
@@ -850,6 +882,33 @@ struct PlayerGameOverviewView: View {
                             Label("Delete", systemImage: "trash")
                         }
                     }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var positionBreakdownSection: some View {
+        let totals = PositionStatAggregator.totals(from: personGameStats.shifts ?? [])
+            .filter { $0.position != nil }
+        if !totals.isEmpty {
+            Section("By Position") {
+                ForEach(totals) { item in
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Label(item.displayName, systemImage: item.iconName)
+                            Spacer()
+                            Text("\(item.shiftCount) \(item.shiftCount == 1 ? "shift" : "shifts")")
+                                .foregroundStyle(.secondary)
+                        }
+                        Text("\(item.formattedDuration)  •  \(item.formattedPlusMinus)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        ForEach(Array(PositionStatAggregator.highlightLines(for: item, sportName: game?.sport?.name).enumerated()), id: \.offset) { _, line in
+                            LabeledContent(line.title, value: line.value)
+                        }
+                    }
+                    .padding(.vertical, 4)
                 }
             }
         }

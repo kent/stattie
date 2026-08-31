@@ -10,6 +10,7 @@
 		B8004615F3AD8C6A57104A65 /* CanonicalStatModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208F798872C3486286D461A4 /* CanonicalStatModelTests.swift */; };
 		B8004615F3AD8C6A57104A66 /* TeamMembershipTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208F798872C3486286D461A5 /* TeamMembershipTests.swift */; };
 		B8004615F3AD8C6A57104A67 /* SportCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208F798872C3486286D461A6 /* SportCatalogTests.swift */; };
+		B8004615F3AD8C6A57104A68 /* PositionTrackingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208F798872C3486286D461A7 /* PositionTrackingTests.swift */; };
 		D41AEE01896277DA537C7661 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B8D9E908A0524BDC7CCD3969 /* Foundation.framework */; };
 		E01000002B000001 /* StattieApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000001 /* StattieApp.swift */; };
 		E01000002B000002 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000002 /* AppState.swift */; };
@@ -40,6 +41,7 @@
 		E01000002B000026 /* NewGameForPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000027 /* NewGameForPlayerView.swift */; };
 		E01000002B000028 /* SoccerPosition.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000028 /* SoccerPosition.swift */; };
 		E01000002B000050 /* SportCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000050 /* SportCatalog.swift */; };
+		E01000002B000051 /* PositionStatBreakdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000051 /* PositionStatBreakdown.swift */; };
 		E01000002B000029 /* PositionPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000029 /* PositionPickerView.swift */; };
 		E01000002B00002A /* Team.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00002A /* Team.swift */; };
 		E01000002B00002B /* TeamMembership.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00002B /* TeamMembership.swift */; };
@@ -77,6 +79,7 @@
 		208F798872C3486286D461A4 /* CanonicalStatModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CanonicalStatModelTests.swift; sourceTree = "<group>"; };
 		208F798872C3486286D461A5 /* TeamMembershipTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TeamMembershipTests.swift; sourceTree = "<group>"; };
 		208F798872C3486286D461A6 /* SportCatalogTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SportCatalogTests.swift; sourceTree = "<group>"; };
+		208F798872C3486286D461A7 /* PositionTrackingTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PositionTrackingTests.swift; sourceTree = "<group>"; };
 		9B1A842DFB0B3585A4BB4990 /* StattieTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StattieTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B8D9E908A0524BDC7CCD3969 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		E00000002B000000 /* Stattie.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Stattie.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -110,6 +113,7 @@
 		E00000002B000027 /* NewGameForPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewGameForPlayerView.swift; sourceTree = "<group>"; };
 		E00000002B000028 /* SoccerPosition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoccerPosition.swift; sourceTree = "<group>"; };
 		E00000002B000050 /* SportCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SportCatalog.swift; sourceTree = "<group>"; };
+		E00000002B000051 /* PositionStatBreakdown.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PositionStatBreakdown.swift; sourceTree = "<group>"; };
 		E00000002B000029 /* PositionPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PositionPickerView.swift; sourceTree = "<group>"; };
 		E00000002B00002A /* Team.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Team.swift; sourceTree = "<group>"; };
 		E00000002B00002B /* TeamMembership.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamMembership.swift; sourceTree = "<group>"; };
@@ -259,6 +263,7 @@
 				E00000002B00000A /* Stat.swift */,
 				E00000002B000028 /* SoccerPosition.swift */,
 				E00000002B000050 /* SportCatalog.swift */,
+				E00000002B000051 /* PositionStatBreakdown.swift */,
 				E00000002B00002A /* Team.swift */,
 				E00000002B00002B /* TeamMembership.swift */,
 				E00000002B00002C /* Shift.swift */,
@@ -427,6 +432,7 @@
 				208F798872C3486286D461A4 /* CanonicalStatModelTests.swift */,
 				208F798872C3486286D461A5 /* TeamMembershipTests.swift */,
 				208F798872C3486286D461A6 /* SportCatalogTests.swift */,
+				208F798872C3486286D461A7 /* PositionTrackingTests.swift */,
 			);
 			name = StattieTests;
 			path = StattieTests;
@@ -539,6 +545,7 @@
 				B8004615F3AD8C6A57104A65 /* CanonicalStatModelTests.swift in Sources */,
 				B8004615F3AD8C6A57104A66 /* TeamMembershipTests.swift in Sources */,
 				B8004615F3AD8C6A57104A67 /* SportCatalogTests.swift in Sources */,
+				B8004615F3AD8C6A57104A68 /* PositionTrackingTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -574,6 +581,7 @@
 				E01000002B000026 /* NewGameForPlayerView.swift in Sources */,
 				E01000002B000028 /* SoccerPosition.swift in Sources */,
 				E01000002B000050 /* SportCatalog.swift in Sources */,
+				E01000002B000051 /* PositionStatBreakdown.swift in Sources */,
 				E01000002B000029 /* PositionPickerView.swift in Sources */,
 				E01000002B00002A /* Team.swift in Sources */,
 				E01000002B00002B /* TeamMembership.swift in Sources */,
@@ -794,7 +802,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.2;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.stattie.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -828,7 +836,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.2;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.stattie.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

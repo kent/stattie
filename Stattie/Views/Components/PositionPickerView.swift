@@ -249,6 +249,114 @@ struct InlinePositionPicker: View {
     }
 }
 
+/// Pick the position for the upcoming or active shift.
+struct ShiftPositionPickerSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let sportName: String?
+    let assignedPositions: [SoccerPosition]
+    let playerName: String
+    let confirmTitle: String
+    @Binding var selectedPosition: SoccerPosition?
+    var onConfirm: (() -> Void)? = nil
+
+    private var supportedSport: SoccerPosition.SupportedSport {
+        SoccerPosition.supportedSport(for: sportName)
+    }
+
+    private var assignedSet: Set<SoccerPosition> {
+        Set(assignedPositions.filter { $0.supportedSports.contains(supportedSport) })
+    }
+
+    private var otherCategories: [SoccerPosition.PositionCategory] {
+        SoccerPosition.categories(for: supportedSport).filter { category in
+            category.positions.contains { !assignedSet.contains($0) }
+        }
+    }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                if !assignedSet.isEmpty {
+                    Section("Your Positions") {
+                        ForEach(assignedPositions.filter { assignedSet.contains($0) }) { position in
+                            positionRow(position)
+                        }
+                    }
+                }
+
+                ForEach(otherCategories) { category in
+                    Section(assignedSet.isEmpty ? category.rawValue : "Other \(category.rawValue)") {
+                        ForEach(category.positions.filter { $0.supportedSports.contains(supportedSport) && !assignedSet.contains($0) }) { position in
+                            positionRow(position)
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Shift Position")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(confirmTitle) {
+                        onConfirm?()
+                        dismiss()
+                    }
+                    .disabled(selectedPosition == nil)
+                }
+            }
+            .safeAreaInset(edge: .bottom) {
+                if let selectedPosition {
+                    Text("\(playerName) will play this shift as \(selectedPosition.displayName).")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal)
+                        .padding(.vertical, 10)
+                        .background(.ultraThinMaterial)
+                }
+            }
+        }
+    }
+
+    private func positionRow(_ position: SoccerPosition) -> some View {
+        Button {
+            selectedPosition = position
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: position.iconName)
+                    .foregroundStyle(selectedPosition == position ? Color.white : Color.accentColor)
+                    .frame(width: 28, height: 28)
+                    .background(
+                        Circle().fill(selectedPosition == position ? Color.accentColor : Color.accentColor.opacity(0.12))
+                    )
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(position.displayName)
+                        .foregroundStyle(.primary)
+                    Text(position.shortName)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                if selectedPosition == position {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(.accent)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(position.displayName)
+        .accessibilityValue(selectedPosition == position ? "Selected" : "Not selected")
+    }
+}
+
 #Preview("Position Picker") {
     struct PreviewWrapper: View {
         @State var assignments = PositionAssignments()

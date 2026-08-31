@@ -23,7 +23,8 @@ final class SportCatalogTests: XCTestCase {
         XCTAssertTrue(soccer.usesCustomTracking)
         XCTAssertTrue(soccer.usesCustomSeed)
         XCTAssertTrue(basketball.stats.isEmpty)
-        XCTAssertTrue(soccer.stats.isEmpty)
+        XCTAssertFalse(soccer.stats.isEmpty)
+        XCTAssertTrue(soccer.stats.contains { $0.shortName == "SAV" && $0.roles == [.goalie] })
     }
 
     func testExistingSoccerAndBasketballPositionRawValuesAreUnchanged() {
@@ -48,6 +49,26 @@ final class SportCatalogTests: XCTestCase {
         XCTAssertEqual(SoccerPosition.SupportedSport.from(sportName: "Soccer"), .soccer)
         XCTAssertEqual(SoccerPosition.SupportedSport.from(sportName: "Basketball"), .basketball)
         XCTAssertEqual(SoccerPosition.SupportedSport.from(sportName: "Baseball"), .baseball)
+    }
+
+    func testSoccerGoalieAndDefenderSeeDifferentBoards() throws {
+        let soccer = try XCTUnwrap(SportCatalog.profile(named: "Soccer"))
+        let goalie = Set(soccer.visibleStats(for: [.goalie]).map(\.shortName))
+        let defender = Set(soccer.visibleStats(for: [.defense]).map(\.shortName))
+
+        XCTAssertTrue(goalie.contains("SAV"))
+        XCTAssertTrue(goalie.contains("GOL"))
+        XCTAssertFalse(goalie.contains("TKL"))
+        XCTAssertFalse(goalie.contains("SOT"))
+
+        XCTAssertTrue(defender.contains("TKL"))
+        XCTAssertTrue(defender.contains("INT"))
+        XCTAssertTrue(defender.contains("GOL"))
+        XCTAssertFalse(defender.contains("SAV"))
+
+        XCTAssertTrue(SportCatalog.showsStat("SAV", sportName: "Soccer", positions: [.goalkeeper]))
+        XCTAssertFalse(SportCatalog.showsStat("SAV", sportName: "Soccer", positions: [.defender]))
+        XCTAssertTrue(SportCatalog.showsStat("SAV", sportName: "Soccer", positions: []))
     }
 
     func testHockeyGoalieSeesSavesAndNotSkaterHits() throws {

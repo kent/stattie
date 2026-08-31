@@ -121,8 +121,15 @@ final class PersonGameStats {
 
     // MARK: - Shift Management
 
-    func startNewShift(teamScore: Int = 0, opponentScore: Int = 0) -> Shift {
+    func startNewShift(
+        teamScore: Int = 0,
+        opponentScore: Int = 0,
+        position: SoccerPosition? = nil
+    ) -> Shift {
         if let existing = currentShift {
+            if existing.recordedPosition == nil, let position {
+                existing.recordedPosition = position
+            }
             return existing
         }
 
@@ -131,7 +138,8 @@ final class PersonGameStats {
             shiftNumber: shiftNumber,
             personGameStats: self,
             teamScore: teamScore,
-            opponentScore: opponentScore
+            opponentScore: opponentScore,
+            position: position
         )
 
         if shifts == nil { shifts = [] }

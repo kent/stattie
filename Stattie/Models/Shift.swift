@@ -17,6 +17,14 @@ final class Shift {
 
     var personGameStats: PersonGameStats?
 
+    /// Raw `SoccerPosition` value recorded for this shift. Empty on legacy shifts.
+    var positionRawValue: String = ""
+
+    var recordedPosition: SoccerPosition? {
+        get { SoccerPosition(rawValue: positionRawValue) }
+        set { positionRawValue = newValue?.rawValue ?? "" }
+    }
+
     // Legacy storage retained only so existing stores can be migrated. New writes use
     // `statRecords`, making Stat the single canonical attribution model.
     @Relationship(deleteRule: .cascade, inverse: \ShiftStat.shift)
@@ -113,7 +121,8 @@ final class Shift {
         shiftNumber: Int = 1,
         personGameStats: PersonGameStats? = nil,
         teamScore: Int = 0,
-        opponentScore: Int = 0
+        opponentScore: Int = 0,
+        position: SoccerPosition? = nil
     ) {
         self.id = UUID()
         self.startTime = Date()
@@ -123,6 +132,7 @@ final class Shift {
         self.createdAt = Date()
         self.startingTeamScore = teamScore
         self.startingOpponentScore = opponentScore
+        self.positionRawValue = position?.rawValue ?? ""
     }
 
     func endShift(
