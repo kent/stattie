@@ -95,6 +95,11 @@ struct SettingsView: View {
                             Text(syncErrorMessage)
                                 .font(.caption)
                                 .foregroundStyle(.orange)
+                            Button("Try Sync Again") {
+                                Task {
+                                    await syncManager.retrySync()
+                                }
+                            }
                         }
                     } else {
                         Text("Sign in to iCloud in Settings to sync data across devices")

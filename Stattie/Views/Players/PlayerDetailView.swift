@@ -393,10 +393,10 @@ struct PersonDetailView: View {
         }
         .onChange(of: selectedPhoto) { _, newValue in
             Task {
-                if let data = try? await newValue?.loadTransferable(type: Data.self) {
-                    player.photoData = data
-                    try? modelContext.save()
-                }
+                    if let data = try? await newValue?.loadTransferable(type: Data.self) {
+                        player.photoData = PlayerPhotoStore.preparedData(from: data)
+                        try? modelContext.save()
+                    }
             }
         }
     }

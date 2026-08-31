@@ -9,6 +9,8 @@ final class Person {
     var jerseyNumber: Int = 0
     var position: String = ""
     var positionAssignmentsJSON: String?  // JSON-encoded PositionAssignments for structured positions
+    /// Stored externally so CloudKit can upload the image as a CKAsset.
+    @Attribute(.externalStorage)
     var photoData: Data?
     var isActive: Bool = true
     /// True after the player chose to keep tracking without joining a team.

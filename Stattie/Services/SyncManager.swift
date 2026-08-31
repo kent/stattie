@@ -159,8 +159,9 @@ final class SyncManager {
 
         if let error = event.error {
             syncError = error
-            lastSyncErrorMessage = error.localizedDescription
-            defaults.set(error.localizedDescription, forKey: lastSyncErrorMessageKey)
+            let message = CloudKitErrorFormatter.userFacingMessage(for: error)
+            lastSyncErrorMessage = message
+            defaults.set(message, forKey: lastSyncErrorMessageKey)
             return
         }
 
@@ -172,7 +173,36 @@ final class SyncManager {
         lastSyncDate = eventDate
         defaults.set(eventDate, forKey: lastSyncDateKey)
 
-        AppState.shared.synchronizeFromCloud()
+        // Import is the only event that can bring new SwiftData rows. Export and
+        // setup must not rewrite preference records or they dirty CloudKit again.
+        if event.type == .import {
+            AppState.shared.synchronizeFromCloud()
+        }
+    }
+
+    @MainActor
+    func retrySync() async {
+        lastSyncErrorMessage = nil
+        syncError = nil
+        defaults.removeObject(forKey: lastSyncErrorMessageKey)
+        isSyncInProgress = true
+        lastSyncOperation = "Retry"
+        defaults.set(lastSyncOperation, forKey: lastSyncOperationKey)
+
+        if let context = SharedModelContainer.container?.mainContext {
+            do {
+                _ = try PlayerPhotoStore.migrateOversizedPhotos(in: context)
+                if context.hasChanges {
+                    try context.save()
+                }
+            } catch {
+                lastSyncErrorMessage = error.localizedDescription
+                defaults.set(error.localizedDescription, forKey: lastSyncErrorMessageKey)
+            }
+        }
+
+        await checkiCloudStatus()
+        isSyncInProgress = false
     }
 
     private func syncOperationName(for type: NSPersistentCloudKitContainer.EventType) -> String {

@@ -23,7 +23,8 @@ struct StattieApp: App {
             SyncedAchievementState.self
         ])
 
-        // Try CloudKit first, fall back to local-only if not available
+        // `.automatic` uses iCloud.com.stattie.app from entitlements in signed
+        // builds. An explicit `.private` identifier traps in unsigned XCTest.
         let cloudKitConfig = ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: false,
@@ -64,8 +65,15 @@ struct StattieApp: App {
             // migration could not be committed.
             print("Stat attribution migration failed: \(error.localizedDescription)")
         }
+        do {
+            _ = try PlayerPhotoStore.migrateOversizedPhotos(
+                in: sharedModelContainer.mainContext
+            )
+        } catch {
+            print("Player photo compression failed: \(error.localizedDescription)")
+        }
         CloudSyncedPreferences.bootstrapIfNeeded(force: true)
-        AchievementManager.shared.synchronizeFromCloud(force: true)
+        AchievementManager.shared.synchronizeFromCloud()
     }
 
     var body: some Scene {

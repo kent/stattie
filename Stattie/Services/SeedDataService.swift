@@ -145,84 +145,60 @@ final class SeedDataService {
 
     // MARK: - Sports Seeding
 
-    func seedBasketballIfNeeded(context: ModelContext) {
+    func seedBasketballIfNeeded(context: ModelContext, persist: Bool = true) {
         let basketball = fetchSport(named: "Basketball", context: context) ?? {
             let created = Sport(name: "Basketball", iconName: "basketball.fill", isBuiltIn: true)
             context.insert(created)
             return created
         }()
 
-        basketball.iconName = "basketball.fill"
-        basketball.isBuiltIn = true
-        basketball.isTeamSport = true
+        assignIfChanged(basketball.iconName, "basketball.fill") { basketball.iconName = $0 }
+        assignIfChanged(basketball.isBuiltIn, true) { basketball.isBuiltIn = $0 }
+        assignIfChanged(basketball.isTeamSport, true) { basketball.isTeamSport = $0 }
         ensureStatDefinitions(for: basketball, from: basketballStatDefinitions, context: context)
-
-        do {
-            try context.save()
-            print("Basketball sport seeded successfully")
-        } catch {
-            print("Failed to save basketball sport: \(error)")
-        }
+        persistIfNeeded(context, persist: persist, label: "Basketball sport")
     }
 
-    func seedSoccerIfNeeded(context: ModelContext) {
+    func seedSoccerIfNeeded(context: ModelContext, persist: Bool = true) {
         let soccer = fetchSport(named: "Soccer", context: context) ?? {
             let created = Sport(name: "Soccer", iconName: "soccerball", isBuiltIn: true)
             context.insert(created)
             return created
         }()
 
-        soccer.iconName = "soccerball"
-        soccer.isBuiltIn = true
-        soccer.isTeamSport = true
+        assignIfChanged(soccer.iconName, "soccerball") { soccer.iconName = $0 }
+        assignIfChanged(soccer.isBuiltIn, true) { soccer.isBuiltIn = $0 }
+        assignIfChanged(soccer.isTeamSport, true) { soccer.isTeamSport = $0 }
         ensureStatDefinitions(for: soccer, from: soccerStatDefinitions, context: context)
-
-        do {
-            try context.save()
-            print("Soccer sport seeded successfully")
-        } catch {
-            print("Failed to save soccer sport: \(error)")
-        }
+        persistIfNeeded(context, persist: persist, label: "Soccer sport")
     }
 
-    func seedTennisIfNeeded(context: ModelContext) {
+    func seedTennisIfNeeded(context: ModelContext, persist: Bool = true) {
         let tennis = fetchSport(named: "Tennis", context: context) ?? {
             let created = Sport(name: "Tennis", iconName: "tennisball.fill", isBuiltIn: true, isTeamSport: false)
             context.insert(created)
             return created
         }()
 
-        tennis.iconName = "tennisball.fill"
-        tennis.isBuiltIn = true
-        tennis.isTeamSport = false
+        assignIfChanged(tennis.iconName, "tennisball.fill") { tennis.iconName = $0 }
+        assignIfChanged(tennis.isBuiltIn, true) { tennis.isBuiltIn = $0 }
+        assignIfChanged(tennis.isTeamSport, false) { tennis.isTeamSport = $0 }
         ensureStatDefinitions(for: tennis, from: tennisStatDefinitions, context: context)
-
-        do {
-            try context.save()
-            print("Tennis sport seeded successfully")
-        } catch {
-            print("Failed to save tennis sport: \(error)")
-        }
+        persistIfNeeded(context, persist: persist, label: "Tennis sport")
     }
 
-    func seedGolfIfNeeded(context: ModelContext) {
+    func seedGolfIfNeeded(context: ModelContext, persist: Bool = true) {
         let golf = fetchSport(named: "Golf", context: context) ?? {
             let created = Sport(name: "Golf", iconName: "figure.golf", isBuiltIn: true, isTeamSport: false)
             context.insert(created)
             return created
         }()
 
-        golf.iconName = "figure.golf"
-        golf.isBuiltIn = true
-        golf.isTeamSport = false
+        assignIfChanged(golf.iconName, "figure.golf") { golf.iconName = $0 }
+        assignIfChanged(golf.isBuiltIn, true) { golf.isBuiltIn = $0 }
+        assignIfChanged(golf.isTeamSport, false) { golf.isTeamSport = $0 }
         ensureStatDefinitions(for: golf, from: golfStatDefinitions, context: context)
-
-        do {
-            try context.save()
-            print("Golf sport seeded successfully")
-        } catch {
-            print("Failed to save golf sport: \(error)")
-        }
+        persistIfNeeded(context, persist: persist, label: "Golf sport")
     }
 
     func getBasketball(context: ModelContext) -> Sport? {
@@ -242,42 +218,45 @@ final class SeedDataService {
     }
 
     func seedAllSportsIfNeeded(context: ModelContext) {
-        seedBasketballIfNeeded(context: context)
-        seedSoccerIfNeeded(context: context)
-        seedTennisIfNeeded(context: context)
-        seedGolfIfNeeded(context: context)
-        seedCatalogSportsIfNeeded(context: context)
+        seedBasketballIfNeeded(context: context, persist: false)
+        seedSoccerIfNeeded(context: context, persist: false)
+        seedTennisIfNeeded(context: context, persist: false)
+        seedGolfIfNeeded(context: context, persist: false)
+        seedCatalogSportsIfNeeded(context: context, persist: false)
+        persistIfNeeded(context, persist: true, label: "all sports")
     }
 
     func seedSelectedSports(_ names: Set<String>, context: ModelContext) {
         for name in names {
-            seedSport(named: name, context: context)
+            seedSport(named: name, context: context, persist: false)
         }
+        persistIfNeeded(context, persist: true, label: "selected sports")
     }
 
-    func seedSport(named name: String, context: ModelContext) {
+    func seedSport(named name: String, context: ModelContext, persist: Bool = true) {
         switch name {
         case "Basketball":
-            seedBasketballIfNeeded(context: context)
+            seedBasketballIfNeeded(context: context, persist: persist)
         case "Soccer":
-            seedSoccerIfNeeded(context: context)
+            seedSoccerIfNeeded(context: context, persist: persist)
         case "Tennis":
-            seedTennisIfNeeded(context: context)
+            seedTennisIfNeeded(context: context, persist: persist)
         case "Golf":
-            seedGolfIfNeeded(context: context)
+            seedGolfIfNeeded(context: context, persist: persist)
         default:
             guard let profile = SportCatalog.profile(named: name), !profile.usesCustomSeed else { return }
-            seedCatalogSport(profile, context: context)
+            seedCatalogSport(profile, context: context, persist: persist)
         }
     }
 
-    func seedCatalogSportsIfNeeded(context: ModelContext) {
+    func seedCatalogSportsIfNeeded(context: ModelContext, persist: Bool = true) {
         for profile in SportCatalog.seedableSports {
-            seedCatalogSport(profile, context: context)
+            seedCatalogSport(profile, context: context, persist: false)
         }
+        persistIfNeeded(context, persist: persist, label: "catalog sports")
     }
 
-    private func seedCatalogSport(_ profile: SportProfile, context: ModelContext) {
+    private func seedCatalogSport(_ profile: SportProfile, context: ModelContext, persist: Bool = true) {
         let sport = fetchSport(named: profile.name, context: context) ?? {
             let created = Sport(
                 name: profile.name,
@@ -289,9 +268,9 @@ final class SeedDataService {
             return created
         }()
 
-        sport.iconName = profile.iconName
-        sport.isBuiltIn = true
-        sport.isTeamSport = profile.isTeamSport
+        assignIfChanged(sport.iconName, profile.iconName) { sport.iconName = $0 }
+        assignIfChanged(sport.isBuiltIn, true) { sport.isBuiltIn = $0 }
+        assignIfChanged(sport.isTeamSport, profile.isTeamSport) { sport.isTeamSport = $0 }
         ensureStatDefinitions(for: sport, from: profile.stats.map { spec in
             (
                 name: spec.name,
@@ -303,13 +282,7 @@ final class SeedDataService {
                 iconName: spec.iconName
             )
         }, context: context)
-
-        do {
-            try context.save()
-            print("\(profile.name) sport seeded successfully")
-        } catch {
-            print("Failed to save \(profile.name) sport: \(error)")
-        }
+        persistIfNeeded(context, persist: persist, label: "\(profile.name) sport")
     }
 
     // MARK: - Showcase Data for Screenshots
@@ -825,14 +798,15 @@ final class SeedDataService {
 
         for seed in seeds {
             if let definition = byShortName[seed.shortName] {
-                definition.name = seed.name
-                definition.category = seed.category
-                definition.hasMadeAndMissed = seed.hasMadeAndMissed
-                definition.pointValue = seed.pointValue
-                definition.sortOrder = seed.sortOrder
-                definition.iconName = seed.iconName
-                definition.sport = sport
-                appendUnique(definition, to: &sport.statDefinitions)
+                assignIfChanged(definition.name, seed.name) { definition.name = $0 }
+                assignIfChanged(definition.category, seed.category) { definition.category = $0 }
+                assignIfChanged(definition.hasMadeAndMissed, seed.hasMadeAndMissed) { definition.hasMadeAndMissed = $0 }
+                assignIfChanged(definition.pointValue, seed.pointValue) { definition.pointValue = $0 }
+                assignIfChanged(definition.sortOrder, seed.sortOrder) { definition.sortOrder = $0 }
+                assignIfChanged(definition.iconName, seed.iconName) { definition.iconName = $0 }
+                if definition.sport?.id != sport.id {
+                    definition.sport = sport
+                }
             } else {
                 let definition = StatDefinition(
                     name: seed.name,
@@ -1795,6 +1769,22 @@ final class SeedDataService {
         let startOfToday = calendar.startOfDay(for: Date())
         let day = calendar.date(byAdding: .day, value: -daysAgo, to: startOfToday) ?? Date()
         return calendar.date(byAdding: DateComponents(hour: hour, minute: minute), to: day) ?? day
+    }
+
+    private func persistIfNeeded(_ context: ModelContext, persist: Bool, label: String) {
+        guard persist, context.hasChanges else { return }
+        do {
+            try context.save()
+            print("\(label) seeded successfully")
+        } catch {
+            print("Failed to save \(label): \(error)")
+        }
+    }
+
+    private func assignIfChanged<T: Equatable>(_ current: T, _ newValue: T, set: (T) -> Void) {
+        if current != newValue {
+            set(newValue)
+        }
     }
 
     private func appendUnique<T: AnyObject>(_ element: T, to array: inout [T]?) {
