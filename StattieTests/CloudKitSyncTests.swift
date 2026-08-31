@@ -136,6 +136,127 @@ final class CloudKitSyncTests: XCTestCase {
         XCTAssertFalse(container.mainContext.hasChanges)
     }
 
+    func testHealthySyncProgressFillsConnectDownloadUpload() {
+        let now = Date()
+        let uploadedAt = now.addingTimeInterval(-90)
+        let progress = SyncProgress.snapshot(
+            isCloudKitBacked: true,
+            accountStatus: .available,
+            isCheckingStatus: false,
+            isRetryPending: false,
+            inFlightPhases: [],
+            completedDates: [.upload: uploadedAt],
+            failedPhase: nil,
+            errorMessage: nil,
+            lastSyncDate: uploadedAt,
+            now: now
+        )
+
+        XCTAssertEqual(progress.headline, "iCloud is healthy")
+        XCTAssertEqual(progress.status(for: .setup), .complete)
+        XCTAssertEqual(progress.status(for: .download), .complete)
+        XCTAssertEqual(progress.status(for: .upload), .complete)
+        XCTAssertEqual(progress.overallFraction, 1)
+        XCTAssertFalse(progress.showsRetry)
+        XCTAssertFalse(progress.isActive)
+        XCTAssertTrue(progress.detail.contains("Uploaded"))
+        XCTAssertFalse(progress.detail.localizedCaseInsensitiveContains("retry"))
+    }
+
+    func testUploadInFlightAdvancesThematicProgress() {
+        let now = Date()
+        let progress = SyncProgress.snapshot(
+            isCloudKitBacked: true,
+            accountStatus: .available,
+            isCheckingStatus: false,
+            isRetryPending: false,
+            inFlightPhases: [.upload],
+            completedDates: [
+                .setup: now.addingTimeInterval(-20),
+                .download: now.addingTimeInterval(-10)
+            ],
+            failedPhase: nil,
+            errorMessage: nil,
+            lastSyncDate: now.addingTimeInterval(-10),
+            now: now
+        )
+
+        XCTAssertEqual(progress.headline, "Uploading players and games")
+        XCTAssertEqual(progress.status(for: .setup), .complete)
+        XCTAssertEqual(progress.status(for: .download), .complete)
+        XCTAssertEqual(progress.status(for: .upload), .active)
+        XCTAssertTrue(progress.isActive)
+        XCTAssertGreaterThan(progress.overallFraction, 0.6)
+        XCTAssertLessThan(progress.overallFraction, 1)
+        XCTAssertFalse(progress.showsRetry)
+    }
+
+    func testFailedUploadKeepsEarlierPhasesAndOffersRetry() {
+        let now = Date()
+        let progress = SyncProgress.snapshot(
+            isCloudKitBacked: true,
+            accountStatus: .available,
+            isCheckingStatus: false,
+            isRetryPending: false,
+            inFlightPhases: [],
+            completedDates: [
+                .setup: now.addingTimeInterval(-40),
+                .download: now.addingTimeInterval(-20)
+            ],
+            failedPhase: .upload,
+            errorMessage: "Some records could not be uploaded to iCloud.",
+            lastSyncDate: now.addingTimeInterval(-20),
+            now: now
+        )
+
+        XCTAssertEqual(progress.headline, "Couldn’t finish upload")
+        XCTAssertEqual(progress.status(for: .setup), .complete)
+        XCTAssertEqual(progress.status(for: .download), .complete)
+        XCTAssertEqual(progress.status(for: .upload), .failed)
+        XCTAssertEqual(progress.errorMessage, "Some records could not be uploaded to iCloud.")
+        XCTAssertTrue(progress.showsRetry)
+        XCTAssertFalse(progress.isActive)
+    }
+
+    func testRetryPendingShowsSyncingInsteadOfRetryOperation() {
+        let progress = SyncProgress.snapshot(
+            isCloudKitBacked: true,
+            accountStatus: .available,
+            isCheckingStatus: false,
+            isRetryPending: true,
+            inFlightPhases: [],
+            completedDates: [:],
+            failedPhase: nil,
+            errorMessage: nil,
+            lastSyncDate: nil
+        )
+
+        XCTAssertEqual(progress.headline, "Syncing with iCloud")
+        XCTAssertTrue(progress.isActive)
+        XCTAssertFalse(progress.showsRetry)
+        XCTAssertFalse(progress.headline.localizedCaseInsensitiveContains("retry"))
+        XCTAssertGreaterThan(progress.overallFraction, 0)
+    }
+
+    func testSignedOutProgressAsksForiCloudSignIn() {
+        let progress = SyncProgress.snapshot(
+            isCloudKitBacked: true,
+            accountStatus: .noAccount,
+            isCheckingStatus: false,
+            isRetryPending: false,
+            inFlightPhases: [],
+            completedDates: [:],
+            failedPhase: nil,
+            errorMessage: nil,
+            lastSyncDate: nil
+        )
+
+        XCTAssertEqual(progress.headline, "Sign in to iCloud")
+        XCTAssertEqual(progress.status(for: .setup), .waiting)
+        XCTAssertEqual(progress.overallFraction, 0)
+        XCTAssertFalse(progress.showsRetry)
+    }
+
     private func makeContainer() throws -> ModelContainer {
         let schema = Schema([
             User.self,

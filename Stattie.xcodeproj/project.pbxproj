@@ -66,6 +66,8 @@
 		E01000002B00003F /* CloudSyncedPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00003F /* CloudSyncedPreferences.swift */; };
 		E01000002B000060 /* PlayerPhotoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000060 /* PlayerPhotoStore.swift */; };
 		E01000002B000061 /* CloudKitErrorFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000061 /* CloudKitErrorFormatter.swift */; };
+		E01000002B000062 /* SyncProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000062 /* SyncProgress.swift */; };
+		E01000002B000063 /* iCloudSyncStatusCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000063 /* iCloudSyncStatusCard.swift */; };
 		ED23180261715630D5B7E8DB /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E6B07DDEB1324F07934F0292 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
@@ -142,6 +144,8 @@
 		E00000002B00003F /* CloudSyncedPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncedPreferences.swift; sourceTree = "<group>"; };
 		E00000002B000060 /* PlayerPhotoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerPhotoStore.swift; sourceTree = "<group>"; };
 		E00000002B000061 /* CloudKitErrorFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitErrorFormatter.swift; sourceTree = "<group>"; };
+		E00000002B000062 /* SyncProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncProgress.swift; sourceTree = "<group>"; };
+		E00000002B000063 /* iCloudSyncStatusCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iCloudSyncStatusCard.swift; sourceTree = "<group>"; };
 		E6B07DDEB1324F07934F0292 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -316,6 +320,7 @@
 				E00000002B000016 /* LockManager.swift */,
 				E00000002B00003F /* CloudSyncedPreferences.swift */,
 				E00000002B000061 /* CloudKitErrorFormatter.swift */,
+				E00000002B000062 /* SyncProgress.swift */,
 				E00000002B000018 /* SeedDataService.swift */,
 				E00000002B000036 /* NotificationManager.swift */,
 				E00000002B000037 /* ReviewManager.swift */,
@@ -391,6 +396,7 @@
 			isa = PBXGroup;
 			children = (
 				E00000002B00001C /* SettingsView.swift */,
+				E00000002B000063 /* iCloudSyncStatusCard.swift */,
 				E00000002B000031 /* AchievementsView.swift */,
 			);
 			path = Settings;
@@ -618,6 +624,8 @@
 				E01000002B00003F /* CloudSyncedPreferences.swift in Sources */,
 				E01000002B000060 /* PlayerPhotoStore.swift in Sources */,
 				E01000002B000061 /* CloudKitErrorFormatter.swift in Sources */,
+				E01000002B000062 /* SyncProgress.swift in Sources */,
+				E01000002B000063 /* iCloudSyncStatusCard.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
