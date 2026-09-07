@@ -34,10 +34,10 @@ This is a repository code review and regression pass, not a claim that every pos
 
 - Local web checks: ESLint with zero warnings, TypeScript route generation/checking, optimized production build, and 14 Playwright cases across desktop/mobile Chromium.
 - Dependency validation: `npm audit` reports zero vulnerabilities; clean npm installation and Linux/x64 dependency resolution checked.
-- Hosted checks: Web CI and iOS CI are required to pass on the final PR revision before merging.
+- Hosted validation: all 70 iOS tests and 14 desktop/mobile web browser tests passed. The final PR revision is required to pass both hosted workflows before merging.
 - Added iOS regression cases cover save failure/retry, completion/reopen/rollback, elapsed time and pauses, shift numbering, negative durations, generic sport labels, inactive memberships, aggregate displays, and photo pixel limits.
 - Xcode project and shell syntax checked. iOS builds/tests and all signing/upload work run on GitHub-hosted macOS, never local Xcode.
-- Web is deployed to Cloud Run after verification. One TestFlight workflow will run from the final merged commit; completion requires App Store Connect processing `VALID`.
+- Web is live at https://www.stattie.com on Cloud Run revision `stattie-web-00007-w8d`; production routes and desktop/mobile layout were checked. One TestFlight upload follows the final merged commit; completion requires App Store Connect processing `VALID`.
 
 ## Compatibility decisions and remaining work
 
