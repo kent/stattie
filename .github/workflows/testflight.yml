@@ -92,6 +92,14 @@ jobs:
           p12-file-base64: ${{ secrets.APPSTORE_CERTIFICATES_FILE_BASE64 }}
           p12-password: ${{ secrets.APPSTORE_CERTIFICATES_PASSWORD }}
 
+      - name: Enable push and refresh CI profile
+        shell: bash
+        env:
+          APPSTORE_ISSUER_ID: ${{ vars.APPSTORE_ISSUER_ID }}
+          APPSTORE_API_KEY_ID: ${{ vars.APPSTORE_API_KEY_ID }}
+          APPSTORE_API_PRIVATE_KEY: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+        run: python3 scripts/appstore/ensure_push_provisioning.py
+
       - name: Download App Store provisioning profile
         uses: apple-actions/download-provisioning-profiles@2126b5f86a0e2863cbf4d2d312112b22b943a594 # v6.1.0
         with:
@@ -119,6 +127,16 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p build/ci
+          python3 - <<'PYTHON'
+          import pathlib
+          import plistlib
+          path = pathlib.Path("Stattie/Stattie.entitlements")
+          entitlements = plistlib.loads(path.read_bytes())
+          if entitlements.get("aps-environment") == "development":
+              entitlements["aps-environment"] = "production"
+              path.write_bytes(plistlib.dumps(entitlements))
+              print("Set aps-environment to production for the App Store archive.")
+          PYTHON
           xcodebuild archive \
             -project Stattie.xcodeproj \
             -scheme Stattie \
