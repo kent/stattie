@@ -61,9 +61,11 @@ struct StartShiftScoreSheet: View {
     let onStart: () -> Bool
 
     @State private var showingPositionPicker = false
+    @State private var draftPosition: SoccerPosition?
+    @State private var didLoadPosition = false
 
     private var resolvedPosition: SoccerPosition? {
-        selectedPosition
+        draftPosition
     }
 
     private var hasPositionChoices: Bool {
@@ -127,6 +129,7 @@ struct StartShiftScoreSheet: View {
                 Spacer()
 
                 Button {
+                    selectedPosition = draftPosition
                     if onStart() { dismiss() }
                 } label: {
                     Text(isPositionChange ? "Change Position" : resolvedPosition.map { "Start Shift as \($0.displayName)" } ?? "Start Shift")
@@ -168,13 +171,13 @@ struct StartShiftScoreSheet: View {
                     assignedPositions: assignedPositions,
                     playerName: "This shift",
                     confirmTitle: "Use Position",
-                    selectedPosition: $selectedPosition
+                    selectedPosition: $draftPosition
                 )
             }
             .onAppear {
-                if selectedPosition == nil, assignedPositions.count == 1 {
-                    selectedPosition = assignedPositions.first
-                }
+                guard !didLoadPosition else { return }
+                didLoadPosition = true
+                draftPosition = selectedPosition ?? (assignedPositions.count == 1 ? assignedPositions.first : nil)
             }
         }
     }
