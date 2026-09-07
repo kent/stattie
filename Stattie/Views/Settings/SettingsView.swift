@@ -72,9 +72,9 @@ struct SettingsView: View {
                     iCloudSyncStatusCard(syncManager: syncManager)
                         .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
                 } header: {
-                    Text("Sync")
+                    Text("iCloud")
                 } footer: {
-                    Text("Players, games, and settings stay on this iPhone and copy to iCloud when you’re signed in.")
+                    Text("Sync is automatic when you’re signed in to iCloud and Stattie is enabled in iPhone Settings.")
                 }
 
                 NotificationsPromptSection()
@@ -157,10 +157,6 @@ struct SettingsView: View {
             }
             .persistenceAlert(persistence)
             .navigationTitle("Settings")
-            .onAppear {
-                CloudSyncedPreferences.bootstrapIfNeeded(force: true)
-                AppState.shared.synchronizeFromCloud()
-            }
             .task {
                 await syncManager.checkiCloudStatus()
             }
@@ -172,8 +168,11 @@ struct SettingsView: View {
         let trimmed = editedName.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return }
 
+        let previousName = user.displayName
         user.displayName = trimmed
-        if persistence.save(modelContext) { isEditingName = false }
+        if persistence.save(modelContext, restoring: { user.displayName = previousName }) {
+            isEditingName = false
+        }
     }
 
     private var appVersion: String {

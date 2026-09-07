@@ -12,38 +12,16 @@ final class AppState {
 
     static let shared = AppState()
 
-    private let selectedTabKey = "selectedMainTab"
-
     var hasCompletedOnboarding: Bool {
-        get {
-            CloudSyncedPreferences.bootstrapIfNeeded()
-            return UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
-        }
-        set {
-            UserDefaults.standard.set(newValue, forKey: "hasCompletedOnboarding")
-            CloudSyncedPreferences.notifyLocalMutation()
-        }
+        didSet { UserDefaults.standard.set(hasCompletedOnboarding, forKey: "hasCompletedOnboarding") }
     }
 
     var currentUserID: UUID? {
-        get {
-            CloudSyncedPreferences.bootstrapIfNeeded()
-            guard let string = UserDefaults.standard.string(forKey: "currentUserID") else { return nil }
-            return UUID(uuidString: string)
-        }
-        set {
-            UserDefaults.standard.set(newValue?.uuidString, forKey: "currentUserID")
-            CloudSyncedPreferences.notifyLocalMutation()
-            AchievementManager.shared.synchronizeFromCloud()
-        }
+        didSet { UserDefaults.standard.set(currentUserID?.uuidString, forKey: "currentUserID") }
     }
 
     var selectedTabRaw: Int {
-        get {
-            let storedValue = UserDefaults.standard.integer(forKey: selectedTabKey)
-            return MainTab(rawValue: storedValue)?.rawValue ?? MainTab.players.rawValue
-        }
-        set { UserDefaults.standard.set(newValue, forKey: selectedTabKey) }
+        didSet { UserDefaults.standard.set(selectedTabRaw, forKey: "selectedMainTab") }
     }
 
     var selectedTab: MainTab {
@@ -51,11 +29,12 @@ final class AppState {
         set { selectedTabRaw = newValue.rawValue }
     }
 
-    private init() {}
-
-    func synchronizeFromCloud() {
-        CloudSyncedPreferences.synchronizeFromCloudIfAvailable()
-        AchievementManager.shared.synchronizeFromCloud()
+    private init() {
+        let defaults = UserDefaults.standard
+        hasCompletedOnboarding = defaults.bool(forKey: "hasCompletedOnboarding")
+        currentUserID = defaults.string(forKey: "currentUserID").flatMap(UUID.init(uuidString:))
+        selectedTabRaw = MainTab(rawValue: defaults.integer(forKey: "selectedMainTab"))?.rawValue
+            ?? MainTab.players.rawValue
     }
 
     func completeOnboarding(userID: UUID) {
@@ -82,13 +61,10 @@ extension Collection where Element == User {
             return matched
         }
 
-        let fallback = users.sorted { $0.createdAt < $1.createdAt }.first
-        if let fallback, AppState.shared.currentUserID == nil {
-            // Backward-compatible migration path for installs created
-            // before currentUserID was persisted.
-            AppState.shared.currentUserID = fallback.id
+        return users.min {
+            if $0.createdAt == $1.createdAt { return $0.id.uuidString < $1.id.uuidString }
+            return $0.createdAt < $1.createdAt
         }
-        return fallback
     }
 }
 

@@ -1,8 +1,8 @@
 import SwiftUI
 
 struct AchievementsView: View {
-    @State private var unlockedAchievements = AchievementManager.shared.unlockedAchievements
-    @State private var totalPoints = AchievementManager.shared.totalPoints
+    private var unlockedAchievements: Set<AchievementType> { AchievementManager.shared.unlockedAchievements }
+    private var totalPoints: Int { AchievementManager.shared.totalPoints }
 
     var unlockedCount: Int {
         unlockedAchievements.filter(\.isVisibleInCatalog).count
@@ -59,8 +59,6 @@ struct AchievementsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             AchievementManager.shared.synchronizeFromCloud()
-            unlockedAchievements = AchievementManager.shared.unlockedAchievements
-            totalPoints = AchievementManager.shared.totalPoints
         }
     }
 }

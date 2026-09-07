@@ -9,6 +9,9 @@ private let logger = Logger(subsystem: "com.stattie.app", category: "Persistence
 @main
 struct StattieApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    // Subscribe before creating the store so initial imports are observed.
+    private let syncManager = SyncManager.shared
+
     var sharedModelContainer: ModelContainer = {
         let schema = SharedModelContainer.schema
 
@@ -22,7 +25,7 @@ struct StattieApp: App {
 
         do {
             let container = try ModelContainer(for: schema, configurations: [cloudKitConfig])
-            SharedModelContainer.isCloudKitBacked = true
+            SharedModelContainer.isCloudKitBacked = cloudKitConfig.cloudKitContainerIdentifier != nil
             return container
         } catch {
             // CloudKit not available, use local storage only
@@ -61,7 +64,6 @@ struct StattieApp: App {
         } catch {
             logger.error("Player photo compression failed: \(error.localizedDescription)")
         }
-        CloudSyncedPreferences.bootstrapIfNeeded(force: true)
         AchievementManager.shared.synchronizeFromCloud()
     }
 

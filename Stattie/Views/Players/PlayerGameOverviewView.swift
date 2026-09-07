@@ -400,10 +400,15 @@ struct PlayerGameOverviewView: View {
         guard let shift = pendingShiftDeletion else { return }
         pendingShiftDeletion = nil
 
+        let previousShifts = personGameStats.shifts
+        let previousNumbers = (previousShifts ?? []).map { ($0, $0.shiftNumber) }
         personGameStats.shifts?.removeAll { $0.id == shift.id }
         modelContext.delete(shift)
         normalizeShiftNumbers()
-        persistence.save(modelContext)
+        persistence.save(modelContext, restoring: {
+            personGameStats.shifts = previousShifts
+            for (shift, number) in previousNumbers { shift.shiftNumber = number }
+        })
     }
 
     private func normalizeShiftNumbers() {

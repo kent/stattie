@@ -10,6 +10,11 @@ struct PersonDetailView: View {
     @Bindable var player: Person
 
     @State private var isEditing = false
+    @State private var draftFirstName = ""
+    @State private var draftLastName = ""
+    @State private var draftPhotoData: Data?
+    @State private var draftPositions: [UUID: PositionAssignments] = [:]
+    @State private var isLoadingPhoto = false
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var showingNewGame = false
     @State private var showingAddToTeam = false
@@ -62,7 +67,7 @@ struct PersonDetailView: View {
                 HStack {
                     Spacer()
                     PhotosPicker(selection: $selectedPhoto, matching: .images) {
-                        if let photoData = player.photoData,
+                        if let photoData = (isEditing ? draftPhotoData : player.photoData),
                            let uiImage = UIImage(data: photoData) {
                             Image(uiImage: uiImage)
                                 .resizable()
@@ -96,8 +101,8 @@ struct PersonDetailView: View {
             // Player Info
             Section {
                 if isEditing {
-                    TextField("First Name", text: $player.firstName)
-                    TextField("Last Name", text: $player.lastName)
+                    TextField("First Name", text: $draftFirstName)
+                    TextField("Last Name", text: $draftLastName)
                 } else {
                     LabeledContent("Name", value: player.fullName)
                 }
@@ -120,8 +125,8 @@ struct PersonDetailView: View {
                                     .foregroundStyle(.secondary)
                                 PositionPickerView(
                                     assignments: Binding(
-                                        get: { membership.positionAssignments },
-                                        set: { membership.positionAssignments = $0 }
+                                        get: { draftPositions[membership.id] ?? membership.positionAssignments },
+                                        set: { draftPositions[membership.id] = $0 }
                                     ),
                                     sportName: membership.team?.sport?.name
                                 )
@@ -338,10 +343,9 @@ struct PersonDetailView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button(isEditing ? "Done" : "Edit") {
-                    if !isEditing || persistence.save(modelContext) {
-                        isEditing.toggle()
-                    }
+                    if isEditing { savePlayerEdits() } else { beginEditing() }
                 }
+                .disabled(isEditing && isLoadingPhoto)
             }
         }
         .sheet(isPresented: $showingNewGame, onDismiss: {
@@ -392,14 +396,41 @@ struct PersonDetailView: View {
                 Text("This cannot be undone.")
             }
         }
-        .onChange(of: selectedPhoto) { _, newValue in
-            Task {
-                    if let data = try? await newValue?.loadTransferable(type: Data.self) {
-                        player.photoData = PlayerPhotoStore.preparedData(from: data)
-                        persistence.save(modelContext)
-                    }
+        .task(id: selectedPhoto) {
+            guard isEditing, let selectedPhoto else { return }
+            isLoadingPhoto = true
+            defer { isLoadingPhoto = false }
+            if let data = try? await selectedPhoto.loadTransferable(type: Data.self), !Task.isCancelled {
+                draftPhotoData = PlayerPhotoStore.preparedData(from: data)
             }
         }
+    }
+
+    private func beginEditing() {
+        draftFirstName = player.firstName
+        draftLastName = player.lastName
+        draftPhotoData = player.photoData
+        draftPositions = Dictionary(uniqueKeysWithValues: player.activeTeamMemberships.map { ($0.id, $0.positionAssignments) })
+        isEditing = true
+    }
+
+    private func savePlayerEdits() {
+        let previous = (player.firstName, player.lastName, player.photoData)
+        let memberships = player.activeTeamMemberships
+        let previousPositions = memberships.map { ($0, $0.position, $0.positionAssignmentsJSON) }
+        player.firstName = draftFirstName.trimmingCharacters(in: .whitespacesAndNewlines)
+        player.lastName = draftLastName.trimmingCharacters(in: .whitespacesAndNewlines)
+        player.photoData = draftPhotoData
+        for membership in memberships {
+            if let draft = draftPositions[membership.id] { membership.positionAssignments = draft }
+        }
+        if persistence.save(modelContext, restoring: {
+            (player.firstName, player.lastName, player.photoData) = previous
+            for (membership, position, json) in previousPositions {
+                membership.position = position
+                membership.positionAssignmentsJSON = json
+            }
+        }) { isEditing = false }
     }
 
     private func startOrContinueGame() {
@@ -446,10 +477,11 @@ struct PersonDetailView: View {
 
     private func removeMemberships(at offsets: IndexSet) {
         let memberships = player.activeTeamMemberships
-        for index in offsets {
-            memberships[index].isActive = false
-        }
-        persistence.save(modelContext)
+        let snapshots = offsets.map { (memberships[$0], memberships[$0].isActive) }
+        for (membership, _) in snapshots { membership.isActive = false }
+        persistence.save(modelContext, restoring: {
+            for (membership, wasActive) in snapshots { membership.isActive = wasActive }
+        })
     }
 
 }

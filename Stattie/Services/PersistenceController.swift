@@ -7,8 +7,14 @@ final class PersistenceController {
     var errorMessage: String?
 
     /// Returns true only after the transaction commits. Callers can then dismiss.
+    /// SwiftData rollback can leave registered property values unchanged, so callers
+    /// that mutate existing values also restore their captured pre-edit snapshot.
     @discardableResult
-    func save(_ context: ModelContext, operation: (() throws -> Void)? = nil) -> Bool {
+    func save(
+        _ context: ModelContext,
+        restoring restore: (() -> Void)? = nil,
+        operation: (() throws -> Void)? = nil
+    ) -> Bool {
         do {
             if let operation {
                 try operation()
@@ -19,6 +25,7 @@ final class PersistenceController {
             return true
         } catch {
             context.rollback()
+            restore?()
             errorMessage = error.localizedDescription
             return false
         }

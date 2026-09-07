@@ -127,8 +127,11 @@ struct PersonListView: View {
                 }
                 Button("Continue without a team") {
                     if let player = pendingPlayerChoice {
+                        let previousPreference = player.prefersNoTeam
                         player.prefersNoTeam = true
-                        if persistence.save(modelContext) { path.append(player) }
+                        if persistence.save(modelContext, restoring: { player.prefersNoTeam = previousPreference }) {
+                            path.append(player)
+                        }
                     }
                     pendingPlayerChoice = nil
                 }
@@ -166,11 +169,11 @@ struct PersonListView: View {
     }
 
     private func deletePerson(at offsets: IndexSet) {
-        for index in offsets {
-            let player = filteredPersons[index]
-            player.isActive = false
-        }
-        persistence.save(modelContext)
+        let snapshots = offsets.map { (player: filteredPersons[$0], wasActive: filteredPersons[$0].isActive) }
+        for snapshot in snapshots { snapshot.player.isActive = false }
+        persistence.save(modelContext, restoring: {
+            for snapshot in snapshots { snapshot.player.isActive = snapshot.wasActive }
+        })
     }
 }
 

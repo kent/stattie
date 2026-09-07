@@ -91,8 +91,12 @@ final class CanonicalStatModelTests: XCTestCase {
         let (game, _) = insertGameGraph(in: context)
         try context.save()
         let persistence = PersistenceController()
+        let originalNotes = game.notes
         game.notes = "Unsaved"
-        XCTAssertFalse(persistence.save(context, operation: { throw TestFailure.injectedSaveFailure }))
+        XCTAssertFalse(persistence.save(
+            context, restoring: { game.notes = originalNotes },
+            operation: { throw TestFailure.injectedSaveFailure }
+        ))
         XCTAssertNotNil(persistence.errorMessage)
         XCTAssertEqual(game.notes, "")
         game.notes = "Saved on retry"

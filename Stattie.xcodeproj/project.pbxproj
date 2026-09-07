@@ -61,10 +61,9 @@
 		E01000002B00003B /* SharedModelContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00003B /* SharedModelContainer.swift */; };
 		E01000002B00003C /* SyncedAppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00003C /* SyncedAppSettings.swift */; };
 		E01000002B00003D /* SyncedAchievementState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00003D /* SyncedAchievementState.swift */; };
-		E01000002B00003F /* CloudSyncedPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00003F /* CloudSyncedPreferences.swift */; };
 		E01000002B000060 /* PlayerPhotoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000060 /* PlayerPhotoStore.swift */; };
 		E01000002B000061 /* CloudKitErrorFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000061 /* CloudKitErrorFormatter.swift */; };
-		E01000002B000062 /* SyncProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000062 /* SyncProgress.swift */; };
+		E01000002B000062 /* SyncStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000062 /* SyncStatus.swift */; };
 		E01000002B000063 /* iCloudSyncStatusCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000063 /* iCloudSyncStatusCard.swift */; };
 		ED23180261715630D5B7E8DB /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E6B07DDEB1324F07934F0292 /* PrivacyInfo.xcprivacy */; };
 		7D5E75BF5B531A97C2BD307A /* StatProviding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 182EEA5B6B8BBAAD48DAF043 /* StatProviding.swift */; };
@@ -144,10 +143,9 @@
 		E00000002B00003B /* SharedModelContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedModelContainer.swift; sourceTree = "<group>"; };
 		E00000002B00003C /* SyncedAppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncedAppSettings.swift; sourceTree = "<group>"; };
 		E00000002B00003D /* SyncedAchievementState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncedAchievementState.swift; sourceTree = "<group>"; };
-		E00000002B00003F /* CloudSyncedPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncedPreferences.swift; sourceTree = "<group>"; };
 		E00000002B000060 /* PlayerPhotoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerPhotoStore.swift; sourceTree = "<group>"; };
 		E00000002B000061 /* CloudKitErrorFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitErrorFormatter.swift; sourceTree = "<group>"; };
-		E00000002B000062 /* SyncProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncProgress.swift; sourceTree = "<group>"; };
+		E00000002B000062 /* SyncStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncStatus.swift; sourceTree = "<group>"; };
 		E00000002B000063 /* iCloudSyncStatusCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iCloudSyncStatusCard.swift; sourceTree = "<group>"; };
 		E6B07DDEB1324F07934F0292 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		182EEA5B6B8BBAAD48DAF043 /* StatProviding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/StatProviding.swift; sourceTree = "<group>"; };
@@ -334,9 +332,8 @@
 			isa = PBXGroup;
 			children = (
 				E00000002B000015 /* SyncManager.swift */,
-				E00000002B00003F /* CloudSyncedPreferences.swift */,
 				E00000002B000061 /* CloudKitErrorFormatter.swift */,
-				E00000002B000062 /* SyncProgress.swift */,
+				E00000002B000062 /* SyncStatus.swift */,
 				E00000002B000018 /* SeedDataService.swift */,
 				E00000002B000036 /* NotificationManager.swift */,
 				E00000002B000037 /* ReviewManager.swift */,
@@ -529,6 +526,10 @@
 				TargetAttributes = {
 					E04000002B000000 = {
 						CreatedOnToolsVersion = 15.0;
+						SystemCapabilities = {
+							com.apple.BackgroundModes = { enabled = 1; };
+							com.apple.iCloud = { enabled = 1; };
+						};
 					};
 				};
 			};
@@ -641,10 +642,9 @@
 				E01000002B00003B /* SharedModelContainer.swift in Sources */,
 				E01000002B00003C /* SyncedAppSettings.swift in Sources */,
 				E01000002B00003D /* SyncedAchievementState.swift in Sources */,
-				E01000002B00003F /* CloudSyncedPreferences.swift in Sources */,
 				E01000002B000060 /* PlayerPhotoStore.swift in Sources */,
 				E01000002B000061 /* CloudKitErrorFormatter.swift in Sources */,
-				E01000002B000062 /* SyncProgress.swift in Sources */,
+				E01000002B000062 /* SyncStatus.swift in Sources */,
 				E01000002B000063 /* iCloudSyncStatusCard.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

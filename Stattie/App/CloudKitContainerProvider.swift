@@ -15,7 +15,4 @@ final class CloudKitContainerProvider {
         try await cloudKitContainer.accountStatus()
     }
 
-    func isICloudAvailable() async -> Bool {
-        (try? await checkAccountStatus()) == .available
-    }
 }

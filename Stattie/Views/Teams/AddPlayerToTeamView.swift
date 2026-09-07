@@ -136,6 +136,10 @@ struct AddPlayerToTeamView: View {
             return
         }
 
+        let previousPlayerMemberships = player.teamMemberships
+        let previousTeamMemberships = teamsToAdd.map { ($0, $0.memberships) }
+        let previousValues = (previousPlayerMemberships ?? []).map { ($0, $0.isActive, $0.role, $0.jerseyNumber) }
+
         for team in teamsToAdd {
             if let existingMembership = (player.teamMemberships ?? []).first(where: { $0.team?.id == team.id }) {
                 existingMembership.isActive = true
@@ -174,6 +178,13 @@ struct AddPlayerToTeamView: View {
             dismiss()
         } catch {
             modelContext.rollback()
+            player.teamMemberships = previousPlayerMemberships
+            for (team, memberships) in previousTeamMemberships { team.memberships = memberships }
+            for (membership, active, role, number) in previousValues {
+                membership.isActive = active
+                membership.role = role
+                membership.jerseyNumber = number
+            }
             saveError = error.localizedDescription
         }
     }

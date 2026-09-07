@@ -1,6 +1,8 @@
 import Foundation
 import SwiftData
 
+// Immutable progress snapshots are merged by union, including legacy rows.
+// This avoids last-writer-wins losses when devices earn achievements offline.
 @Model
 final class SyncedAchievementState {
     var id: UUID = UUID()

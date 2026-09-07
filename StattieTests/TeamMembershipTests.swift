@@ -243,7 +243,7 @@ final class TeamMembershipTests: XCTestCase {
         XCTAssertNil(game.team)
         XCTAssertEqual(game.totalCount(forName: "ACE"), 1)
         XCTAssertEqual(game.listSummaryValue, 1)
-        XCTAssertEqual(game.listSummaryLabel, "ace")
+        XCTAssertEqual(game.listSummaryLabel, "aces")
         XCTAssertFalse(tennis.usesShiftTracking)
         XCTAssertFalse(player.shouldPromptForTeamAssociation)
     }

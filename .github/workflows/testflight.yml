@@ -144,6 +144,13 @@ jobs:
             exit 1
           fi
           plutil -lint "$app_path/PrivacyInfo.xcprivacy"
+          python3 - "$app_path/Info.plist" <<'PYTHON'
+          import plistlib
+          import sys
+          with open(sys.argv[1], "rb") as source:
+              info = plistlib.load(source)
+          assert "remote-notification" in info.get("UIBackgroundModes", []), "Automatic iCloud imports require background remote notifications"
+          PYTHON
 
       - name: Export IPA
         id: export
