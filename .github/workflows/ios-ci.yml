@@ -10,7 +10,7 @@ on:
       - "Stattie.xcodeproj/**"
       - ".github/workflows/ios-ci.yml"
       - ".github/workflows/testflight.yml"
-      - "ci/ExportOptions.plist"
+      - "ci/**"
   workflow_dispatch:
 
 permissions:
@@ -34,6 +34,9 @@ jobs:
         uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         with:
           xcode-version: "~26.4.0"
+
+      - name: Test release profile selection
+        run: python3 -m unittest discover -s ci -p 'test_*.py'
 
       - name: Run unit tests
         shell: bash

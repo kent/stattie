@@ -41,3 +41,7 @@ signing/
 !.env.example
 !**/.env.example
 assets/app-store/
+
+# Python release tooling
+__pycache__/
+*.py[cod]

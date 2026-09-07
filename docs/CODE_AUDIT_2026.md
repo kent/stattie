@@ -37,6 +37,7 @@ This is a repository code review and regression pass, not a claim that every pos
 - Hosted validation: all 70 iOS tests and 14 desktop/mobile web browser tests passed. The final PR revision is required to pass both hosted workflows before merging.
 - Added iOS regression cases cover save failure/retry, completion/reopen/rollback, elapsed time and pauses, shift numbering, negative durations, generic sport labels, inactive memberships, aggregate displays, and photo pixel limits.
 - Xcode project and shell syntax checked. iOS builds/tests and all signing/upload work run on GitHub-hosted macOS, never local Xcode.
+- The initial release archive exposed a provisioning profile without Push Notifications; no upload occurred. A protected, idempotent profile repair reuses the existing distribution certificate, enables the missing app capability, and validates a compatible profile before archiving.
 - Web is live at https://www.stattie.com on Cloud Run revision `stattie-web-00007-w8d`; production routes and desktop/mobile layout were checked. One TestFlight upload follows the final merged commit; completion requires App Store Connect processing `VALID`.
 
 ## Compatibility decisions and remaining work
@@ -57,3 +58,4 @@ This is a repository code review and regression pass, not a claim that every pos
 - [Apple date format styles](https://developer.apple.com/documentation/foundation/date/formatstyle) and [requesting App Store reviews](https://developer.apple.com/documentation/storekit/requesting-app-store-reviews): current platform APIs with deployment-target compatibility.
 
 - [Apple automatic SwiftData sync](https://developer.apple.com/documentation/swiftdata/syncing-model-data-across-a-persons-devices) and [CloudKit container events](https://developer.apple.com/documentation/coredata/nspersistentcloudkitcontainer/eventchangednotification): required background capability, native automatic syncing, and truthful activity monitoring.
+- [Apple capability API](https://developer.apple.com/documentation/appstoreconnectapi/post-v1-bundleidcapabilities) and [profile creation API](https://developer.apple.com/documentation/appstoreconnectapi/post-v1-profiles): protected release-profile repair with the existing signing certificate.

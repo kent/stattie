@@ -58,7 +58,7 @@ The GitHub `TestFlight` environment is restricted to `main` and contains:
 
 The API private key, CI distribution key, and provisioning profiles must never be committed. They also do not belong in Cursor Cloud secrets: Cursor does not need them to create or review a PR, and its Linux workers cannot use them to build iOS archives.
 
-The CI distribution certificate and profile expire on August 30, 2027. Rotate them before expiry by creating a new CI certificate/profile, updating the two certificate secrets, and keeping the profile name `AppStore com.stattie.app CI`.
+The CI distribution certificate and original profile expire on August 30, 2027. Rotate them before expiry by creating a new CI certificate/profile, updating the two certificate secrets, and keeping the original profile name `AppStore com.stattie.app CI`. The release workflow uses that profile to identify the existing distribution certificate. It reuses a compatible iCloud profile or enables Push Notifications for `com.stattie.app` and creates a separate `AppStore com.stattie.app CI iCloud` profile. It never deletes profiles or certificates. Archive/export use the verified profile UUID, and the signed IPA must contain production iCloud and push entitlements before upload.
 
 ## If a deployment fails
 
