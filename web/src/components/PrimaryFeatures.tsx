@@ -1,6 +1,6 @@
 'use client'
 
-import { Fragment, useEffect, useId, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { Tab, TabGroup, TabList, TabPanel, TabPanels } from '@headlessui/react'
 import clsx from 'clsx'
 import {
@@ -161,26 +161,17 @@ const bodyAnimation: MotionProps = {
   },
 }
 
-function usePrevious<T>(value: T) {
-  let ref = useRef<T | undefined>(undefined)
-
-  useEffect(() => {
-    ref.current = value
-  }, [value])
-
-  return ref.current
-}
-
 function FeaturesDesktop() {
-  let [changeCount, setChangeCount] = useState(0)
-  let [selectedIndex, setSelectedIndex] = useState(0)
-  let prevIndex = usePrevious(selectedIndex)
-  let isForwards = prevIndex === undefined ? true : selectedIndex > prevIndex
+  const [selection, setSelection] = useState({ index: 0, changeCount: 0, isForwards: true })
+  const { index: selectedIndex, changeCount, isForwards } = selection
 
-  let onChange = useDebouncedCallback(
-    (selectedIndex) => {
-      setSelectedIndex(selectedIndex)
-      setChangeCount((changeCount) => changeCount + 1)
+  const onChange = useDebouncedCallback(
+    (index: number) => {
+      setSelection((previous) => ({
+        index,
+        changeCount: previous.changeCount + 1,
+        isForwards: index > previous.index,
+      }))
     },
     100,
     { leading: true },
@@ -256,14 +247,14 @@ function FeaturesDesktop() {
 }
 
 function FeaturesMobile() {
-  let [activeIndex, setActiveIndex] = useState(0)
-  let slideContainerRef = useRef<React.ElementRef<'div'>>(null)
-  let slideRefs = useRef<Array<React.ElementRef<'div'>>>([])
+  const [activeIndex, setActiveIndex] = useState(0)
+  const slideContainerRef = useRef<React.ElementRef<'div'>>(null)
+  const slideRefs = useRef<Array<React.ElementRef<'div'>>>([])
 
   useEffect(() => {
-    let observer = new window.IntersectionObserver(
+    const observer = new window.IntersectionObserver(
       (entries) => {
-        for (let entry of entries) {
+        for (const entry of entries) {
           if (entry.isIntersecting && entry.target instanceof HTMLDivElement) {
             setActiveIndex(slideRefs.current.indexOf(entry.target))
             break
@@ -276,7 +267,7 @@ function FeaturesMobile() {
       },
     )
 
-    for (let slide of slideRefs.current) {
+    for (const slide of slideRefs.current) {
       if (slide) {
         observer.observe(slide)
       }

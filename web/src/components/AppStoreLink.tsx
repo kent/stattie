@@ -1,3 +1,4 @@
+import { site } from '@/lib/site'
 import Link from 'next/link'
 import clsx from 'clsx'
 
@@ -8,7 +9,7 @@ export function AppStoreLink({
 }) {
   return (
     <Link
-      href="https://apps.apple.com/app/id6758022135"
+      href={site.appStoreUrl}
       aria-label="Get Stattie free on the App Store"
       className={clsx(
         'rounded-lg transition-colors',

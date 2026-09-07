@@ -108,7 +108,7 @@ function DeviceCalendarIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
 }
 
 function DeviceTapIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
-  let id = useId()
+  const id = useId()
 
   return (
     <svg viewBox="0 0 32 32" fill="none" aria-hidden="true" {...props}>

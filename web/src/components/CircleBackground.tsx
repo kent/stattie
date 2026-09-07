@@ -6,7 +6,7 @@ export function CircleBackground({
 }: React.ComponentPropsWithoutRef<'svg'> & {
   color: string
 }) {
-  let id = useId()
+  const id = useId()
 
   return (
     <svg
