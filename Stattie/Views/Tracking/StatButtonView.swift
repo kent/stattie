@@ -2,12 +2,11 @@ import SwiftUI
 
 struct ShootingStatButton: View {
     let definition: StatDefinition
-    let stat: Stat?
+    let made: Int
+    let missed: Int
     let onMade: () -> Void
     let onMissed: () -> Void
 
-    private var made: Int { stat?.made ?? 0 }
-    private var missed: Int { stat?.missed ?? 0 }
     private var attempts: Int { made + missed }
     private var percentage: String {
         guard attempts > 0 else { return "0%" }
@@ -87,10 +86,8 @@ struct ShootingStatButton: View {
 
 struct CountStatButton: View {
     let definition: StatDefinition
-    let stat: Stat?
+    let count: Int
     let onTap: () -> Void
-
-    private var count: Int { stat?.count ?? 0 }
 
     var body: some View {
         Button(action: onTap) {
@@ -116,18 +113,68 @@ struct CountStatButton: View {
     }
 }
 
+struct RecordingStatButton: View {
+    let title: String
+    let subtitle: String
+    let color: Color
+    let action: () -> Void
+    let undoAction: (() -> Void)?
+
+    init(
+        title: String,
+        subtitle: String,
+        color: Color,
+        action: @escaping () -> Void,
+        undoAction: (() -> Void)? = nil
+    ) {
+        self.title = title
+        self.subtitle = subtitle
+        self.color = color
+        self.action = action
+        self.undoAction = undoAction
+    }
+
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(title)
+                .font(.title3.bold())
+            Text(subtitle)
+                .font(.headline)
+                .opacity(0.85)
+        }
+        .foregroundStyle(.white)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(color)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .contentShape(RoundedRectangle(cornerRadius: 14))
+        .onTapGesture(perform: action)
+        .onLongPressGesture(minimumDuration: 0.45) {
+            undoAction?()
+        }
+        .accessibilityLabel("\(title), current: \(subtitle)")
+        .accessibilityHint(undoAction == nil ? "Double tap to record" : "Double tap to record. Long press to undo one.")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { action() }
+        .accessibilityActions {
+            if let undoAction { Button("Undo one", action: undoAction) }
+        }
+    }
+}
+
+
 #Preview {
     VStack(spacing: 20) {
         ShootingStatButton(
             definition: StatDefinition(name: "2-Point Shot", shortName: "2PT", category: "shooting", hasMadeAndMissed: true, pointValue: 2),
-            stat: nil,
+            made: 0,
+            missed: 0,
             onMade: {},
             onMissed: {}
         )
 
         CountStatButton(
             definition: StatDefinition(name: "Steal", shortName: "STL", category: "defense", iconName: "hand.raised.fill"),
-            stat: nil,
+            count: 0,
             onTap: {}
         )
     }

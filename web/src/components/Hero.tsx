@@ -6,7 +6,7 @@ import { PhoneFrame } from '@/components/PhoneFrame'
 import { StatTrackingScreen } from '@/components/mockups/StatTrackingScreen'
 
 function BackgroundIllustration(props: React.ComponentPropsWithoutRef<'div'>) {
-  let id = useId()
+  const id = useId()
 
   return (
     <div {...props}>

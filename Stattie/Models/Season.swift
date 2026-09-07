@@ -20,13 +20,10 @@ final class Season {
     }
 
     var dateRangeText: String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-
         if let end = endDate {
-            return "\(formatter.string(from: startDate)) - \(formatter.string(from: end))"
+            return "\(startDate.formatted(date: .abbreviated, time: .omitted)) - \(end.formatted(date: .abbreviated, time: .omitted))"
         } else {
-            return "Since \(formatter.string(from: startDate))"
+            return "Since \(startDate.formatted(date: .abbreviated, time: .omitted))"
         }
     }
 }

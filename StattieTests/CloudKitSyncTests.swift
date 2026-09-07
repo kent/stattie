@@ -2,23 +2,23 @@ import XCTest
 import SwiftData
 import UIKit
 import CloudKit
+import CoreData
 @testable import Stattie
 
 @MainActor
 final class CloudKitSyncTests: XCTestCase {
     private var previousContainer: ModelContainer?
+    private var previousUserID: UUID?
 
     override func setUp() {
         super.setUp()
         previousContainer = SharedModelContainer.container
+        previousUserID = AppState.shared.currentUserID
     }
 
     override func tearDown() {
         SharedModelContainer.container = previousContainer
-        let defaults = UserDefaults.standard
-        defaults.removeObject(forKey: "hasCompletedOnboarding")
-        defaults.removeObject(forKey: "currentUserID")
-        defaults.removeObject(forKey: "cloudSyncedPreferencesLocalUpdatedAt")
+        AppState.shared.currentUserID = previousUserID
         super.tearDown()
     }
 
@@ -30,6 +30,14 @@ final class CloudKitSyncTests: XCTestCase {
         XCTAssertNotNil(prepared)
         XCTAssertLessThanOrEqual(prepared?.count ?? .max, PlayerPhotoStore.maxByteCount)
         XCTAssertNotNil(prepared.flatMap(UIImage.init(data:)))
+    }
+
+    func testPreparedPhotoUsesPixelCapIndependentOfDisplayScale() throws {
+        let original = stripedJPEG(width: 1200, height: 800, quality: 1)
+        let prepared = try XCTUnwrap(PlayerPhotoStore.preparedData(from: original))
+        let image = try XCTUnwrap(UIImage(data: prepared)?.cgImage)
+        XCTAssertLessThanOrEqual(max(image.width, image.height), Int(PlayerPhotoStore.maxPixelSize))
+        XCTAssertEqual(PlayerPhotoStore.preparedData(from: prepared), prepared)
     }
 
     func testSmallPhotosAreLeftAloneWhenAlreadyUnderTheCap() {
@@ -117,162 +125,166 @@ final class CloudKitSyncTests: XCTestCase {
         XCTAssertEqual(sports.filter { $0.name == "Basketball" }.count, 1)
     }
 
-    func testPreferenceSyncDoesNotRewriteUnchangedCloudState() throws {
+    func testRestoredProfileWorksWithoutCloudPreferenceRows() throws {
         let container = try makeContainer()
         SharedModelContainer.container = container
-        let defaults = UserDefaults.standard
-        defaults.set(true, forKey: "hasCompletedOnboarding")
-        defaults.set(UUID().uuidString, forKey: "currentUserID")
-        defaults.removeObject(forKey: "cloudSyncedPreferencesLocalUpdatedAt")
+        AppState.shared.currentUserID = nil
+        let restored = User(displayName: "Restored")
+        container.mainContext.insert(restored)
+        try container.mainContext.save()
 
-        CloudSyncedPreferences.synchronizeFromCloudIfAvailable()
-        let first = try XCTUnwrap(container.mainContext.fetch(FetchDescriptor<SyncedAppSettings>()).first)
-        let firstUpdatedAt = first.updatedAt
+        let users = try container.mainContext.fetch(FetchDescriptor<User>())
+        XCTAssertEqual(users.resolvedCurrentUser?.id, restored.id)
+        _ = AppState.shared.currentUserID
+        _ = AppState.shared.hasCompletedOnboarding
+        XCTAssertTrue(try container.mainContext.fetch(FetchDescriptor<SyncedAppSettings>()).isEmpty)
+        XCTAssertFalse(container.mainContext.hasChanges)
+        XCTAssertNil(AppState.shared.currentUserID, "Resolving a view must not mutate preferences")
+    }
 
-        CloudSyncedPreferences.synchronizeFromCloudIfAvailable()
-        let second = try XCTUnwrap(container.mainContext.fetch(FetchDescriptor<SyncedAppSettings>()).first)
-        XCTAssertEqual(second.id, first.id)
-        XCTAssertEqual(second.updatedAt, firstUpdatedAt)
+    func testStaleProfilePreferenceFallsBackDeterministically() {
+        AppState.shared.currentUserID = UUID()
+        let older = User(displayName: "Older")
+        let newer = User(displayName: "Newer")
+        older.createdAt = Date(timeIntervalSince1970: 1)
+        newer.createdAt = Date(timeIntervalSince1970: 2)
+        XCTAssertEqual([newer, older].resolvedCurrentUser?.id, older.id)
+    }
+
+    func testConcurrentAchievementSnapshotsMergeWithoutRewritingCloudRows() throws {
+        let container = try makeContainer()
+        SharedModelContainer.container = container
+        let ownerID = UUID()
+        AppState.shared.currentUserID = ownerID
+        let suite = "StattieSyncTests.\(UUID())"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let manager = AchievementManager(defaults: defaults)
+        let first = SyncedAchievementState(ownerUserID: ownerID)
+        first.unlockedAchievementIDsJSON = "[\"first_game\"]"
+        first.totalPoints = 500 // Includes preserved legacy points.
+        first.updatedAt = Date(timeIntervalSince1970: 10)
+        let second = SyncedAchievementState(ownerUserID: ownerID)
+        second.unlockedAchievementIDsJSON = "[\"hat_trick\"]"
+        second.updatedAt = Date(timeIntervalSince1970: 5)
+        container.mainContext.insert(first)
+        container.mainContext.insert(second)
+        try container.mainContext.save()
+
+        manager.synchronizeFromCloud()
+        XCTAssertEqual(manager.unlockedAchievements, [.firstGame, .hatTrick])
+        XCTAssertEqual(manager.totalPoints, 500 + AchievementType.hatTrick.points)
+        manager.synchronizeFromCloud()
+        XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<SyncedAchievementState>()), 2)
+        XCTAssertEqual(second.updatedAt, Date(timeIntervalSince1970: 5))
         XCTAssertFalse(container.mainContext.hasChanges)
     }
 
-    func testHealthySyncProgressFillsConnectDownloadUpload() {
-        let now = Date()
-        let uploadedAt = now.addingTimeInterval(-90)
-        let progress = SyncProgress.snapshot(
-            isCloudKitBacked: true,
-            accountStatus: .available,
-            isCheckingStatus: false,
-            isRetryPending: false,
-            inFlightPhases: [],
-            completedDates: [.upload: uploadedAt],
-            failedPhase: nil,
-            errorMessage: nil,
-            lastSyncDate: uploadedAt,
-            now: now
-        )
+    func testLegacyAchievementsMigrateOnceAndOfflineUnlockSurvives() throws {
+        let container = try makeContainer()
+        SharedModelContainer.container = container
+        let ownerID = UUID()
+        AppState.shared.currentUserID = ownerID
+        let suite = "StattieSyncTests.\(UUID())"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        defaults.set(try JSONEncoder().encode(["first_game"]), forKey: "unlockedAchievements")
+        defaults.set(500, forKey: "achievementPoints")
+        let manager = AchievementManager(defaults: defaults)
+        manager.synchronizeFromCloud()
+        manager.synchronizeFromCloud()
+        XCTAssertEqual(manager.totalPoints, 500)
+        XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<SyncedAchievementState>()), 1)
 
-        XCTAssertEqual(progress.headline, "iCloud is healthy")
-        XCTAssertEqual(progress.status(for: .setup), .complete)
-        XCTAssertEqual(progress.status(for: .download), .complete)
-        XCTAssertEqual(progress.status(for: .upload), .complete)
-        XCTAssertEqual(progress.overallFraction, 1)
-        XCTAssertFalse(progress.showsRetry)
-        XCTAssertFalse(progress.isActive)
-        XCTAssertTrue(progress.detail.contains("Uploaded"))
-        XCTAssertFalse(progress.detail.localizedCaseInsensitiveContains("retry"))
+        SharedModelContainer.container = nil
+        XCTAssertTrue(manager.unlock(.hatTrick))
+        XCTAssertFalse(manager.unlock(.hatTrick))
+        SharedModelContainer.container = container
+        manager.synchronizeFromCloud()
+        XCTAssertEqual(manager.unlockedAchievements, [.firstGame, .hatTrick])
+        XCTAssertEqual(manager.totalPoints, 500 + AchievementType.hatTrick.points)
+        XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<SyncedAchievementState>()), 2)
+
+        AppState.shared.currentUserID = UUID()
+        manager.synchronizeFromCloud()
+        XCTAssertTrue(manager.unlockedAchievements.isEmpty)
+        XCTAssertEqual(manager.totalPoints, 0)
     }
 
-    func testUploadInFlightAdvancesThematicProgress() {
-        let now = Date()
-        let progress = SyncProgress.snapshot(
-            isCloudKitBacked: true,
-            accountStatus: .available,
-            isCheckingStatus: false,
-            isRetryPending: false,
-            inFlightPhases: [.upload],
-            completedDates: [
-                .setup: now.addingTimeInterval(-20),
-                .download: now.addingTimeInterval(-10)
-            ],
-            failedPhase: nil,
-            errorMessage: nil,
-            lastSyncDate: now.addingTimeInterval(-10),
-            now: now
-        )
-
-        XCTAssertEqual(progress.headline, "Uploading players and games")
-        XCTAssertEqual(progress.status(for: .setup), .complete)
-        XCTAssertEqual(progress.status(for: .download), .complete)
-        XCTAssertEqual(progress.status(for: .upload), .active)
-        XCTAssertTrue(progress.isActive)
-        XCTAssertGreaterThan(progress.overallFraction, 0.6)
-        XCTAssertLessThan(progress.overallFraction, 1)
-        XCTAssertFalse(progress.showsRetry)
+    func testReadingAchievementsDoesNotCreateEmptyCloudSnapshots() throws {
+        let container = try makeContainer()
+        SharedModelContainer.container = container
+        AppState.shared.currentUserID = UUID()
+        let suite = "StattieSyncTests.\(UUID())"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let manager = AchievementManager(defaults: defaults)
+        manager.synchronizeFromCloud()
+        _ = manager.unlockedAchievements
+        _ = manager.totalPoints
+        XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<SyncedAchievementState>()), 0)
     }
 
-    func testFailedUploadKeepsEarlierPhasesAndOffersRetry() {
-        let now = Date()
-        let progress = SyncProgress.snapshot(
-            isCloudKitBacked: true,
-            accountStatus: .available,
-            isCheckingStatus: false,
-            isRetryPending: false,
-            inFlightPhases: [],
-            completedDates: [
-                .setup: now.addingTimeInterval(-40),
-                .download: now.addingTimeInterval(-20)
-            ],
-            failedPhase: .upload,
-            errorMessage: "Some records could not be uploaded to iCloud.",
-            lastSyncDate: now.addingTimeInterval(-20),
-            now: now
-        )
-
-        XCTAssertEqual(progress.headline, "Couldn’t finish upload")
-        XCTAssertEqual(progress.status(for: .setup), .complete)
-        XCTAssertEqual(progress.status(for: .download), .complete)
-        XCTAssertEqual(progress.status(for: .upload), .failed)
-        XCTAssertEqual(progress.errorMessage, "Some records could not be uploaded to iCloud.")
-        XCTAssertTrue(progress.showsRetry)
-        XCTAssertFalse(progress.isActive)
+    func testAvailableAccountDoesNotClaimEveryRecordHasSynced() {
+        var activity = SyncActivity()
+        activity.record(id: UUID(), type: .export, endDate: Date(), succeeded: true, errorMessage: nil)
+        let status = SyncStatus.snapshot(isCloudKitBacked: true, accountStatus: .available, activity: activity)
+        XCTAssertEqual(status.headline, "iCloud sync is on")
+        XCTAssertFalse(status.isActive)
+        XCTAssertFalse(status.needsAttention)
     }
 
-    func testRetryPendingShowsSyncingInsteadOfRetryOperation() {
-        let progress = SyncProgress.snapshot(
-            isCloudKitBacked: true,
-            accountStatus: .available,
-            isCheckingStatus: false,
-            isRetryPending: true,
-            inFlightPhases: [],
-            completedDates: [:],
-            failedPhase: nil,
-            errorMessage: nil,
-            lastSyncDate: nil
-        )
-
-        XCTAssertEqual(progress.headline, "Syncing with iCloud")
-        XCTAssertTrue(progress.isActive)
-        XCTAssertFalse(progress.showsRetry)
-        XCTAssertFalse(progress.headline.localizedCaseInsensitiveContains("retry"))
-        XCTAssertGreaterThan(progress.overallFraction, 0)
+    func testSetupDoesNotCountAsDataTransfer() {
+        var activity = SyncActivity()
+        activity.record(id: UUID(), type: .setup, endDate: Date(), succeeded: true, errorMessage: nil)
+        XCTAssertNil(activity.lastTransferDate)
     }
 
-    func testSignedOutProgressAsksForiCloudSignIn() {
-        let progress = SyncProgress.snapshot(
-            isCloudKitBacked: true,
-            accountStatus: .noAccount,
-            isCheckingStatus: false,
-            isRetryPending: false,
-            inFlightPhases: [],
-            completedDates: [:],
-            failedPhase: nil,
-            errorMessage: nil,
-            lastSyncDate: nil
-        )
+    func testOverlappingOperationsStayActiveUntilBothEnd() {
+        var activity = SyncActivity()
+        let first = UUID()
+        let second = UUID()
+        activity.record(id: first, type: .export, endDate: nil, succeeded: false, errorMessage: nil)
+        activity.record(id: second, type: .export, endDate: nil, succeeded: false, errorMessage: nil)
+        activity.record(id: first, type: .export, endDate: Date(), succeeded: true, errorMessage: nil)
+        XCTAssertTrue(SyncStatus.snapshot(isCloudKitBacked: true, accountStatus: .available, activity: activity).isActive)
+        activity.record(id: second, type: .export, endDate: Date(), succeeded: true, errorMessage: nil)
+        XCTAssertFalse(SyncStatus.snapshot(isCloudKitBacked: true, accountStatus: .available, activity: activity).isActive)
+    }
 
-        XCTAssertEqual(progress.headline, "Sign in to iCloud")
-        XCTAssertEqual(progress.status(for: .setup), .waiting)
-        XCTAssertEqual(progress.overallFraction, 0)
-        XCTAssertFalse(progress.showsRetry)
+    func testSuccessfulDownloadDoesNotHideFailedUpload() {
+        var activity = SyncActivity()
+        activity.record(id: UUID(), type: .export, endDate: Date(), succeeded: false, errorMessage: "Out of storage.")
+        activity.record(id: UUID(), type: .import, endDate: Date(), succeeded: true, errorMessage: nil)
+        let status = SyncStatus.snapshot(isCloudKitBacked: true, accountStatus: .available, activity: activity)
+        XCTAssertTrue(status.needsAttention)
+        XCTAssertTrue(status.detail.contains("Out of storage."))
+        activity.record(id: UUID(), type: .export, endDate: Date(), succeeded: true, errorMessage: nil)
+        XCTAssertFalse(SyncStatus.snapshot(isCloudKitBacked: true, accountStatus: .available, activity: activity).needsAttention)
+    }
+
+    func testUnsuccessfulEventWithoutErrorIsNotReportedAsSuccess() {
+        var activity = SyncActivity()
+        activity.record(id: UUID(), type: .export, endDate: Date(), succeeded: false, errorMessage: nil)
+        XCTAssertNil(activity.lastTransferDate)
+        XCTAssertTrue(SyncStatus.snapshot(isCloudKitBacked: true, accountStatus: .available, activity: activity).needsAttention)
+    }
+
+    func testSignedOutStatusExplainsAutomaticSyncAndLocalStorage() {
+        let status = SyncStatus.snapshot(isCloudKitBacked: true, accountStatus: .noAccount)
+        XCTAssertEqual(status.headline, "Saved on this iPhone")
+        XCTAssertTrue(status.detail.contains("sync automatically"))
+        XCTAssertFalse(status.isActive)
+    }
+
+    func testLocalFallbackNeverClaimsCloudSyncIsOn() {
+        let status = SyncStatus.snapshot(isCloudKitBacked: false, accountStatus: .available)
+        XCTAssertEqual(status.headline, "Saved on this iPhone")
+        XCTAssertTrue(status.needsAttention)
     }
 
     private func makeContainer() throws -> ModelContainer {
-        let schema = Schema([
-            User.self,
-            Person.self,
-            Team.self,
-            TeamMembership.self,
-            Sport.self,
-            StatDefinition.self,
-            Game.self,
-            PersonGameStats.self,
-            Stat.self,
-            Shift.self,
-            ShiftStat.self,
-            SyncedAppSettings.self,
-            SyncedAchievementState.self
-        ])
+        let schema = SharedModelContainer.schema
         let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
         return try ModelContainer(for: schema, configurations: [configuration])
     }

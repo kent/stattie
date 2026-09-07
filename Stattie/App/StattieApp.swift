@@ -1,27 +1,19 @@
+import OSLog
 import SwiftUI
 import SwiftData
 import UIKit
 import UserNotifications
 
+private let logger = Logger(subsystem: "com.stattie.app", category: "Persistence")
+
 @main
 struct StattieApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    // Subscribe before creating the store so initial imports are observed.
+    private let syncManager = SyncManager.shared
+
     var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            User.self,
-            Person.self,
-            Team.self,
-            TeamMembership.self,
-            Sport.self,
-            StatDefinition.self,
-            Game.self,
-            PersonGameStats.self,
-            Stat.self,
-            Shift.self,
-            ShiftStat.self,
-            SyncedAppSettings.self,
-            SyncedAchievementState.self
-        ])
+        let schema = SharedModelContainer.schema
 
         // `.automatic` uses iCloud.com.stattie.app from entitlements in signed
         // builds. An explicit `.private` identifier traps in unsigned XCTest.
@@ -33,11 +25,11 @@ struct StattieApp: App {
 
         do {
             let container = try ModelContainer(for: schema, configurations: [cloudKitConfig])
-            SharedModelContainer.isCloudKitBacked = true
+            SharedModelContainer.isCloudKitBacked = cloudKitConfig.cloudKitContainerIdentifier != nil
             return container
         } catch {
             // CloudKit not available, use local storage only
-            print("CloudKit not available, using local storage: \(error)")
+            logger.error("CloudKit not available, using local storage: \(error.localizedDescription)")
             SharedModelContainer.isCloudKitBacked = false
         }
 
@@ -50,7 +42,7 @@ struct StattieApp: App {
         do {
             return try ModelContainer(for: schema, configurations: [localConfig])
         } catch {
-            fatalError("Could not create ModelContainer: \(error)")
+            fatalError("Could not create ModelContainer: \(error.localizedDescription)")
         }
     }()
 
@@ -63,16 +55,15 @@ struct StattieApp: App {
         } catch {
             // GameTrackingView retries and presents a visible error if launch-time
             // migration could not be committed.
-            print("Stat attribution migration failed: \(error.localizedDescription)")
+            logger.error("Stat attribution migration failed: \(error.localizedDescription)")
         }
         do {
             _ = try PlayerPhotoStore.migrateOversizedPhotos(
                 in: sharedModelContainer.mainContext
             )
         } catch {
-            print("Player photo compression failed: \(error.localizedDescription)")
+            logger.error("Player photo compression failed: \(error.localizedDescription)")
         }
-        CloudSyncedPreferences.bootstrapIfNeeded(force: true)
         AchievementManager.shared.synchronizeFromCloud()
     }
 

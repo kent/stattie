@@ -144,6 +144,13 @@ jobs:
             exit 1
           fi
           plutil -lint "$app_path/PrivacyInfo.xcprivacy"
+          python3 - "$app_path/Info.plist" <<'PYTHON'
+          import plistlib
+          import sys
+          with open(sys.argv[1], "rb") as source:
+              info = plistlib.load(source)
+          assert "remote-notification" in info.get("UIBackgroundModes", []), "Automatic iCloud imports require background remote notifications"
+          PYTHON
 
       - name: Export IPA
         id: export
@@ -164,6 +171,24 @@ jobs:
             exit 1
           fi
           echo "ipa_path=$ipa_path" >>"$GITHUB_OUTPUT"
+
+          # Check the signed payload, since export replaces development entitlements.
+          verification_dir="$RUNNER_TEMP/Stattie-export-verification"
+          mkdir -p "$verification_dir"
+          unzip -q "$ipa_path" -d "$verification_dir"
+          codesign -d --entitlements - "$verification_dir/Payload/Stattie.app" \
+            > "$RUNNER_TEMP/stattie-export-entitlements.plist" 2>/dev/null
+          python3 - "$RUNNER_TEMP/stattie-export-entitlements.plist" <<'PYTHON'
+          import plistlib
+          import sys
+          with open(sys.argv[1], "rb") as source:
+              entitlements = plistlib.load(source)
+          assert entitlements.get("aps-environment") == "production", "Production push notifications are required for automatic iCloud sync"
+          assert "iCloud.com.stattie.app" in entitlements.get("com.apple.developer.icloud-container-identifiers", []), "Missing Stattie iCloud container"
+          assert "CloudKit" in entitlements.get("com.apple.developer.icloud-services", []), "Missing CloudKit entitlement"
+          assert entitlements.get("com.apple.developer.icloud-container-environment") == "Production", "TestFlight must use production iCloud"
+          print("Verified production iCloud and push entitlements.")
+          PYTHON
 
       - name: Upload to TestFlight
         uses: apple-actions/upload-testflight-build@5e75ff58276689011512ba87a381d93dc67dbcf8 # v5.3.0

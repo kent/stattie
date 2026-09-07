@@ -3,6 +3,8 @@ import { Inter } from 'next/font/google'
 import clsx from 'clsx'
 
 import '@/styles/tailwind.css'
+import { site } from '@/lib/site'
+import { MotionProvider } from '@/components/MotionProvider'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -17,7 +19,7 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://www.stattie.com'),
+  metadataBase: new URL(site.url),
   title: {
     template: '%s - Stattie',
     default: 'Stattie - Track Every Game. Own Every Stat.',
@@ -60,7 +62,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://www.stattie.com',
+    url: site.url,
     siteName: 'Stattie',
     title: 'Stattie - Track Every Game. Own Every Stat.',
     description:
@@ -87,7 +89,7 @@ export const metadata: Metadata = {
     statusBarStyle: 'black-translucent',
   },
   itunes: {
-    appId: '6758022135',
+    appId: site.appId,
   },
   category: 'sports',
   robots: {
@@ -121,7 +123,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={clsx('bg-gray-50 antialiased', inter.variable)}>
-      <body>{children}</body>
+      <body><MotionProvider>{children}</MotionProvider></body>
     </html>
   )
 }

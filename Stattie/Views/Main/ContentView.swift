@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
+    @Environment(\.scenePhase) private var scenePhase
     @Query private var users: [User]
 
     private var currentUser: User? {
@@ -22,10 +23,18 @@ struct ContentView: View {
                 }
             }
         }
-        .onAppear {
-            CloudSyncedPreferences.bootstrapIfNeeded(force: true)
-            AppState.shared.synchronizeFromCloud()
+        .task(id: scenePhase) {
+            guard scenePhase == .active else { return }
             AchievementManager.shared.synchronizeFromCloud()
+            await SyncManager.shared.checkiCloudStatus()
+        }
+        .task(id: currentUser?.id) {
+            // The User record arrives through SwiftData; onboarding needs no
+            // separate cloud flag or settings record to finish restoring.
+            if let currentUser {
+                AppState.shared.completeOnboarding(userID: currentUser.id)
+                AchievementManager.shared.synchronizeFromCloud()
+            }
         }
     }
 }

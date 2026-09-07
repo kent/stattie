@@ -1,3 +1,4 @@
+import { site } from '@/lib/site'
 import Link from 'next/link'
 
 import { Container } from '@/components/Container'
@@ -17,7 +18,7 @@ export function Footer() {
                 <p className="mt-1 text-sm">Track Every Game. Own Every Stat.</p>
               </div>
             </div>
-            <nav className="mt-11 flex gap-8">
+            <nav aria-label="Footer navigation" className="mt-11 flex flex-wrap gap-x-8 gap-y-4">
               <NavLinks />
             </nav>
           </div>
@@ -29,7 +30,7 @@ export function Footer() {
             </div>
             <div className="ml-8 lg:w-64">
               <p className="text-base font-semibold text-gray-900">
-                <Link href="https://apps.apple.com/app/id6758022135">
+                <Link href={site.appStoreUrl}>
                   <span className="absolute inset-0 sm:rounded-2xl" />
                   Get Stattie free
                 </Link>

@@ -42,16 +42,16 @@ fi
 API_KEY_JSON="$(mktemp /tmp/asc_api_key.XXXXXX.json)"
 trap 'rm -f "$API_KEY_JSON"' EXIT
 
-ruby <<RUBY
+ruby - "$APP_STORE_CONNECT_KEY_PATH" "$APP_STORE_CONNECT_KEY_ID" "$APP_STORE_CONNECT_ISSUER_ID" "$API_KEY_JSON" <<'RUBY'
 require 'json'
-key = File.read('${APP_STORE_CONNECT_KEY_PATH}')
+key_path, key_id, issuer_id, output_path = ARGV
 json = {
-  key_id: '${APP_STORE_CONNECT_KEY_ID}',
-  issuer_id: '${APP_STORE_CONNECT_ISSUER_ID}',
-  key: key,
+  key_id: key_id,
+  issuer_id: issuer_id,
+  key: File.read(key_path),
   in_house: false
 }
-File.write('${API_KEY_JSON}', JSON.pretty_generate(json))
+File.write(output_path, JSON.pretty_generate(json))
 RUBY
 
 FASTLANE_SKIP_UPDATE_CHECK=1 FASTLANE_HIDE_CHANGELOG=1 \

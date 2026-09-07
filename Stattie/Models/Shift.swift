@@ -67,7 +67,7 @@ final class Shift {
 
     var duration: TimeInterval {
         let end = endTime ?? Date()
-        return end.timeIntervalSince(startTime)
+        return max(0, end.timeIntervalSince(startTime))
     }
 
     var formattedDuration: String {
@@ -78,10 +78,6 @@ final class Shift {
     }
 
     // MARK: - Stat Aggregation
-
-    var totalPoints: Int {
-        canonicalStats.reduce(0) { $0 + $1.points }
-    }
 
     var canonicalStats: [Stat] {
         var seen = Set<UUID>()
@@ -103,18 +99,6 @@ final class Shift {
 
     func legacyStatValue(forName name: String) -> ShiftStat? {
         (stats ?? []).first { $0.statName == name }
-    }
-
-    func totalMade(forName name: String) -> Int {
-        statRecords(forName: name).reduce(0) { $0 + $1.made }
-    }
-
-    func totalMissed(forName name: String) -> Int {
-        statRecords(forName: name).reduce(0) { $0 + $1.missed }
-    }
-
-    func totalCount(forName name: String) -> Int {
-        statRecords(forName: name).reduce(0) { $0 + $1.count }
     }
 
     init(

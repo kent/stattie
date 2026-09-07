@@ -76,7 +76,9 @@ enum PlayerPhotoStore {
             width: max(1, (image.size.width * scale).rounded()),
             height: max(1, (image.size.height * scale).rounded())
         )
-        let renderer = UIGraphicsImageRenderer(size: newSize)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let renderer = UIGraphicsImageRenderer(size: newSize, format: format)
         return renderer.image { _ in
             image.draw(in: CGRect(origin: .zero, size: newSize))
         }

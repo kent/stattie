@@ -5,19 +5,7 @@ import SwiftData
 @MainActor
 final class TeamMembershipTests: XCTestCase {
     private func makeContainer() throws -> ModelContainer {
-        let schema = Schema([
-            User.self,
-            Person.self,
-            Team.self,
-            TeamMembership.self,
-            Sport.self,
-            StatDefinition.self,
-            Game.self,
-            PersonGameStats.self,
-            Stat.self,
-            Shift.self,
-            ShiftStat.self
-        ])
+        let schema = SharedModelContainer.schema
         let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
         return try ModelContainer(for: schema, configurations: [configuration])
     }
@@ -72,6 +60,7 @@ final class TeamMembershipTests: XCTestCase {
         team.memberships = [membership]
         try context.save()
 
+        XCTAssertTrue(team.activeMembers.isEmpty)
         XCTAssertTrue(player.activeTeams.isEmpty)
         XCTAssertFalse(player.isMember(of: team))
         XCTAssertTrue(player.shouldPromptForTeamAssociation)
@@ -254,7 +243,7 @@ final class TeamMembershipTests: XCTestCase {
         XCTAssertNil(game.team)
         XCTAssertEqual(game.totalCount(forName: "ACE"), 1)
         XCTAssertEqual(game.listSummaryValue, 1)
-        XCTAssertEqual(game.listSummaryLabel, "ace")
+        XCTAssertEqual(game.listSummaryLabel, "aces")
         XCTAssertFalse(tennis.usesShiftTracking)
         XCTAssertFalse(player.shouldPromptForTeamAssociation)
     }

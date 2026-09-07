@@ -3,7 +3,8 @@ import UserNotifications
 import SwiftUI
 import UIKit
 
-class NotificationManager: ObservableObject {
+@MainActor
+final class NotificationManager: ObservableObject {
     static let shared = NotificationManager()
 
     @Published var isAuthorized = false
@@ -13,7 +14,7 @@ class NotificationManager: ObservableObject {
     private let permissionRequestedKey = "notificationPermissionRequested"
 
     var needsPermissionPrompt: Bool {
-        !hasRequestedPermission || (!isAuthorized && hasRequestedPermission)
+        !isAuthorized
     }
 
     init() {
@@ -23,10 +24,9 @@ class NotificationManager: ObservableObject {
     }
 
     func checkAuthorizationStatus() {
-        UNUserNotificationCenter.current().getNotificationSettings { [weak self] settings in
-            DispatchQueue.main.async {
-                self?.isAuthorized = settings.authorizationStatus == .authorized
-            }
+        Task {
+            let settings = await UNUserNotificationCenter.current().notificationSettings()
+            isAuthorized = settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional
         }
     }
 
@@ -36,11 +36,10 @@ class NotificationManager: ObservableObject {
 
         do {
             let granted = try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])
-            await MainActor.run {
-                isAuthorized = granted
-            }
+            isAuthorized = granted
             return granted
         } catch {
+            isAuthorized = false
             return false
         }
     }

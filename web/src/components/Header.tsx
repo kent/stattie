@@ -1,5 +1,6 @@
 'use client'
 
+import { site, navigationLinks } from '@/lib/site'
 import Link from 'next/link'
 import {
   Popover,
@@ -58,7 +59,7 @@ function MobileNavLink(
 export function Header() {
   return (
     <header>
-      <nav>
+      <nav aria-label="Main navigation">
         <Container className="relative z-50 flex justify-between py-8">
           <div className="relative z-10 flex items-center gap-16">
             <Link href="/" aria-label="Home">
@@ -108,22 +109,14 @@ export function Header() {
                           className="absolute inset-x-0 top-0 z-0 origin-top rounded-b-2xl bg-gray-50 px-6 pt-32 pb-6 shadow-2xl shadow-gray-900/20"
                         >
                           <div className="space-y-4">
-                            <MobileNavLink href="/#features">
-                              Features
-                            </MobileNavLink>
-                            <MobileNavLink href="/#secondary-features">
-                              How it works
-                            </MobileNavLink>
-                            <MobileNavLink href="/#reviews">
-                              Reviews
-                            </MobileNavLink>
-                            <MobileNavLink href="/#pricing">
-                              Pricing
-                            </MobileNavLink>
-                            <MobileNavLink href="/#faqs">FAQs</MobileNavLink>
+                            {navigationLinks.map(({ label, href }) => (
+                              <MobileNavLink key={href} href={href}>
+                                {label}
+                              </MobileNavLink>
+                            ))}
                           </div>
                           <div className="mt-8 flex flex-col gap-4">
-                            <Button href="https://apps.apple.com/app/id6758022135" color="orange">Get the app</Button>
+                            <Button href={site.appStoreUrl} color="orange">Get the app</Button>
                           </div>
                         </PopoverPanel>
                       </>
@@ -133,7 +126,7 @@ export function Header() {
               )}
             </Popover>
             <div className="flex items-center gap-6 max-lg:hidden">
-              <Button href="https://apps.apple.com/app/id6758022135" color="orange">Get the app</Button>
+              <Button href={site.appStoreUrl} color="orange">Get the app</Button>
             </div>
           </div>
         </Container>

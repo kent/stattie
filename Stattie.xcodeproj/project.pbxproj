@@ -32,7 +32,6 @@
 		E01000002B000012 /* StatButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000012 /* StatButtonView.swift */; };
 		E01000002B000013 /* GameSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000013 /* GameSummaryView.swift */; };
 		E01000002B000015 /* SyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000015 /* SyncManager.swift */; };
-		E01000002B000016 /* LockManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000016 /* LockManager.swift */; };
 		E01000002B000018 /* SeedDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000018 /* SeedDataService.swift */; };
 		E01000002B00001B /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00001B /* OnboardingView.swift */; };
 		E01000002B00001C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00001C /* SettingsView.swift */; };
@@ -51,7 +50,6 @@
 		E01000002B000041 /* CreateTeamView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000041 /* CreateTeamView.swift */; };
 		E01000002B00002C /* Shift.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00002C /* Shift.swift */; };
 		E01000002B00002D /* ShiftStat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00002D /* ShiftStat.swift */; };
-		E01000002B00002E /* ShiftTrackingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00002E /* ShiftTrackingView.swift */; };
 		E01000002B000030 /* Achievement.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000030 /* Achievement.swift */; };
 		E01000002B000031 /* AchievementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000031 /* AchievementsView.swift */; };
 		E01000002B000032 /* ConfettiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000032 /* ConfettiView.swift */; };
@@ -63,12 +61,18 @@
 		E01000002B00003B /* SharedModelContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00003B /* SharedModelContainer.swift */; };
 		E01000002B00003C /* SyncedAppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00003C /* SyncedAppSettings.swift */; };
 		E01000002B00003D /* SyncedAchievementState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00003D /* SyncedAchievementState.swift */; };
-		E01000002B00003F /* CloudSyncedPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B00003F /* CloudSyncedPreferences.swift */; };
 		E01000002B000060 /* PlayerPhotoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000060 /* PlayerPhotoStore.swift */; };
 		E01000002B000061 /* CloudKitErrorFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000061 /* CloudKitErrorFormatter.swift */; };
-		E01000002B000062 /* SyncProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000062 /* SyncProgress.swift */; };
+		E01000002B000062 /* SyncStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000062 /* SyncStatus.swift */; };
 		E01000002B000063 /* iCloudSyncStatusCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000002B000063 /* iCloudSyncStatusCard.swift */; };
 		ED23180261715630D5B7E8DB /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E6B07DDEB1324F07934F0292 /* PrivacyInfo.xcprivacy */; };
+		7D5E75BF5B531A97C2BD307A /* StatProviding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 182EEA5B6B8BBAAD48DAF043 /* StatProviding.swift */; };
+		CBE7B1DF817C254E363A54CB /* TrackingClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD94BC59FF3D9798A324FA87 /* TrackingClock.swift */; };
+		9CA45ECA0AA06FBFF27F7F6F /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 387E4390EBE33251913DF5C8 /* PersistenceController.swift */; };
+		06102165F39F45BDF3C7D510 /* ShiftEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A85253E91EEF09575759A3A /* ShiftEditView.swift */; };
+		F243BC8F570E84B147F4BC09 /* GameTrackingComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A45EBD0C4E4303066CD9A99B /* GameTrackingComponents.swift */; };
+		DA5751D4FE59DE607A0B8859 /* ShiftScoreSheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6838CCEE7C3CD6A3C327ACFD /* ShiftScoreSheets.swift */; };
+		A61731F39133553C878FB44B /* PlayerGameOverviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A80FDD793E8F3E84BB03250 /* PlayerGameOverviewView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -109,7 +113,6 @@
 		E00000002B000012 /* StatButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatButtonView.swift; sourceTree = "<group>"; };
 		E00000002B000013 /* GameSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSummaryView.swift; sourceTree = "<group>"; };
 		E00000002B000015 /* SyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncManager.swift; sourceTree = "<group>"; };
-		E00000002B000016 /* LockManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockManager.swift; sourceTree = "<group>"; };
 		E00000002B000018 /* SeedDataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeedDataService.swift; sourceTree = "<group>"; };
 		E00000002B00001B /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		E00000002B00001C /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -129,7 +132,6 @@
 		E00000002B000041 /* CreateTeamView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateTeamView.swift; sourceTree = "<group>"; };
 		E00000002B00002C /* Shift.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shift.swift; sourceTree = "<group>"; };
 		E00000002B00002D /* ShiftStat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShiftStat.swift; sourceTree = "<group>"; };
-		E00000002B00002E /* ShiftTrackingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShiftTrackingView.swift; sourceTree = "<group>"; };
 		E00000002B000030 /* Achievement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Achievement.swift; sourceTree = "<group>"; };
 		E00000002B000031 /* AchievementsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AchievementsView.swift; sourceTree = "<group>"; };
 		E00000002B000032 /* ConfettiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfettiView.swift; sourceTree = "<group>"; };
@@ -141,12 +143,18 @@
 		E00000002B00003B /* SharedModelContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedModelContainer.swift; sourceTree = "<group>"; };
 		E00000002B00003C /* SyncedAppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncedAppSettings.swift; sourceTree = "<group>"; };
 		E00000002B00003D /* SyncedAchievementState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncedAchievementState.swift; sourceTree = "<group>"; };
-		E00000002B00003F /* CloudSyncedPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncedPreferences.swift; sourceTree = "<group>"; };
 		E00000002B000060 /* PlayerPhotoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerPhotoStore.swift; sourceTree = "<group>"; };
 		E00000002B000061 /* CloudKitErrorFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitErrorFormatter.swift; sourceTree = "<group>"; };
-		E00000002B000062 /* SyncProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncProgress.swift; sourceTree = "<group>"; };
+		E00000002B000062 /* SyncStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncStatus.swift; sourceTree = "<group>"; };
 		E00000002B000063 /* iCloudSyncStatusCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iCloudSyncStatusCard.swift; sourceTree = "<group>"; };
 		E6B07DDEB1324F07934F0292 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		182EEA5B6B8BBAAD48DAF043 /* StatProviding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/StatProviding.swift; sourceTree = "<group>"; };
+		CD94BC59FF3D9798A324FA87 /* TrackingClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TrackingClock.swift; sourceTree = "<group>"; };
+		387E4390EBE33251913DF5C8 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/PersistenceController.swift; sourceTree = "<group>"; };
+		7A85253E91EEF09575759A3A /* ShiftEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Tracking/ShiftEditView.swift; sourceTree = "<group>"; };
+		A45EBD0C4E4303066CD9A99B /* GameTrackingComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Tracking/GameTrackingComponents.swift; sourceTree = "<group>"; };
+		6838CCEE7C3CD6A3C327ACFD /* ShiftScoreSheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Tracking/ShiftScoreSheets.swift; sourceTree = "<group>"; };
+		0A80FDD793E8F3E84BB03250 /* PlayerGameOverviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Players/PlayerGameOverviewView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -228,6 +236,13 @@
 		E03000002B000001 /* Stattie */ = {
 			isa = PBXGroup;
 			children = (
+				0A80FDD793E8F3E84BB03250 /* PlayerGameOverviewView.swift */,
+				6838CCEE7C3CD6A3C327ACFD /* ShiftScoreSheets.swift */,
+				A45EBD0C4E4303066CD9A99B /* GameTrackingComponents.swift */,
+				7A85253E91EEF09575759A3A /* ShiftEditView.swift */,
+				387E4390EBE33251913DF5C8 /* PersistenceController.swift */,
+				CD94BC59FF3D9798A324FA87 /* TrackingClock.swift */,
+				182EEA5B6B8BBAAD48DAF043 /* StatProviding.swift */,
 				E03000002B000003 /* App */,
 				E03000002B000004 /* Models */,
 				E03000002B000005 /* ViewModels */,
@@ -317,10 +332,8 @@
 			isa = PBXGroup;
 			children = (
 				E00000002B000015 /* SyncManager.swift */,
-				E00000002B000016 /* LockManager.swift */,
-				E00000002B00003F /* CloudSyncedPreferences.swift */,
 				E00000002B000061 /* CloudKitErrorFormatter.swift */,
-				E00000002B000062 /* SyncProgress.swift */,
+				E00000002B000062 /* SyncStatus.swift */,
 				E00000002B000018 /* SeedDataService.swift */,
 				E00000002B000036 /* NotificationManager.swift */,
 				E00000002B000037 /* ReviewManager.swift */,
@@ -379,7 +392,6 @@
 			children = (
 				E00000002B000011 /* GameTrackingView.swift */,
 				E00000002B000012 /* StatButtonView.swift */,
-				E00000002B00002E /* ShiftTrackingView.swift */,
 			);
 			path = Tracking;
 			sourceTree = "<group>";
@@ -514,6 +526,11 @@
 				TargetAttributes = {
 					E04000002B000000 = {
 						CreatedOnToolsVersion = 15.0;
+						SystemCapabilities = {
+							com.apple.BackgroundModes = { enabled = 1; };
+							com.apple.Push = { enabled = 1; };
+							com.apple.iCloud = { enabled = 1; };
+						};
 					};
 				};
 			};
@@ -573,6 +590,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A61731F39133553C878FB44B /* PlayerGameOverviewView.swift in Sources */,
+				DA5751D4FE59DE607A0B8859 /* ShiftScoreSheets.swift in Sources */,
+				F243BC8F570E84B147F4BC09 /* GameTrackingComponents.swift in Sources */,
+				06102165F39F45BDF3C7D510 /* ShiftEditView.swift in Sources */,
+				9CA45ECA0AA06FBFF27F7F6F /* PersistenceController.swift in Sources */,
+				CBE7B1DF817C254E363A54CB /* TrackingClock.swift in Sources */,
+				7D5E75BF5B531A97C2BD307A /* StatProviding.swift in Sources */,
 				E01000002B000001 /* StattieApp.swift in Sources */,
 				E01000002B000002 /* AppState.swift in Sources */,
 				E01000002B000003 /* ContentView.swift in Sources */,
@@ -591,7 +615,6 @@
 				E01000002B000012 /* StatButtonView.swift in Sources */,
 				E01000002B000013 /* GameSummaryView.swift in Sources */,
 				E01000002B000015 /* SyncManager.swift in Sources */,
-				E01000002B000016 /* LockManager.swift in Sources */,
 				E01000002B000018 /* SeedDataService.swift in Sources */,
 				E01000002B00001B /* OnboardingView.swift in Sources */,
 				E01000002B00001C /* SettingsView.swift in Sources */,
@@ -609,7 +632,6 @@
 				E01000002B000041 /* CreateTeamView.swift in Sources */,
 				E01000002B00002C /* Shift.swift in Sources */,
 				E01000002B00002D /* ShiftStat.swift in Sources */,
-				E01000002B00002E /* ShiftTrackingView.swift in Sources */,
 				E01000002B000030 /* Achievement.swift in Sources */,
 				E01000002B000031 /* AchievementsView.swift in Sources */,
 				E01000002B000032 /* ConfettiView.swift in Sources */,
@@ -621,10 +643,9 @@
 				E01000002B00003B /* SharedModelContainer.swift in Sources */,
 				E01000002B00003C /* SyncedAppSettings.swift in Sources */,
 				E01000002B00003D /* SyncedAchievementState.swift in Sources */,
-				E01000002B00003F /* CloudSyncedPreferences.swift in Sources */,
 				E01000002B000060 /* PlayerPhotoStore.swift in Sources */,
 				E01000002B000061 /* CloudKitErrorFormatter.swift in Sources */,
-				E01000002B000062 /* SyncProgress.swift in Sources */,
+				E01000002B000062 /* SyncStatus.swift in Sources */,
 				E01000002B000063 /* iCloudSyncStatusCard.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

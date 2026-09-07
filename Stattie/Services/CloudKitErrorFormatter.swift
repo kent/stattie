@@ -61,11 +61,11 @@ enum CloudKitErrorFormatter {
         switch CKError.Code(rawValue: code) {
         case .partialFailure:
             if fallback.contains("CKErrorDomain") {
-                return "Some records could not be uploaded to iCloud. Player photos are now resized automatically; open Settings and tap Try Sync Again."
+                return "Some records could not be uploaded to iCloud. Sync will retry automatically."
             }
             return nil
         case .networkUnavailable, .networkFailure:
-            return "iCloud is unreachable. Check the network and try again."
+            return "iCloud is unreachable. Sync resumes automatically when the connection returns."
         case .serviceUnavailable, .requestRateLimited, .zoneBusy:
             return "iCloud is busy. Stattie will retry automatically."
         case .notAuthenticated:
@@ -75,13 +75,13 @@ enum CloudKitErrorFormatter {
         case .limitExceeded:
             return "A record is too large for iCloud, usually an uncompressed photo."
         case .unknownItem, .invalidArguments, .serverRejectedRequest:
-            return "iCloud rejected a record. If this continues after a retry, the production CloudKit schema may need to be deployed."
+            return "iCloud couldn’t save a change. If this continues, contact Stattie support."
         case .serverRecordChanged:
             return "iCloud hit a record conflict and will retry."
         case .zoneNotFound, .userDeletedZone:
-            return "The iCloud zone is missing. Sign out of iCloud and back in, then retry."
+            return "iCloud data is temporarily unavailable. If this continues, contact Stattie support."
         case .changeTokenExpired:
-            return "The iCloud change token expired. Stattie will rebuild the sync snapshot."
+            return "iCloud is refreshing your data automatically."
         default:
             let trimmed = fallback.trimmingCharacters(in: .whitespacesAndNewlines)
             return trimmed.isEmpty ? nil : trimmed

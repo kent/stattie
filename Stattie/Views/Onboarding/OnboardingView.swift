@@ -21,6 +21,7 @@ struct OnboardingView: View {
     @State private var selectedSports: Set<String> = ["Basketball"]
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var isCreating = false
+    @State private var saveError: String?
     @State private var currentPage = 0
 
     let onComplete: () -> Void
@@ -149,6 +150,7 @@ struct OnboardingView: View {
                 }
             }
         }
+        .errorAlert(title: "Couldn’t Create Profile", message: $saveError)
     }
 
     private func createUser() {
@@ -157,78 +159,23 @@ struct OnboardingView: View {
         let user = User(displayName: displayName.trimmingCharacters(in: .whitespaces))
         modelContext.insert(user)
 
-        SeedDataService.shared.seedSelectedSports(selectedSports, context: modelContext)
-        SeedDataService.shared.seedAllSportsIfNeeded(context: modelContext)
-
-        // Request notification permission
-        Task {
-            await NotificationManager.shared.requestPermission()
-        }
+        // Keep the profile and initial catalog in the same onboarding transaction.
+        SeedDataService.shared.seedAllSportsIfNeeded(context: modelContext, persist: false)
 
         do {
             try modelContext.save()
             AppState.shared.completeOnboarding(userID: user.id)
+            Task { await NotificationManager.shared.requestPermission() }
             onComplete()
         } catch {
-            print("Failed to create user: \(error)")
+            modelContext.rollback()
+            saveError = error.localizedDescription
             isCreating = false
         }
     }
 }
 
-// MARK: - First Player Prompt
 
-struct FirstPlayerPromptView: View {
-    @Binding var isPresented: Bool
-    let onAddPlayer: () -> Void
-
-    var body: some View {
-        VStack(spacing: 24) {
-            Spacer()
-
-            Image(systemName: "person.badge.plus")
-                .scaledFont(size: 60, relativeTo: .largeTitle)
-                .foregroundStyle(.accent)
-
-            Text("Ready to track your first game?")
-                .font(.title2.bold())
-                .multilineTextAlignment(.center)
-
-            Text("Add a player to get started. You can add their name, jersey number, and position.")
-                .font(.body)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
-
-            VStack(spacing: 12) {
-                Button {
-                    onAddPlayer()
-                    isPresented = false
-                } label: {
-                    Text("Add Your First Player")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.accentColor)
-                        .foregroundStyle(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                }
-
-                Button {
-                    isPresented = false
-                } label: {
-                    Text("I'll do this later")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .padding(.horizontal, 32)
-
-            Spacer()
-        }
-        .padding()
-    }
-}
 
 struct SportSelectionCard: View {
     let sport: SportSelection

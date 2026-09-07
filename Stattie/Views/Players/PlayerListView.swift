@@ -4,6 +4,7 @@ import UIKit
 
 struct PersonListView: View {
     @Environment(\.modelContext) private var modelContext
+    @State private var persistence = PersistenceController()
     @Query(sort: \Person.firstName) private var players: [Person]
     @Query private var users: [User]
     @State private var showingAddPerson = false
@@ -96,6 +97,7 @@ struct PersonListView: View {
                     }
                 }
             }
+            .persistenceAlert(persistence)
             .navigationTitle("Players")
             .navigationDestination(for: Person.self) { player in
                 PersonDetailView(player: player)
@@ -125,9 +127,11 @@ struct PersonListView: View {
                 }
                 Button("Continue without a team") {
                     if let player = pendingPlayerChoice {
+                        let previousPreference = player.prefersNoTeam
                         player.prefersNoTeam = true
-                        try? modelContext.save()
-                        path.append(player)
+                        if persistence.save(modelContext, restoring: { player.prefersNoTeam = previousPreference }) {
+                            path.append(player)
+                        }
                     }
                     pendingPlayerChoice = nil
                 }
@@ -165,11 +169,11 @@ struct PersonListView: View {
     }
 
     private func deletePerson(at offsets: IndexSet) {
-        for index in offsets {
-            let player = filteredPersons[index]
-            player.isActive = false
-        }
-        try? modelContext.save()
+        let snapshots = offsets.map { (player: filteredPersons[$0], wasActive: filteredPersons[$0].isActive) }
+        for snapshot in snapshots { snapshot.player.isActive = false }
+        persistence.save(modelContext, restoring: {
+            for snapshot in snapshots { snapshot.player.isActive = snapshot.wasActive }
+        })
     }
 }
 

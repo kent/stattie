@@ -4,6 +4,7 @@ import PhotosUI
 
 struct AddPersonView: View {
     @Environment(\.modelContext) private var modelContext
+    @State private var persistence = PersistenceController()
     @Environment(\.dismiss) private var dismiss
 
     @State private var firstName = ""
@@ -73,6 +74,7 @@ struct AddPersonView: View {
                     Text("You can add jersey and position details later.")
                 }
             }
+            .persistenceAlert(persistence)
             .navigationTitle("Add Player")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -110,8 +112,7 @@ struct AddPersonView: View {
         )
 
         modelContext.insert(player)
-        try? modelContext.save()
-        dismiss()
+        if persistence.save(modelContext) { dismiss() }
     }
 }
 

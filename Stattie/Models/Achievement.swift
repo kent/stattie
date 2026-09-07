@@ -1,6 +1,10 @@
+import Observation
+import OSLog
 import Foundation
 import SwiftUI
 import SwiftData
+
+private let logger = Logger(subsystem: "com.stattie.app", category: "Achievements")
 
 // MARK: - Achievement Definitions
 
@@ -154,75 +158,113 @@ enum AchievementType: String, CaseIterable, Codable {
 
 // MARK: - Achievement Manager
 
-class AchievementManager {
+@MainActor
+@Observable
+final class AchievementManager {
     static let shared = AchievementManager()
 
-    private let unlockedKey = "unlockedAchievements"
-    private let totalPointsKey = "achievementPoints"
-    private let localUpdatedAtPrefix = "achievementLocalUpdatedAt"
+    private let defaults: UserDefaults
+    private var unlockedIDs: Set<String> = []
+    private(set) var totalPoints = 0
 
     var unlockedAchievements: Set<AchievementType> {
-        get {
-            synchronizeFromCloud()
-            guard let data = UserDefaults.standard.data(forKey: unlockedKey),
-                  let decoded = try? JSONDecoder().decode(Set<String>.self, from: data) else {
-                return []
-            }
-            return Set(decoded.compactMap { AchievementType(rawValue: $0) })
-        }
-        set {
-            let strings = Set(newValue.map { $0.rawValue })
-            if let data = try? JSONEncoder().encode(strings) {
-                UserDefaults.standard.set(data, forKey: unlockedKey)
-            }
-            markLocalMutationAndPush()
-        }
+        Set(unlockedIDs.compactMap(AchievementType.init(rawValue:)))
     }
 
-    var totalPoints: Int {
-        get {
-            synchronizeFromCloud()
-            return UserDefaults.standard.integer(forKey: totalPointsKey)
-        }
-        set {
-            UserDefaults.standard.set(newValue, forKey: totalPointsKey)
-            markLocalMutationAndPush()
-        }
-    }
-
-    func unlock(_ achievement: AchievementType) -> Bool {
-        guard !unlockedAchievements.contains(achievement) else { return false }
-
-        var unlocked = unlockedAchievements
-        unlocked.insert(achievement)
-        unlockedAchievements = unlocked
-        totalPoints += achievement.points
-
-        return true
-    }
-
-    func synchronizeFromCloud(force: Bool = false) {
-        guard let context = SharedModelContainer.makeContext() else { return }
-
-        let ownerUserID = AppState.shared.currentUserID
-        let state = fetchOrCreateState(ownerUserID: ownerUserID, context: context)
-
-        let localUpdatedAt = UserDefaults.standard.double(forKey: localUpdatedAtKey(for: ownerUserID))
-        let remoteUpdatedAt = state.updatedAt.timeIntervalSince1970
-
-        if remoteUpdatedAt > localUpdatedAt {
-            applyRemoteStateToDefaults(state)
-            UserDefaults.standard.set(remoteUpdatedAt, forKey: localUpdatedAtKey(for: ownerUserID))
-            return
-        }
-
-        if force || localUpdatedAt > remoteUpdatedAt {
-            pushLocalStateToCloud(ownerUserID: ownerUserID, context: context)
-        }
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
     }
 
     func isUnlocked(_ achievement: AchievementType) -> Bool {
-        unlockedAchievements.contains(achievement)
+        unlockedIDs.contains(achievement.rawValue)
+    }
+
+    func unlock(_ achievement: AchievementType) -> Bool {
+        synchronizeFromCloud()
+        guard let ownerID = AppState.shared.currentUserID,
+              unlockedIDs.insert(achievement.rawValue).inserted else { return false }
+        totalPoints += achievement.points
+        cacheLocally(ownerID: ownerID)
+        synchronizeFromCloud()
+        return true
+    }
+
+    /// Merge earned achievements monotonically. Separate devices may create
+    /// snapshots concurrently; their union preserves both without clock ordering.
+    /// Reading UI properties never creates or saves SwiftData records.
+    func synchronizeFromCloud() {
+        guard let ownerID = AppState.shared.currentUserID else {
+            unlockedIDs = []
+            totalPoints = 0
+            return
+        }
+        let prefix = cachePrefix(ownerID)
+        var localIDs = decode(defaults.data(forKey: prefix + ".ids"))
+        var localPoints = defaults.integer(forKey: prefix + ".points")
+
+        // Adopt pre-account caches once, keeping them available if a save fails.
+        let legacyOwnerKey = "achievementLegacyOwnerID"
+        if defaults.string(forKey: legacyOwnerKey) == nil {
+            defaults.set(ownerID.uuidString, forKey: legacyOwnerKey)
+        }
+        let ownsLegacy = defaults.string(forKey: legacyOwnerKey) == ownerID.uuidString
+        if ownsLegacy {
+            localIDs.formUnion(decode(defaults.data(forKey: "unlockedAchievements")))
+            localPoints = max(localPoints, defaults.integer(forKey: "achievementPoints"))
+        }
+        unlockedIDs = localIDs
+        totalPoints = max(localPoints, points(for: localIDs))
+
+        guard let context = SharedModelContainer.makeContext() else { return }
+        do {
+            let states = try context.fetch(FetchDescriptor<SyncedAchievementState>())
+                .filter { $0.ownerUserID == ownerID || (ownsLegacy && $0.ownerUserID == nil) }
+            let remoteIDs = states.reduce(into: Set<String>()) { result, state in
+                result.formUnion(decode(Data(state.unlockedAchievementIDsJSON.utf8)))
+            }
+            // Preserve legacy point adjustments once, then count each known
+            // achievement once across every device's snapshot.
+            let remoteBonus = states.map { state in
+                max(0, state.totalPoints - points(for: decode(Data(state.unlockedAchievementIDsJSON.utf8))))
+            }.max() ?? 0
+            let localBonus = max(0, totalPoints - points(for: unlockedIDs))
+            let remotePoints = points(for: remoteIDs) + remoteBonus
+            unlockedIDs.formUnion(remoteIDs)
+            totalPoints = points(for: unlockedIDs) + max(localBonus, remoteBonus)
+            cacheLocally(ownerID: ownerID)
+
+            guard !unlockedIDs.isSubset(of: remoteIDs) || totalPoints > remotePoints else { return }
+            // Append only when local progress is missing remotely. Never overwrite
+            // a shared snapshot: concurrent offline unlocks must both survive.
+            let snapshot = SyncedAchievementState(ownerUserID: ownerID)
+            snapshot.unlockedAchievementIDsJSON = String(
+                decoding: try JSONEncoder().encode(unlockedIDs.sorted()), as: UTF8.self
+            )
+            snapshot.totalPoints = totalPoints
+            context.insert(snapshot)
+            try context.save()
+        } catch {
+            logger.error("Could not persist achievements: \(error.localizedDescription)")
+        }
+    }
+
+    private func cachePrefix(_ ownerID: UUID) -> String {
+        "achievements.\(ownerID.uuidString)"
+    }
+
+    private func decode(_ data: Data?) -> Set<String> {
+        guard let data else { return [] }
+        return (try? JSONDecoder().decode(Set<String>.self, from: data)) ?? []
+    }
+
+    private func points(for ids: Set<String>) -> Int {
+        ids.compactMap(AchievementType.init(rawValue:)).reduce(0) { $0 + $1.points }
+    }
+
+    private func cacheLocally(ownerID: UUID) {
+        let prefix = cachePrefix(ownerID)
+        defaults.set(try? JSONEncoder().encode(unlockedIDs), forKey: prefix + ".ids")
+        defaults.set(totalPoints, forKey: prefix + ".points")
     }
 
     func checkGameAchievements(completedGamesCount: Int, points: Int, rebounds: Int, assists: Int, steals: Int, goals: Int) -> [AchievementType] {
@@ -255,96 +297,4 @@ class AchievementManager {
         return newAchievements
     }
 
-    // MARK: - Cloud Sync
-
-    private func markLocalMutationAndPush() {
-        let ownerUserID = AppState.shared.currentUserID
-        UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: localUpdatedAtKey(for: ownerUserID))
-
-        guard let context = SharedModelContainer.makeContext() else { return }
-        pushLocalStateToCloud(ownerUserID: ownerUserID, context: context)
-    }
-
-    private func localUpdatedAtKey(for ownerUserID: UUID?) -> String {
-        "\(localUpdatedAtPrefix).\(ownerUserID?.uuidString ?? "global")"
-    }
-
-    private func fetchOrCreateState(ownerUserID: UUID?, context: ModelContext) -> SyncedAchievementState {
-        let descriptor = FetchDescriptor<SyncedAchievementState>()
-        if let states = try? context.fetch(descriptor),
-           let existing = states.first(where: { $0.ownerUserID == ownerUserID }) {
-            return existing
-        }
-
-        let created = SyncedAchievementState(ownerUserID: ownerUserID)
-        context.insert(created)
-        _ = writeLocalStateIfNeeded(to: created, ownerUserID: ownerUserID)
-        save(context: context)
-        return created
-    }
-
-    private func pushLocalStateToCloud(ownerUserID: UUID?, context: ModelContext) {
-        let state = fetchOrCreateState(ownerUserID: ownerUserID, context: context)
-        guard writeLocalStateIfNeeded(to: state, ownerUserID: ownerUserID) else { return }
-        save(context: context)
-    }
-
-    @discardableResult
-    private func writeLocalStateIfNeeded(
-        to state: SyncedAchievementState,
-        ownerUserID: UUID?
-    ) -> Bool {
-        var changed = false
-
-        let unlockedData = UserDefaults.standard.data(forKey: unlockedKey)
-        let unlockedIDs = (try? JSONDecoder().decode(Set<String>.self, from: unlockedData ?? Data())) ?? []
-        let encoded = (try? String(data: JSONEncoder().encode(Array(unlockedIDs).sorted()), encoding: .utf8)) ?? "[]"
-        if state.unlockedAchievementIDsJSON != encoded {
-            state.unlockedAchievementIDsJSON = encoded
-            changed = true
-        }
-
-        let points = UserDefaults.standard.integer(forKey: totalPointsKey)
-        if state.totalPoints != points {
-            state.totalPoints = points
-            changed = true
-        }
-
-        if state.ownerUserID != ownerUserID {
-            state.ownerUserID = ownerUserID
-            changed = true
-        }
-
-        let localUpdatedAt = UserDefaults.standard.double(forKey: localUpdatedAtKey(for: ownerUserID))
-        if localUpdatedAt > 0 {
-            let localDate = Date(timeIntervalSince1970: localUpdatedAt)
-            if state.updatedAt != localDate {
-                state.updatedAt = localDate
-                changed = true
-            }
-        } else if changed {
-            state.updatedAt = Date()
-        }
-
-        return changed
-    }
-
-    private func applyRemoteStateToDefaults(_ state: SyncedAchievementState) {
-        let unlockedIDs = ((try? JSONDecoder().decode([String].self, from: Data(state.unlockedAchievementIDsJSON.utf8))) ?? [])
-        let unique = Set(unlockedIDs)
-
-        if let data = try? JSONEncoder().encode(unique) {
-            UserDefaults.standard.set(data, forKey: unlockedKey)
-        }
-        UserDefaults.standard.set(state.totalPoints, forKey: totalPointsKey)
-    }
-
-    private func save(context: ModelContext) {
-        guard context.hasChanges else { return }
-        do {
-            try context.save()
-        } catch {
-            // Keep local progress if cloud write fails.
-        }
-    }
 }

@@ -1,5 +1,8 @@
+import OSLog
 import Foundation
 import SwiftData
+
+private let logger = Logger(subsystem: "com.stattie.app", category: "SeedData")
 
 final class SeedDataService {
     static let shared = SeedDataService()
@@ -146,59 +149,23 @@ final class SeedDataService {
     // MARK: - Sports Seeding
 
     func seedBasketballIfNeeded(context: ModelContext, persist: Bool = true) {
-        let basketball = fetchSport(named: "Basketball", context: context) ?? {
-            let created = Sport(name: "Basketball", iconName: "basketball.fill", isBuiltIn: true)
-            context.insert(created)
-            return created
-        }()
-
-        assignIfChanged(basketball.iconName, "basketball.fill") { basketball.iconName = $0 }
-        assignIfChanged(basketball.isBuiltIn, true) { basketball.isBuiltIn = $0 }
-        assignIfChanged(basketball.isTeamSport, true) { basketball.isTeamSport = $0 }
-        ensureStatDefinitions(for: basketball, from: basketballStatDefinitions, context: context)
-        persistIfNeeded(context, persist: persist, label: "Basketball sport")
+        seedSportRecord(name: "Basketball", iconName: "basketball.fill", isTeamSport: true,
+                        seeds: basketballStatDefinitions, context: context, persist: persist)
     }
 
     func seedSoccerIfNeeded(context: ModelContext, persist: Bool = true) {
-        let soccer = fetchSport(named: "Soccer", context: context) ?? {
-            let created = Sport(name: "Soccer", iconName: "soccerball", isBuiltIn: true)
-            context.insert(created)
-            return created
-        }()
-
-        assignIfChanged(soccer.iconName, "soccerball") { soccer.iconName = $0 }
-        assignIfChanged(soccer.isBuiltIn, true) { soccer.isBuiltIn = $0 }
-        assignIfChanged(soccer.isTeamSport, true) { soccer.isTeamSport = $0 }
-        ensureStatDefinitions(for: soccer, from: soccerStatDefinitions, context: context)
-        persistIfNeeded(context, persist: persist, label: "Soccer sport")
+        seedSportRecord(name: "Soccer", iconName: "soccerball", isTeamSport: true,
+                        seeds: soccerStatDefinitions, context: context, persist: persist)
     }
 
     func seedTennisIfNeeded(context: ModelContext, persist: Bool = true) {
-        let tennis = fetchSport(named: "Tennis", context: context) ?? {
-            let created = Sport(name: "Tennis", iconName: "tennisball.fill", isBuiltIn: true, isTeamSport: false)
-            context.insert(created)
-            return created
-        }()
-
-        assignIfChanged(tennis.iconName, "tennisball.fill") { tennis.iconName = $0 }
-        assignIfChanged(tennis.isBuiltIn, true) { tennis.isBuiltIn = $0 }
-        assignIfChanged(tennis.isTeamSport, false) { tennis.isTeamSport = $0 }
-        ensureStatDefinitions(for: tennis, from: tennisStatDefinitions, context: context)
-        persistIfNeeded(context, persist: persist, label: "Tennis sport")
+        seedSportRecord(name: "Tennis", iconName: "tennisball.fill", isTeamSport: false,
+                        seeds: tennisStatDefinitions, context: context, persist: persist)
     }
 
     func seedGolfIfNeeded(context: ModelContext, persist: Bool = true) {
-        let golf = fetchSport(named: "Golf", context: context) ?? {
-            let created = Sport(name: "Golf", iconName: "figure.golf", isBuiltIn: true, isTeamSport: false)
-            context.insert(created)
-            return created
-        }()
-
-        assignIfChanged(golf.iconName, "figure.golf") { golf.iconName = $0 }
-        assignIfChanged(golf.isBuiltIn, true) { golf.isBuiltIn = $0 }
-        assignIfChanged(golf.isTeamSport, false) { golf.isTeamSport = $0 }
-        ensureStatDefinitions(for: golf, from: golfStatDefinitions, context: context)
-        persistIfNeeded(context, persist: persist, label: "Golf sport")
+        seedSportRecord(name: "Golf", iconName: "figure.golf", isTeamSport: false,
+                        seeds: golfStatDefinitions, context: context, persist: persist)
     }
 
     func getBasketball(context: ModelContext) -> Sport? {
@@ -217,13 +184,13 @@ final class SeedDataService {
         fetchSport(named: "Golf", context: context)
     }
 
-    func seedAllSportsIfNeeded(context: ModelContext) {
+    func seedAllSportsIfNeeded(context: ModelContext, persist: Bool = true) {
         seedBasketballIfNeeded(context: context, persist: false)
         seedSoccerIfNeeded(context: context, persist: false)
         seedTennisIfNeeded(context: context, persist: false)
         seedGolfIfNeeded(context: context, persist: false)
         seedCatalogSportsIfNeeded(context: context, persist: false)
-        persistIfNeeded(context, persist: true, label: "all sports")
+        persistIfNeeded(context, persist: persist, label: "all sports")
     }
 
     func seedSelectedSports(_ names: Set<String>, context: ModelContext) {
@@ -257,32 +224,28 @@ final class SeedDataService {
     }
 
     private func seedCatalogSport(_ profile: SportProfile, context: ModelContext, persist: Bool = true) {
-        let sport = fetchSport(named: profile.name, context: context) ?? {
-            let created = Sport(
-                name: profile.name,
-                iconName: profile.iconName,
-                isBuiltIn: true,
-                isTeamSport: profile.isTeamSport
-            )
+        let seeds: [StatSeed] = profile.stats.map { spec in
+            (spec.name, spec.shortName, spec.category, spec.hasMadeAndMissed,
+             spec.pointValue, spec.sortOrder, spec.iconName)
+        }
+        seedSportRecord(name: profile.name, iconName: profile.iconName, isTeamSport: profile.isTeamSport,
+                        seeds: seeds, context: context, persist: persist)
+    }
+
+    private func seedSportRecord(
+        name: String, iconName: String, isTeamSport: Bool, seeds: [StatSeed],
+        context: ModelContext, persist: Bool
+    ) {
+        let sport = fetchSport(named: name, context: context) ?? {
+            let created = Sport(name: name, iconName: iconName, isBuiltIn: true, isTeamSport: isTeamSport)
             context.insert(created)
             return created
         }()
-
-        assignIfChanged(sport.iconName, profile.iconName) { sport.iconName = $0 }
+        assignIfChanged(sport.iconName, iconName) { sport.iconName = $0 }
         assignIfChanged(sport.isBuiltIn, true) { sport.isBuiltIn = $0 }
-        assignIfChanged(sport.isTeamSport, profile.isTeamSport) { sport.isTeamSport = $0 }
-        ensureStatDefinitions(for: sport, from: profile.stats.map { spec in
-            (
-                name: spec.name,
-                shortName: spec.shortName,
-                category: spec.category,
-                hasMadeAndMissed: spec.hasMadeAndMissed,
-                pointValue: spec.pointValue,
-                sortOrder: spec.sortOrder,
-                iconName: spec.iconName
-            )
-        }, context: context)
-        persistIfNeeded(context, persist: persist, label: "\(profile.name) sport")
+        assignIfChanged(sport.isTeamSport, isTeamSport) { sport.isTeamSport = $0 }
+        ensureStatDefinitions(for: sport, from: seeds, context: context)
+        persistIfNeeded(context, persist: persist, label: "\(name) sport")
     }
 
     // MARK: - Showcase Data for Screenshots
@@ -298,7 +261,7 @@ final class SeedDataService {
 
         guard let basketball = getBasketball(context: context),
               let soccer = getSoccer(context: context) else {
-            print("Showcase seeding skipped: required sports are missing")
+            logger.debug("Showcase seeding skipped: required sports are missing")
             return
         }
 
@@ -763,9 +726,9 @@ final class SeedDataService {
 
         do {
             try context.save()
-            print("Showcase data seeded successfully")
+            logger.debug("Showcase data seeded successfully")
         } catch {
-            print("Failed to save showcase data: \(error)")
+            logger.error("Failed to save showcase data: \(error.localizedDescription)")
         }
     }
 
@@ -784,7 +747,7 @@ final class SeedDataService {
             let sports = try context.fetch(FetchDescriptor<Sport>())
             return sports.first { $0.name.caseInsensitiveCompare(name) == .orderedSame }
         } catch {
-            print("Failed to fetch sports: \(error)")
+            logger.error("Failed to fetch sports: \(error.localizedDescription)")
             return nil
         }
     }
@@ -839,7 +802,7 @@ final class SeedDataService {
             let teams = try context.fetch(FetchDescriptor<Team>())
             return teams.contains { $0.name == showcaseMarkerTeamName }
         } catch {
-            print("Failed to check showcase marker: \(error)")
+            logger.error("Failed to check showcase marker: \(error.localizedDescription)")
             return false
         }
     }
@@ -859,7 +822,7 @@ final class SeedDataService {
             }
             return fallback
         } catch {
-            print("Failed to fetch users: \(error)")
+            logger.error("Failed to fetch users: \(error.localizedDescription)")
             return nil
         }
     }
@@ -1067,7 +1030,7 @@ final class SeedDataService {
 
             try context.save()
         } catch {
-            print("Failed to seed Fenwick players: \(error)")
+            logger.error("Failed to seed Fenwick players: \(error.localizedDescription)")
         }
     }
 
@@ -1116,9 +1079,9 @@ final class SeedDataService {
             }
 
             try context.save()
-            print("Showcase data removed")
+            logger.debug("Showcase data removed")
         } catch {
-            print("Failed to remove showcase data: \(error)")
+            logger.error("Failed to remove showcase data: \(error.localizedDescription)")
         }
     }
 
@@ -1135,7 +1098,7 @@ final class SeedDataService {
                 team.sport?.name.caseInsensitiveCompare(sportName) == .orderedSame
             }
         } catch {
-            print("Failed to fetch teams: \(error)")
+            logger.error("Failed to fetch teams: \(error.localizedDescription)")
             return nil
         }
     }
@@ -1187,7 +1150,7 @@ final class SeedDataService {
                 return (game.personStats ?? []).contains(where: { $0.person?.id == player.id })
             }.count
         } catch {
-            print("Failed to count Fenwick history games: \(error)")
+            logger.error("Failed to count Fenwick history games: \(error.localizedDescription)")
             return 0
         }
     }
@@ -1775,9 +1738,9 @@ final class SeedDataService {
         guard persist, context.hasChanges else { return }
         do {
             try context.save()
-            print("\(label) seeded successfully")
+            logger.debug("\(label) seeded successfully")
         } catch {
-            print("Failed to save \(label): \(error)")
+            logger.error("Failed to save \(label): \(error.localizedDescription)")
         }
     }
 
