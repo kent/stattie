@@ -200,7 +200,8 @@ def find_bundle(client: AppStoreConnect) -> dict[str, Any]:
 
 
 def capability_types(client: AppStoreConnect, bundle_id: str) -> set[str]:
-    payload = client.get(f"/v1/bundleIds/{bundle_id}/bundleIdCapabilities?limit=200")
+    # Production rejects `limit` on this related-resource endpoint.
+    payload = client.get(f"/v1/bundleIds/{bundle_id}/bundleIdCapabilities")
     types: set[str] = set()
     for item in payload.get("data") or []:
         capability = (item.get("attributes") or {}).get("capabilityType")
