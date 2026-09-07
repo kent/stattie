@@ -113,31 +113,49 @@ class AppStoreConnect:
         self.token = token
 
     def request(self, method: str, path: str, payload: dict[str, Any] | None = None) -> Any:
-        data = None if payload is None else json.dumps(payload).encode()
-        request = urllib.request.Request(
-            f"{API_BASE}{path}",
-            data=data,
-            method=method,
-            headers={
-                "Authorization": f"Bearer {self.token}",
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-            },
-        )
-        try:
-            with urllib.request.urlopen(request) as response:
-                raw = response.read()
-                return json.loads(raw) if raw else {}
-        except urllib.error.HTTPError as error:
-            body = error.read().decode("utf-8", "replace")
-            message = api_error_message(body)
-            if error.code == 403:
+        max_attempts = 5 if method in {"POST", "PATCH"} else 1
+        last_message = ""
+        last_status = 0
+        for attempt in range(1, max_attempts + 1):
+            data = None if payload is None else json.dumps(payload).encode()
+            request = urllib.request.Request(
+                f"{API_BASE}{path}",
+                data=data,
+                method=method,
+                headers={
+                    "Authorization": f"Bearer {self.token}",
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                },
+            )
+            try:
+                with urllib.request.urlopen(request) as response:
+                    raw = response.read()
+                    return json.loads(raw) if raw else {}
+            except urllib.error.HTTPError as error:
+                body = error.read().decode("utf-8", "replace")
+                last_status = error.code
+                last_message = api_error_message(body)
+                if error.code >= 500 and attempt < max_attempts:
+                    delay = 2 ** attempt
+                    print(
+                        f"App Store Connect {method} {path} returned {error.code}; "
+                        f"retry {attempt}/{max_attempts - 1} in {delay}s."
+                    )
+                    time.sleep(delay)
+                    continue
+                if error.code == 403:
+                    raise SystemExit(
+                        "The App Store Connect API key cannot update identifiers or profiles. "
+                        f"Enable Push Notifications on {BUNDLE_ID} and regenerate "
+                        f"{PROFILE_NAME!r} in the Developer portal. Apple said: {last_message}"
+                    ) from error
                 raise SystemExit(
-                    "The App Store Connect API key cannot update identifiers or profiles. "
-                    f"Enable Push Notifications on {BUNDLE_ID} and regenerate "
-                    f"{PROFILE_NAME!r} in the Developer portal. Apple said: {message}"
+                    f"App Store Connect {method} {path} failed ({error.code}): {last_message}"
                 ) from error
-            raise SystemExit(f"App Store Connect {method} {path} failed ({error.code}): {message}") from error
+        raise SystemExit(
+            f"App Store Connect {method} {path} failed ({last_status}): {last_message}"
+        )
 
     def get(self, path: str) -> Any:
         return self.request("GET", path)
@@ -235,6 +253,7 @@ def enable_push(client: AppStoreConnect, bundle_id: str) -> None:
             return
         raise
     print("Push Notifications is enabled.")
+    time.sleep(5)
 
 
 def list_named_profiles(client: AppStoreConnect) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
@@ -324,7 +343,7 @@ def ensure_profile(client: AppStoreConnect, bundle_id: str) -> None:
         print(f"Removing stale profile {PROFILE_NAME}.")
         delete_profile(client, profile["id"])
     if profiles:
-        time.sleep(2)
+        time.sleep(5)
 
     print(f"Creating {PROFILE_NAME} with Push Notifications.")
     created = create_profile(client, bundle_id, certificate_ids)
