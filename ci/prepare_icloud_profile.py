@@ -171,7 +171,7 @@ def main():
     if os.environ.get("GITHUB_ACTIONS") != "true":
         raise RuntimeError("Signing profile preparation runs only in protected GitHub Actions")
     profile, decoded = prepare_profile(AppleAPI(api_token()))
-    profile_uuid = str(uuid.UUID(decoded["UUID"]))
+    profile_uuid = str(uuid.UUID(decoded["UUID"])).upper()
     content = base64.b64decode(profile["attributes"]["profileContent"], validate=True)
     for directory in ("Library/Developer/Xcode/UserData/Provisioning Profiles",
                       "Library/MobileDevice/Provisioning Profiles"):
