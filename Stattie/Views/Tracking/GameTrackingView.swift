@@ -324,8 +324,8 @@ struct GameTrackingView: View {
                         sportName: game.sport?.name,
                         assignedPositions: assignedShiftPositions,
                         selectedPosition: $selectedGamePosition,
-                        title: "Change Position",
-                        actionTitle: "Start Shift in New Position",
+                        isPositionChange: true,
+                        previousPosition: activeShift?.recordedPosition,
                         onStart: changeActivePosition
                     )
                     .errorAlert(title: "Couldn’t Change Position", message: $persistenceError)
