@@ -191,79 +191,7 @@ struct ActivityRow: View {
     }
 }
 
-// MARK: - Activity Summary Card (for use in other views)
 
-struct ActivitySummaryCard: View {
-    @Query private var users: [User]
-    @Query(sort: \Game.gameDate, order: .reverse) private var allGames: [Game]
-
-    private var currentUser: User? {
-        users.resolvedCurrentUser
-    }
-
-    private var recentGames: [Game] {
-        Array(allGames.filter { $0.isCompleted && $0.isOwned(by: currentUser) }.prefix(3))
-    }
-
-    private var hasActivity: Bool {
-        !recentGames.isEmpty
-    }
-
-    var body: some View {
-        if hasActivity {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Text("Recent Activity")
-                        .font(.headline)
-                    Spacer()
-                    NavigationLink {
-                        RecentActivityView()
-                    } label: {
-                        Text("See All")
-                            .font(.subheadline)
-                    }
-                }
-
-                ForEach(recentGames) { game in
-                    MiniActivityRow(game: game)
-                }
-            }
-            .padding()
-            .background(Color(.secondarySystemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-        }
-    }
-}
-
-struct MiniActivityRow: View {
-    let game: Game
-
-    private var playerName: String {
-        (game.personStats ?? []).first?.person?.firstName ?? "Game"
-    }
-
-    var body: some View {
-        HStack(spacing: 8) {
-            Circle()
-                .fill(Color.accentColor.opacity(0.2))
-                .frame(width: 8, height: 8)
-                .accessibilityHidden(true)
-
-            Text(playerName)
-                .font(.subheadline)
-
-            Text("\(game.listSummaryValue) \(game.listSummaryLabel)")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-
-            Spacer()
-
-            Text(game.gameDate, style: .relative)
-                .font(.caption)
-                .foregroundStyle(.tertiary)
-        }
-    }
-}
 
 #Preview {
     NavigationStack {

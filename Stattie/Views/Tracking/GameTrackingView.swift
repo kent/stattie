@@ -804,9 +804,9 @@ struct GameTrackingView: View {
     private var genericPrimaryValue: Int {
         guard let definition = genericPrimaryDefinition else { return game.totalPoints }
         if definition.hasMadeAndMissed {
-            return currentStat(named: definition.shortName)?.made ?? game.totalMade(forName: definition.shortName)
+            return displayedStats.totalMade(forName: definition.shortName)
         }
-        return currentStat(named: definition.shortName)?.count ?? game.totalCount(forName: definition.shortName)
+        return displayedStats.totalCount(forName: definition.shortName)
     }
 
     private var genericTrackingView: some View {
@@ -828,7 +828,8 @@ struct GameTrackingView: View {
                 ForEach(genericShootingDefinitions, id: \.id) { definition in
                     ShootingStatButton(
                         definition: definition,
-                        stat: currentStat(named: definition.shortName),
+                        made: displayedStats.totalMade(forName: definition.shortName),
+                        missed: displayedStats.totalMissed(forName: definition.shortName),
                         onMade: { recordMade(definition.shortName, points: definition.pointValue) },
                         onMissed: { recordMiss(definition.shortName, points: definition.pointValue) }
                     )
@@ -839,7 +840,7 @@ struct GameTrackingView: View {
                     ForEach(genericCountDefinitions, id: \.id) { definition in
                         CountStatButton(
                             definition: definition,
-                            stat: currentStat(named: definition.shortName),
+                            count: displayedStats.totalCount(forName: definition.shortName),
                             onTap: { recordCount(definition.shortName) }
                         )
                     }
@@ -851,12 +852,9 @@ struct GameTrackingView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private func currentStat(named name: String) -> Stat? {
-        game.statRecord(
-            named: name,
-            personGameStats: currentStatPersonAttribution,
-            shift: activeShift
-        )
+    private var displayedStats: any StatProviding {
+        if let activeShift { return activeShift }
+        return game
     }
 
     // MARK: - Timer

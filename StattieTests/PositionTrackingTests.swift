@@ -5,19 +5,7 @@ import SwiftData
 @MainActor
 final class PositionTrackingTests: XCTestCase {
     private func makeContainer() throws -> ModelContainer {
-        let schema = Schema([
-            Game.self,
-            PersonGameStats.self,
-            Shift.self,
-            Stat.self,
-            ShiftStat.self,
-            User.self,
-            Person.self,
-            Team.self,
-            TeamMembership.self,
-            Sport.self,
-            StatDefinition.self
-        ])
+        let schema = SharedModelContainer.schema
         let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
         return try ModelContainer(for: schema, configurations: [configuration])
     }

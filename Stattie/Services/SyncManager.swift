@@ -1,8 +1,11 @@
+import OSLog
 import Foundation
 import CloudKit
 import SwiftData
 import Combine
 import CoreData
+
+private let logger = Logger(subsystem: "com.stattie.app", category: "CloudSync")
 
 @Observable
 final class SyncManager {
@@ -288,7 +291,7 @@ final class SyncManager {
                 cloudKitUserID = recordID.recordName
             }
         } catch {
-            print("Failed to fetch CloudKit user ID: \(error)")
+            logger.error("Failed to fetch CloudKit user ID: \(error.localizedDescription)")
             await MainActor.run {
                 cloudKitUserID = nil
             }

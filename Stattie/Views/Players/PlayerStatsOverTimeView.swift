@@ -574,25 +574,6 @@ struct GameStatRow: View {
     }
 }
 
-struct StatPill: View {
-    let label: String
-    let value: Int
-    let isHighlighted: Bool
-    var color: Color = .blue
-
-    var body: some View {
-        VStack(spacing: 0) {
-            Text("\(value)")
-                .font(.subheadline.bold())
-                .foregroundStyle(isHighlighted ? color : .primary)
-            Text(label)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-        }
-        .frame(width: 36)
-    }
-}
-
 #Preview {
     NavigationStack {
         PersonStatsOverTimeView(player: Person(firstName: "Jack", lastName: "Fenwick", jerseyNumber: 23, position: "Guard"))

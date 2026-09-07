@@ -1,6 +1,9 @@
+import OSLog
 import Foundation
 import SwiftUI
 import SwiftData
+
+private let logger = Logger(subsystem: "com.stattie.app", category: "Achievements")
 
 // MARK: - Achievement Definitions
 
@@ -345,6 +348,7 @@ class AchievementManager {
             try context.save()
         } catch {
             // Keep local progress if cloud write fails.
+            logger.error("Could not persist achievements: \(error.localizedDescription)")
         }
     }
 }

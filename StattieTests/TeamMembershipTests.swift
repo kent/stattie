@@ -5,19 +5,7 @@ import SwiftData
 @MainActor
 final class TeamMembershipTests: XCTestCase {
     private func makeContainer() throws -> ModelContainer {
-        let schema = Schema([
-            User.self,
-            Person.self,
-            Team.self,
-            TeamMembership.self,
-            Sport.self,
-            StatDefinition.self,
-            Game.self,
-            PersonGameStats.self,
-            Stat.self,
-            Shift.self,
-            ShiftStat.self
-        ])
+        let schema = SharedModelContainer.schema
         let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
         return try ModelContainer(for: schema, configurations: [configuration])
     }

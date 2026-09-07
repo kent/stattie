@@ -2,12 +2,11 @@ import SwiftUI
 
 struct ShootingStatButton: View {
     let definition: StatDefinition
-    let stat: Stat?
+    let made: Int
+    let missed: Int
     let onMade: () -> Void
     let onMissed: () -> Void
 
-    private var made: Int { stat?.made ?? 0 }
-    private var missed: Int { stat?.missed ?? 0 }
     private var attempts: Int { made + missed }
     private var percentage: String {
         guard attempts > 0 else { return "0%" }
@@ -87,10 +86,8 @@ struct ShootingStatButton: View {
 
 struct CountStatButton: View {
     let definition: StatDefinition
-    let stat: Stat?
+    let count: Int
     let onTap: () -> Void
-
-    private var count: Int { stat?.count ?? 0 }
 
     var body: some View {
         Button(action: onTap) {
@@ -169,14 +166,15 @@ struct RecordingStatButton: View {
     VStack(spacing: 20) {
         ShootingStatButton(
             definition: StatDefinition(name: "2-Point Shot", shortName: "2PT", category: "shooting", hasMadeAndMissed: true, pointValue: 2),
-            stat: nil,
+            made: 0,
+            missed: 0,
             onMade: {},
             onMissed: {}
         )
 
         CountStatButton(
             definition: StatDefinition(name: "Steal", shortName: "STL", category: "defense", iconName: "hand.raised.fill"),
-            stat: nil,
+            count: 0,
             onTap: {}
         )
     }

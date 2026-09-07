@@ -143,19 +143,7 @@ final class SportCatalogTests: XCTestCase {
     }
 
     func testSeedingCreatesNewSportsWithoutChangingBasketballAndSoccerPresets() throws {
-        let schema = Schema([
-            Sport.self,
-            StatDefinition.self,
-            Game.self,
-            Person.self,
-            Team.self,
-            TeamMembership.self,
-            PersonGameStats.self,
-            Stat.self,
-            Shift.self,
-            ShiftStat.self,
-            User.self,
-        ])
+        let schema = SharedModelContainer.schema
         let container = try ModelContainer(
             for: schema,
             configurations: ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)

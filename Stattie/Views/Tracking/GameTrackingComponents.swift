@@ -277,26 +277,6 @@ struct ShiftGameOverviewSheet: View {
     }
 }
 
-struct AchievementBadge: View {
-    let title: String
-    let icon: String
-    let color: Color
-
-    var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.largeTitle)
-                .foregroundStyle(color)
-            Text(title)
-                .font(.caption.bold())
-                .foregroundStyle(.primary)
-        }
-        .padding()
-        .background(color.opacity(0.15))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-    }
-}
-
 struct MilestoneOverlay: View {
     let text: String
 

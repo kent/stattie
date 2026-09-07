@@ -1,5 +1,8 @@
+import OSLog
 import Foundation
 import SwiftData
+
+private let logger = Logger(subsystem: "com.stattie.app", category: "Preferences")
 
 enum CloudSyncedPreferences {
     private static let defaults = UserDefaults.standard
@@ -121,6 +124,7 @@ enum CloudSyncedPreferences {
             try context.save()
         } catch {
             // Keep local defaults as source of truth if cloud write fails.
+            logger.error("Could not persist cloud preferences: \(error.localizedDescription)")
         }
     }
 }

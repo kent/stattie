@@ -175,59 +175,7 @@ struct OnboardingView: View {
     }
 }
 
-// MARK: - First Player Prompt
 
-struct FirstPlayerPromptView: View {
-    @Binding var isPresented: Bool
-    let onAddPlayer: () -> Void
-
-    var body: some View {
-        VStack(spacing: 24) {
-            Spacer()
-
-            Image(systemName: "person.badge.plus")
-                .scaledFont(size: 60, relativeTo: .largeTitle)
-                .foregroundStyle(.accent)
-
-            Text("Ready to track your first game?")
-                .font(.title2.bold())
-                .multilineTextAlignment(.center)
-
-            Text("Add a player to get started. You can add their name, jersey number, and position.")
-                .font(.body)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
-
-            VStack(spacing: 12) {
-                Button {
-                    onAddPlayer()
-                    isPresented = false
-                } label: {
-                    Text("Add Your First Player")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.accentColor)
-                        .foregroundStyle(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                }
-
-                Button {
-                    isPresented = false
-                } label: {
-                    Text("I'll do this later")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .padding(.horizontal, 32)
-
-            Spacer()
-        }
-        .padding()
-    }
-}
 
 struct SportSelectionCard: View {
     let sport: SportSelection
