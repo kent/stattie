@@ -155,9 +155,9 @@ struct PlayerGameOverviewView: View {
                 Button("Cancel", role: .cancel) { }
                 Button("End Game", role: .destructive) {
                     guard let game else { return }
-                    persistence.save(modelContext) {
+                    persistence.save(modelContext, operation: {
                         _ = try game.finalize(in: modelContext)
-                    }
+                    })
                 }
             } message: {
                 Text("This will mark the game as completed.")
