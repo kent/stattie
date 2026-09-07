@@ -162,6 +162,7 @@ final class CloudKitSyncTests: XCTestCase {
         let manager = AchievementManager(defaults: defaults)
         let first = SyncedAchievementState(ownerUserID: ownerID)
         first.unlockedAchievementIDsJSON = "[\"first_game\"]"
+        first.totalPoints = 500 // Includes preserved legacy points.
         first.updatedAt = Date(timeIntervalSince1970: 10)
         let second = SyncedAchievementState(ownerUserID: ownerID)
         second.unlockedAchievementIDsJSON = "[\"hat_trick\"]"
@@ -172,7 +173,7 @@ final class CloudKitSyncTests: XCTestCase {
 
         manager.synchronizeFromCloud()
         XCTAssertEqual(manager.unlockedAchievements, [.firstGame, .hatTrick])
-        XCTAssertEqual(manager.totalPoints, AchievementType.firstGame.points + AchievementType.hatTrick.points)
+        XCTAssertEqual(manager.totalPoints, 500 + AchievementType.hatTrick.points)
         manager.synchronizeFromCloud()
         XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<SyncedAchievementState>()), 2)
         XCTAssertEqual(second.updatedAt, Date(timeIntervalSince1970: 5))

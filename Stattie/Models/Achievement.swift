@@ -222,9 +222,15 @@ final class AchievementManager {
             let remoteIDs = states.reduce(into: Set<String>()) { result, state in
                 result.formUnion(decode(Data(state.unlockedAchievementIDsJSON.utf8)))
             }
-            let remotePoints = max(states.map(\.totalPoints).max() ?? 0, points(for: remoteIDs))
+            // Preserve legacy point adjustments once, then count each known
+            // achievement once across every device's snapshot.
+            let remoteBonus = states.map { state in
+                max(0, state.totalPoints - points(for: decode(Data(state.unlockedAchievementIDsJSON.utf8))))
+            }.max() ?? 0
+            let localBonus = max(0, totalPoints - points(for: unlockedIDs))
+            let remotePoints = points(for: remoteIDs) + remoteBonus
             unlockedIDs.formUnion(remoteIDs)
-            totalPoints = max(totalPoints, remotePoints, points(for: unlockedIDs))
+            totalPoints = points(for: unlockedIDs) + max(localBonus, remoteBonus)
             cacheLocally(ownerID: ownerID)
 
             guard !unlockedIDs.isSubset(of: remoteIDs) || totalPoints > remotePoints else { return }
