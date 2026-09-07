@@ -114,8 +114,9 @@ class AppStoreConnect:
 
     def request(self, method: str, path: str, payload: dict[str, Any] | None = None) -> Any:
         data = None if payload is None else json.dumps(payload).encode()
+        url = path if path.startswith("https://") else f"{API_BASE}{path}"
         request = urllib.request.Request(
-            f"{API_BASE}{path}",
+            url,
             data=data,
             method=method,
             headers={
@@ -200,12 +201,21 @@ def find_bundle(client: AppStoreConnect) -> dict[str, Any]:
 
 
 def capability_types(client: AppStoreConnect, bundle_id: str) -> set[str]:
-    payload = client.get(f"/v1/bundleIds/{bundle_id}/bundleIdCapabilities?limit=200")
+    # This related-resource endpoint rejects `limit`.
+    payload = client.get(f"/v1/bundleIds/{bundle_id}/bundleIdCapabilities")
     types: set[str] = set()
     for item in payload.get("data") or []:
         capability = (item.get("attributes") or {}).get("capabilityType")
         if capability:
             types.add(capability)
+    next_path = (payload.get("links") or {}).get("next") or ""
+    while next_path:
+        payload = client.get(next_path)
+        for item in payload.get("data") or []:
+            capability = (item.get("attributes") or {}).get("capabilityType")
+            if capability:
+                types.add(capability)
+        next_path = (payload.get("links") or {}).get("next") or ""
     return types
 
 
