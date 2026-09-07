@@ -588,7 +588,7 @@ struct PositionAssignments: Codable, Equatable {
         if assignments.count == 1 && assignments[0].percentage == 100 {
             return assignments[0].position.displayName
         }
-        return assignments.map { $0.displayText }.joined(separator: " / ")
+        return assignments.map { $0.position.displayName }.joined(separator: " / ")
     }
 
     /// Short display with abbreviations
@@ -599,7 +599,7 @@ struct PositionAssignments: Codable, Equatable {
         if assignments.count == 1 && assignments[0].percentage == 100 {
             return assignments[0].position.shortName
         }
-        return assignments.map { "\($0.position.shortName) \($0.percentage)%" }.joined(separator: " / ")
+        return assignments.map { $0.position.shortName }.joined(separator: " / ")
     }
 
     /// Primary position (highest percentage)
@@ -611,6 +611,17 @@ struct PositionAssignments: Codable, Equatable {
     func positions(for sportName: String?) -> [SoccerPosition] {
         let sport = SoccerPosition.supportedSport(for: sportName)
         return assignments.map(\.position).filter { $0.supportedSports.contains(sport) }
+    }
+
+    func filtered(for sportName: String?) -> PositionAssignments {
+        let sport = SoccerPosition.supportedSport(for: sportName)
+        return PositionAssignments(assignments: assignments.filter { $0.position.supportedSports.contains(sport) })
+    }
+
+    /// Multi-position players explicitly select a role; a single role is automatic.
+    func startingPosition(for sportName: String?) -> SoccerPosition? {
+        let positions = positions(for: sportName)
+        return positions.count == 1 ? positions.first : nil
     }
 
     /// Check if this is a goalie (any percentage as a keeper-style position)

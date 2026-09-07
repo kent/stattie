@@ -13,6 +13,7 @@ struct AddPlayerToTeamView: View {
     @Query(sort: \Team.name) private var allTeams: [Team]
 
     @State private var selectedTeamIDs: Set<UUID> = []
+    @State private var teamPositions: [UUID: PositionAssignments] = [:]
     @State private var showingCreateTeam = false
     @State private var saveError: String?
 
@@ -80,6 +81,18 @@ struct AddPlayerToTeamView: View {
                     }
                 }
 
+                ForEach(availableTeams.filter { selectedTeamIDs.contains($0.id) }) { team in
+                    if !SoccerPosition.positions(for: SoccerPosition.supportedSport(for: team.sport?.name)).isEmpty {
+                        Section {
+                            PositionPickerView(assignments: positionsBinding(for: team), sportName: team.sport?.name)
+                        } header: {
+                            Text("Positions · \(team.name)")
+                        } footer: {
+                            Text("Choose every position they play on this team.")
+                        }
+                    }
+                }
+
                 Section {
                     Button {
                         showingCreateTeam = true
@@ -112,6 +125,18 @@ struct AddPlayerToTeamView: View {
         }
     }
 
+    private func positionsBinding(for team: Team) -> Binding<PositionAssignments> {
+        Binding(
+            get: {
+                if let draft = teamPositions[team.id] { return draft }
+                let previous = (player.teamMemberships ?? []).first { $0.team?.id == team.id }
+                let source = previous?.positionAssignments ?? player.positionAssignments
+                return source.filtered(for: team.sport?.name)
+            },
+            set: { teamPositions[team.id] = $0 }
+        )
+    }
+
     private func toggleSelection(for team: Team) {
         if selectedTeamIDs.contains(team.id) {
             selectedTeamIDs.remove(team.id)
@@ -138,12 +163,13 @@ struct AddPlayerToTeamView: View {
 
         let previousPlayerMemberships = player.teamMemberships
         let previousTeamMemberships = teamsToAdd.map { ($0, $0.memberships) }
-        let previousValues = (previousPlayerMemberships ?? []).map { ($0, $0.isActive, $0.role, $0.jerseyNumber) }
+        let previousValues = (previousPlayerMemberships ?? []).map { ($0, $0.isActive, $0.role, $0.jerseyNumber, $0.position, $0.positionAssignmentsJSON) }
 
         for team in teamsToAdd {
             if let existingMembership = (player.teamMemberships ?? []).first(where: { $0.team?.id == team.id }) {
                 existingMembership.isActive = true
                 existingMembership.role = "player"
+                existingMembership.positionAssignments = positionsBinding(for: team).wrappedValue
                 if existingMembership.jerseyNumber == nil, player.jerseyNumber > 0 {
                     existingMembership.jerseyNumber = player.jerseyNumber
                 }
@@ -155,8 +181,7 @@ struct AddPlayerToTeamView: View {
                 team: team,
                 role: "player",
                 jerseyNumber: player.jerseyNumber > 0 ? player.jerseyNumber : nil,
-                position: player.position,
-                positionAssignments: player.positionAssignments.isEmpty ? nil : player.positionAssignments,
+                positionAssignments: positionsBinding(for: team).wrappedValue,
                 isActive: true
             )
             modelContext.insert(membership)
@@ -180,10 +205,12 @@ struct AddPlayerToTeamView: View {
             modelContext.rollback()
             player.teamMemberships = previousPlayerMemberships
             for (team, memberships) in previousTeamMemberships { team.memberships = memberships }
-            for (membership, active, role, number) in previousValues {
+            for (membership, active, role, number, position, assignments) in previousValues {
                 membership.isActive = active
                 membership.role = role
                 membership.jerseyNumber = number
+                membership.position = position
+                membership.positionAssignmentsJSON = assignments
             }
             saveError = error.localizedDescription
         }

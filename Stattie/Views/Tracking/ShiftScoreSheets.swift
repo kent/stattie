@@ -56,7 +56,9 @@ struct StartShiftScoreSheet: View {
     var sportName: String? = nil
     var assignedPositions: [SoccerPosition] = []
     @Binding var selectedPosition: SoccerPosition?
-    let onStart: () -> Void
+    var title = "Start Shift"
+    var actionTitle: String? = nil
+    let onStart: () -> Bool
 
     @State private var showingPositionPicker = false
 
@@ -125,10 +127,9 @@ struct StartShiftScoreSheet: View {
                 Spacer()
 
                 Button {
-                    onStart()
-                    dismiss()
+                    if onStart() { dismiss() }
                 } label: {
-                    Text(resolvedPosition.map { "Start Shift as \($0.displayName)" } ?? "Start Shift")
+                    Text(actionTitle ?? resolvedPosition.map { "Start Shift as \($0.displayName)" } ?? "Start Shift")
                         .font(.headline)
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
@@ -136,10 +137,11 @@ struct StartShiftScoreSheet: View {
                         .background(Color.green)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
+                .disabled(assignedPositions.count > 1 && resolvedPosition == nil)
                 .padding(.horizontal)
                 .padding(.bottom)
             }
-            .navigationTitle("Start Shift")
+            .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -169,7 +171,7 @@ struct StartShiftScoreSheet: View {
                 )
             }
             .onAppear {
-                if selectedPosition == nil {
+                if selectedPosition == nil, assignedPositions.count == 1 {
                     selectedPosition = assignedPositions.first
                 }
             }

@@ -139,4 +139,64 @@ final class PositionTrackingTests: XCTestCase {
         let resolved = person.positionAssignments(for: game)
         XCTAssertEqual(Set(resolved.positions(for: "Soccer")), [.defender, .goalkeeper])
     }
+    func testMultiplePositionsRequireSelectionAndSinglePositionIsAutomatic() {
+        let assignments = PositionAssignments(assignments: [
+            PositionAssignment(position: .defender, percentage: 50),
+            PositionAssignment(position: .goalkeeper, percentage: 50)
+        ])
+        XCTAssertNil(assignments.startingPosition(for: "Soccer"))
+        XCTAssertEqual(PositionAssignments(singlePosition: .defender).startingPosition(for: "Soccer"), .defender)
+        XCTAssertNil(assignments.startingPosition(for: "Basketball"))
+        XCTAssertTrue(assignments.filtered(for: "Basketball").isEmpty)
+    }
+
+    func testLivePositionChangePreservesEarlierStatsAndCreatesContinuousShift() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let game = Game(sport: Sport(name: "Soccer"))
+        let player = PersonGameStats(game: game)
+        context.insert(game)
+        context.insert(player)
+        let first = player.startNewShift(position: .defender)
+        context.insert(first)
+        let tackle = Stat(statName: "TKL", count: 2, personGameStats: player, game: game, shift: first)
+        context.insert(tackle)
+        first.statRecords = [tackle]
+        try context.save()
+        let boundary = first.startTime.addingTimeInterval(120)
+        let next = try player.changePosition(to: .goalkeeper, teamScore: 1, opponentScore: 0, at: boundary, in: context)
+
+        XCTAssertEqual(first.recordedPosition, .defender)
+        XCTAssertEqual(first.totalCount(forName: "TKL"), 2)
+        XCTAssertEqual(first.endTime, boundary)
+        XCTAssertEqual(next.startTime, boundary)
+        XCTAssertEqual(next.recordedPosition, .goalkeeper)
+        XCTAssertEqual(next.shiftNumber, 2)
+        XCTAssertEqual(next.startingTeamScore, 1)
+        XCTAssertTrue(next.canonicalStats.isEmpty)
+        XCTAssertEqual(player.currentShift?.id, next.id)
+        XCTAssertEqual(player.completedShifts.count, 1)
+    }
+
+    func testFailedPositionChangeRestoresActiveShift() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let game = Game()
+        let player = PersonGameStats(game: game)
+        context.insert(game)
+        context.insert(player)
+        let shift = player.startNewShift(position: .defender)
+        context.insert(shift)
+        try context.save()
+        XCTAssertThrowsError(try player.changePosition(
+            to: .goalkeeper, teamScore: 1, opponentScore: 0, in: context,
+            save: { throw CocoaError(.fileWriteUnknown) }
+        ))
+        XCTAssertEqual(player.shifts?.count, 1)
+        XCTAssertEqual(player.currentShift?.id, shift.id)
+        XCTAssertEqual(shift.recordedPosition, .defender)
+        XCTAssertNil(shift.endTime)
+        XCTAssertNil(shift.endingTeamScore)
+    }
+
 }

@@ -258,7 +258,7 @@ struct ShiftPositionPickerSheet: View {
     let playerName: String
     let confirmTitle: String
     @Binding var selectedPosition: SoccerPosition?
-    var onConfirm: (() -> Void)? = nil
+    @State private var draftPosition: SoccerPosition?
 
     private var supportedSport: SoccerPosition.SupportedSport {
         SoccerPosition.supportedSport(for: sportName)
@@ -303,15 +303,16 @@ struct ShiftPositionPickerSheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(confirmTitle) {
-                        onConfirm?()
+                        selectedPosition = draftPosition
                         dismiss()
                     }
-                    .disabled(selectedPosition == nil)
+                    .disabled(draftPosition == nil)
                 }
             }
+            .onAppear { draftPosition = selectedPosition }
             .safeAreaInset(edge: .bottom) {
-                if let selectedPosition {
-                    Text("\(playerName) will play this shift as \(selectedPosition.displayName).")
+                if let draftPosition {
+                    Text("\(playerName) will play this shift as \(draftPosition.displayName).")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity)
@@ -325,14 +326,14 @@ struct ShiftPositionPickerSheet: View {
 
     private func positionRow(_ position: SoccerPosition) -> some View {
         Button {
-            selectedPosition = position
+            draftPosition = position
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: position.iconName)
-                    .foregroundStyle(selectedPosition == position ? Color.white : Color.accentColor)
+                    .foregroundStyle(draftPosition == position ? Color.white : Color.accentColor)
                     .frame(width: 28, height: 28)
                     .background(
-                        Circle().fill(selectedPosition == position ? Color.accentColor : Color.accentColor.opacity(0.12))
+                        Circle().fill(draftPosition == position ? Color.accentColor : Color.accentColor.opacity(0.12))
                     )
 
                 VStack(alignment: .leading, spacing: 2) {
@@ -345,7 +346,7 @@ struct ShiftPositionPickerSheet: View {
 
                 Spacer()
 
-                if selectedPosition == position {
+                if draftPosition == position {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(.accent)
                 }
@@ -353,7 +354,7 @@ struct ShiftPositionPickerSheet: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(position.displayName)
-        .accessibilityValue(selectedPosition == position ? "Selected" : "Not selected")
+        .accessibilityValue(draftPosition == position ? "Selected" : "Not selected")
     }
 }
 

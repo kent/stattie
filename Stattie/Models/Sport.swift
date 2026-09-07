@@ -42,23 +42,16 @@ final class Sport {
 }
 
 enum TeamAssociationPolicy {
-    /// Only team sports with a matching membership should offer a team picker.
-    static func shouldOfferTeamPicker(sport: Sport?, memberships: [TeamMembership]) -> Bool {
-        guard let sport, sport.isTeamSport else { return false }
-        return !membershipsMatching(sport: sport, from: memberships).isEmpty
+    /// Offer all of the player's teams before choosing a sport. A stale last-played
+    /// sport must never hide a roster for a different sport.
+    static func gameMemberships(from memberships: [TeamMembership]) -> [TeamMembership] {
+        memberships.filter {
+            $0.isActive && $0.team?.isActive == true && $0.team?.sport?.isTeamSport == true
+        }.sorted { ($0.team?.name ?? "").localizedCaseInsensitiveCompare($1.team?.name ?? "") == .orderedAscending }
     }
 
-    /// Individual sports never preselect a team. Team sports prefer the last used matching team.
-    static func defaultMembership(
-        for sport: Sport?,
-        player: Person,
-        from memberships: [TeamMembership]
-    ) -> TeamMembership? {
-        guard let sport, sport.isTeamSport else { return nil }
-        return player.preferredMembership(from: membershipsMatching(sport: sport, from: memberships))
+    static func defaultGameMembership(player: Person, from memberships: [TeamMembership]) -> TeamMembership? {
+        player.preferredMembership(from: gameMemberships(from: memberships))
     }
 
-    static func membershipsMatching(sport: Sport, from memberships: [TeamMembership]) -> [TeamMembership] {
-        memberships.filter { $0.team?.sport?.id == sport.id }
-    }
 }

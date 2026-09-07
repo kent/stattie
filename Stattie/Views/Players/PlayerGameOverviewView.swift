@@ -216,7 +216,11 @@ struct PlayerGameOverviewView: View {
     private var currentShiftSection: some View {
         if let activeShift = personGameStats.currentShift {
             Section("Current Shift") {
-                ShiftSummaryRow(shift: activeShift)
+                NavigationLink {
+                    ShiftEditView(shift: activeShift, playerName: playerName)
+                } label: {
+                    ShiftSummaryRow(shift: activeShift)
+                }
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         Button(role: .destructive) {
                             pendingShiftDeletion = activeShift
