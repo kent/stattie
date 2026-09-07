@@ -56,12 +56,16 @@ struct StartShiftScoreSheet: View {
     var sportName: String? = nil
     var assignedPositions: [SoccerPosition] = []
     @Binding var selectedPosition: SoccerPosition?
-    let onStart: () -> Void
+    var isPositionChange = false
+    var previousPosition: SoccerPosition? = nil
+    let onStart: () -> Bool
 
     @State private var showingPositionPicker = false
+    @State private var draftPosition: SoccerPosition?
+    @State private var didLoadPosition = false
 
     private var resolvedPosition: SoccerPosition? {
-        selectedPosition
+        draftPosition
     }
 
     private var hasPositionChoices: Bool {
@@ -75,11 +79,11 @@ struct StartShiftScoreSheet: View {
                     .font(.headline)
                     .padding(.top)
 
-                Text("What's the score when entering the game?")
+                Text(isPositionChange ? "Confirm the score at the position change." : "What's the score when entering the game?")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
-                Text("Pre-filled from the previous shift. Type to adjust quickly.")
+                Text(isPositionChange ? "A new shift keeps the earlier position’s time and stats separate." : "Pre-filled from the previous shift. Type to adjust quickly.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
@@ -125,10 +129,10 @@ struct StartShiftScoreSheet: View {
                 Spacer()
 
                 Button {
-                    onStart()
-                    dismiss()
+                    selectedPosition = draftPosition
+                    if onStart() { dismiss() }
                 } label: {
-                    Text(resolvedPosition.map { "Start Shift as \($0.displayName)" } ?? "Start Shift")
+                    Text(isPositionChange ? "Change Position" : resolvedPosition.map { "Start Shift as \($0.displayName)" } ?? "Start Shift")
                         .font(.headline)
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
@@ -136,10 +140,12 @@ struct StartShiftScoreSheet: View {
                         .background(Color.green)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
+                .disabled((assignedPositions.count > 1 && resolvedPosition == nil) ||
+                          (isPositionChange && (resolvedPosition == nil || resolvedPosition == previousPosition)))
                 .padding(.horizontal)
                 .padding(.bottom)
             }
-            .navigationTitle("Start Shift")
+            .navigationTitle(isPositionChange ? "Change Position" : "Start Shift")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -165,13 +171,13 @@ struct StartShiftScoreSheet: View {
                     assignedPositions: assignedPositions,
                     playerName: "This shift",
                     confirmTitle: "Use Position",
-                    selectedPosition: $selectedPosition
+                    selectedPosition: $draftPosition
                 )
             }
             .onAppear {
-                if selectedPosition == nil {
-                    selectedPosition = assignedPositions.first
-                }
+                guard !didLoadPosition else { return }
+                didLoadPosition = true
+                draftPosition = selectedPosition ?? (assignedPositions.count == 1 ? assignedPositions.first : nil)
             }
         }
     }

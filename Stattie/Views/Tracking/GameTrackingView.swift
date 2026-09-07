@@ -296,7 +296,10 @@ struct GameTrackingView: View {
             } message: {
                 Text("This will mark the game as completed.")
             }
-            .errorAlert(title: "Couldn’t Save", message: $persistenceError)
+            .errorAlert(title: "Couldn’t Save", message: Binding(
+                get: { showingStartShiftSheet || showingShiftPositionPicker ? nil : persistenceError },
+                set: { persistenceError = $0 }
+            ))
             .sheet(isPresented: $showingSummary, onDismiss: { dismiss() }) {
                 GameSummaryView(game: game)
             }
@@ -311,18 +314,30 @@ struct GameTrackingView: View {
                         startNewShift()
                     }
                 )
+                .errorAlert(title: "Couldn’t Start Shift", message: $persistenceError)
             }
             .sheet(isPresented: $showingShiftPositionPicker) {
-                ShiftPositionPickerSheet(
-                    sportName: game.sport?.name,
-                    assignedPositions: assignedShiftPositions,
-                    playerName: selectedShiftPlayerName,
-                    confirmTitle: activeShift == nil ? "Use Position" : "Update Shift",
-                    selectedPosition: $selectedGamePosition,
-                    onConfirm: {
-                        applySelectedPositionToActiveShift()
-                    }
-                )
+                if activeShift != nil {
+                    StartShiftScoreSheet(
+                        teamScore: $shiftTeamScore,
+                        opponentScore: $shiftOpponentScore,
+                        sportName: game.sport?.name,
+                        assignedPositions: assignedShiftPositions,
+                        selectedPosition: $selectedGamePosition,
+                        isPositionChange: true,
+                        previousPosition: activeShift?.recordedPosition,
+                        onStart: changeActivePosition
+                    )
+                    .errorAlert(title: "Couldn’t Change Position", message: $persistenceError)
+                } else {
+                    ShiftPositionPickerSheet(
+                        sportName: game.sport?.name,
+                        assignedPositions: assignedShiftPositions,
+                        playerName: selectedShiftPlayerName,
+                        confirmTitle: "Use Position",
+                        selectedPosition: $selectedGamePosition
+                    )
+                }
             }
             .fullScreenCover(isPresented: $showingEndShiftSheet) {
                 EndShiftScoreSheet(
@@ -400,8 +415,8 @@ struct GameTrackingView: View {
                 bootstrapInitialShiftIfNeeded()
                 syncClockWithActiveShift()
             }
-            .onChange(of: selectedShiftPersonStatsID) { _, _ in
-                seedShiftPositionIfNeeded(force: true)
+            .onChange(of: selectedShiftPersonStatsID) { previousID, _ in
+                seedShiftPositionIfNeeded(force: previousID != nil)
                 bootstrapInitialShiftIfNeeded()
                 syncClockWithActiveShift()
             }
@@ -415,6 +430,11 @@ struct GameTrackingView: View {
     @ViewBuilder
     private var shiftPositionPickerButton: some View {
         Button {
+            if let activeShift {
+                selectedGamePosition = activeShift.recordedPosition
+                shiftTeamScore = activeShift.startingTeamScore
+                shiftOpponentScore = activeShift.startingOpponentScore
+            }
             showingShiftPositionPicker = true
         } label: {
             HStack(spacing: 8) {
@@ -523,21 +543,22 @@ struct GameTrackingView: View {
             return
         }
         guard force || selectedGamePosition == nil else { return }
-        if let lastPosition = selectedShiftPersonStats?.completedShifts.last(where: { $0.recordedPosition != nil })?.recordedPosition {
-            selectedGamePosition = lastPosition
-            return
-        }
-        selectedGamePosition = playerPositionAssignments.primaryPosition ?? assignedShiftPositions.first
+        selectedGamePosition = playerPositionAssignments.startingPosition(for: game.sport?.name)
     }
 
-    private func applySelectedPositionToActiveShift() {
-        guard let activeShift, let selectedGamePosition else { return }
-        activeShift.recordedPosition = selectedGamePosition
+    private func changeActivePosition() -> Bool {
+        guard let selectedShiftPersonStats, let selectedGamePosition else { return false }
         do {
-            try modelContext.save()
+            _ = try selectedShiftPersonStats.changePosition(
+                to: selectedGamePosition,
+                teamScore: shiftTeamScore,
+                opponentScore: shiftOpponentScore,
+                in: modelContext
+            )
+            return true
         } catch {
-            modelContext.rollback()
             persistenceError = error.localizedDescription
+            return false
         }
     }
 
@@ -935,9 +956,10 @@ struct GameTrackingView: View {
         shiftOpponentScore = lastKnownShiftOpponentScore
     }
 
-    private func startNewShift() {
-        guard let selectedShiftPersonStats else { return }
-        guard selectedShiftPersonStats.currentShift == nil else { return }
+    private func startNewShift() -> Bool {
+        guard let selectedShiftPersonStats,
+              selectedShiftPersonStats.currentShift == nil,
+              assignedShiftPositions.count <= 1 || selectedGamePosition != nil else { return false }
 
         let previousShifts = selectedShiftPersonStats.shifts
         let previousClock = clock
@@ -946,16 +968,18 @@ struct GameTrackingView: View {
         let shift = selectedShiftPersonStats.startNewShift(
             teamScore: shiftTeamScore,
             opponentScore: shiftOpponentScore,
-            position: selectedGamePosition ?? assignedShiftPositions.first
+            position: selectedGamePosition ?? playerPositionAssignments.startingPosition(for: game.sport?.name)
         )
         modelContext.insert(shift)
         do {
             try modelContext.save()
+            return true
         } catch {
             modelContext.rollback()
             selectedShiftPersonStats.shifts = previousShifts
             clock = previousClock
             persistenceError = error.localizedDescription
+            return false
         }
     }
 
@@ -972,6 +996,7 @@ struct GameTrackingView: View {
         )
         do {
             try modelContext.save()
+            selectedGamePosition = playerPositionAssignments.startingPosition(for: game.sport?.name)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                 showingPostShiftOverviewSheet = true
             }

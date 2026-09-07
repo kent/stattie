@@ -341,7 +341,11 @@ struct ShiftHistorySheet: View {
             List {
                 if let activeShift = personGameStats.currentShift {
                     Section("Current Shift") {
-                        ShiftSummaryRow(shift: activeShift)
+                        NavigationLink {
+                            ShiftEditView(shift: activeShift, playerName: playerName)
+                        } label: {
+                            ShiftSummaryRow(shift: activeShift)
+                        }
                     }
                 }
 

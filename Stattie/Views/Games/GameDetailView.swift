@@ -14,6 +14,7 @@ struct GameDetailView: View {
     @State private var draftNotes = ""
     @State private var draftIsCompleted = false
 
+    @State private var selectedPlayerStats: PersonGameStats?
     @State private var showingSummary = false
     @State private var showingTracking = false
     @State private var showingDeleteConfirmation = false
@@ -225,7 +226,18 @@ struct GameDetailView: View {
             Section("Player Stats") {
                 ForEach(sortedPersonStats) { pgs in
                     if let person = pgs.person {
-                        PersonStatsRow(person: person, stats: pgs)
+                        Button {
+                            selectedPlayerStats = pgs
+                        } label: {
+                            HStack {
+                                PersonStatsRow(person: person, stats: pgs)
+                                Image(systemName: "chevron.right")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityHint("Review and edit this player's shifts")
                     }
                 }
             }
@@ -315,6 +327,9 @@ struct GameDetailView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("This will permanently remove the game and all tracked stats.")
+        }
+        .sheet(item: $selectedPlayerStats) { stats in
+            PlayerGameOverviewView(personGameStats: stats)
         }
         .onAppear {
             loadDraftFromGame()

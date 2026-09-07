@@ -73,6 +73,8 @@
 		F243BC8F570E84B147F4BC09 /* GameTrackingComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A45EBD0C4E4303066CD9A99B /* GameTrackingComponents.swift */; };
 		DA5751D4FE59DE607A0B8859 /* ShiftScoreSheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6838CCEE7C3CD6A3C327ACFD /* ShiftScoreSheets.swift */; };
 		A61731F39133553C878FB44B /* PlayerGameOverviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A80FDD793E8F3E84BB03250 /* PlayerGameOverviewView.swift */; };
+		774F11E6152F4F2BAAA20101 /* ShiftEditing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 774F11E6152F4F2BAAA20102 /* ShiftEditing.swift */; };
+		774F11E6152F4F2BAAA20201 /* ShiftEditingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 774F11E6152F4F2BAAA20202 /* ShiftEditingTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -155,6 +157,8 @@
 		A45EBD0C4E4303066CD9A99B /* GameTrackingComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Tracking/GameTrackingComponents.swift; sourceTree = "<group>"; };
 		6838CCEE7C3CD6A3C327ACFD /* ShiftScoreSheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Tracking/ShiftScoreSheets.swift; sourceTree = "<group>"; };
 		0A80FDD793E8F3E84BB03250 /* PlayerGameOverviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Players/PlayerGameOverviewView.swift; sourceTree = "<group>"; };
+		774F11E6152F4F2BAAA20102 /* ShiftEditing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/ShiftEditing.swift; sourceTree = "<group>"; };
+		774F11E6152F4F2BAAA20202 /* ShiftEditingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShiftEditingTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -240,6 +244,7 @@
 				6838CCEE7C3CD6A3C327ACFD /* ShiftScoreSheets.swift */,
 				A45EBD0C4E4303066CD9A99B /* GameTrackingComponents.swift */,
 				7A85253E91EEF09575759A3A /* ShiftEditView.swift */,
+				774F11E6152F4F2BAAA20102 /* ShiftEditing.swift */,
 				387E4390EBE33251913DF5C8 /* PersistenceController.swift */,
 				CD94BC59FF3D9798A324FA87 /* TrackingClock.swift */,
 				182EEA5B6B8BBAAD48DAF043 /* StatProviding.swift */,
@@ -461,6 +466,7 @@
 				208F798872C3486286D461A5 /* TeamMembershipTests.swift */,
 				208F798872C3486286D461A6 /* SportCatalogTests.swift */,
 				208F798872C3486286D461A7 /* PositionTrackingTests.swift */,
+				774F11E6152F4F2BAAA20202 /* ShiftEditingTests.swift */,
 				208F798872C3486286D461A8 /* AchievementTests.swift */,
 				208F798872C3486286D461A9 /* CloudKitSyncTests.swift */,
 			);
@@ -581,6 +587,7 @@
 				B8004615F3AD8C6A57104A66 /* TeamMembershipTests.swift in Sources */,
 				B8004615F3AD8C6A57104A67 /* SportCatalogTests.swift in Sources */,
 				B8004615F3AD8C6A57104A68 /* PositionTrackingTests.swift in Sources */,
+				774F11E6152F4F2BAAA20201 /* ShiftEditingTests.swift in Sources */,
 				B8004615F3AD8C6A57104A69 /* AchievementTests.swift in Sources */,
 				B8004615F3AD8C6A57104A6A /* CloudKitSyncTests.swift in Sources */,
 			);
@@ -594,6 +601,7 @@
 				DA5751D4FE59DE607A0B8859 /* ShiftScoreSheets.swift in Sources */,
 				F243BC8F570E84B147F4BC09 /* GameTrackingComponents.swift in Sources */,
 				06102165F39F45BDF3C7D510 /* ShiftEditView.swift in Sources */,
+				774F11E6152F4F2BAAA20101 /* ShiftEditing.swift in Sources */,
 				9CA45ECA0AA06FBFF27F7F6F /* PersistenceController.swift in Sources */,
 				CBE7B1DF817C254E363A54CB /* TrackingClock.swift in Sources */,
 				7D5E75BF5B531A97C2BD307A /* StatProviding.swift in Sources */,

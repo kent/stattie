@@ -24,21 +24,16 @@ struct NewGameForPersonView: View {
 
     private var currentUser: User? { users.resolvedCurrentUser }
     private var selectedSport: Sport? {
+        if let teamSport = selectedTeam?.sport { return teamSport }
         if let selectedSportID, let match = sports.first(where: { $0.id == selectedSportID }) {
             return match
         }
-        if let teamSport = selectedTeam?.sport { return teamSport }
         return sports.first
     }
 
     private var activeMemberships: [TeamMembership] {
-        (player.teamMemberships ?? [])
-            .filter {
-                $0.isActive &&
-                $0.team?.isActive == true &&
-                $0.team?.isOwned(by: currentUser) == true
-            }
-            .sorted { ($0.team?.name ?? "") < ($1.team?.name ?? "") }
+        TeamAssociationPolicy.gameMemberships(from: player.teamMemberships ?? [])
+            .filter { $0.team?.isOwned(by: currentUser) == true }
     }
 
     private var selectedMembership: TeamMembership? {
@@ -50,26 +45,12 @@ struct NewGameForPersonView: View {
         selectedMembership?.team
     }
 
-    private var shouldOfferTeamPicker: Bool {
-        TeamAssociationPolicy.shouldOfferTeamPicker(
-            sport: selectedSport,
-            memberships: activeMemberships
-        )
-    }
-
-    private var membershipsForSelectedSport: [TeamMembership] {
-        guard let selectedSport else { return [] }
-        return TeamAssociationPolicy.membershipsMatching(sport: selectedSport, from: activeMemberships)
-    }
-
     private var availablePositionAssignments: [PositionAssignment] {
         guard let selectedSport else { return [] }
         let source = selectedMembership.flatMap { membership in
             membership.positionAssignments.isEmpty ? nil : membership.positionAssignments
         } ?? player.positionAssignments
-        let supportedSport = SoccerPosition.supportedSport(for: selectedSport.name)
-
-        return source.assignments.filter { $0.position.supportedSport == supportedSport }
+        return source.filtered(for: selectedSport.name).assignments
     }
 
     private var requiresPositionSelection: Bool {
@@ -151,39 +132,39 @@ struct NewGameForPersonView: View {
                     Text("Person")
                 }
 
-                if sports.count > 1 {
-                    Section("Sport") {
-                        Picker("Sport", selection: $selectedSportID) {
-                            ForEach(sports) { sport in
-                                Label(sport.name, systemImage: sport.iconName.isEmpty ? "sportscourt" : sport.iconName)
-                                    .tag(sport.id as UUID?)
-                            }
-                        }
-                    }
-                }
-
-                if shouldOfferTeamPicker {
+                if !activeMemberships.isEmpty {
                     Section {
                         Picker("Team", selection: $selectedMembershipID) {
-                            Text("No team")
-                                .tag(nil as UUID?)
-                            ForEach(membershipsForSelectedSport) { membership in
+                            Text("No team").tag(Optional<UUID>.none)
+                            ForEach(activeMemberships) { membership in
                                 if let team = membership.team {
-                                    Text(teamDisplayName(for: team))
-                                        .tag(membership.id as UUID?)
+                                    Text(teamDisplayName(for: team)).tag(Optional(membership.id))
                                 }
                             }
                         }
+                        if let selectedSport, selectedTeam != nil {
+                            LabeledContent("Sport", value: selectedSport.name)
+                        }
                     } header: {
-                        Text("Team (Optional)")
+                        Text("Team")
                     } footer: {
-                        Text("Team is optional. Individual sports like tennis, golf, and wrestling can start without one.")
+                        Text("The team sets the sport. Choose No team to play independently.")
+                    }
+                }
+
+                if selectedTeam == nil {
+                    Section("Sport") {
+                        Picker("Sport", selection: $selectedSportID) {
+                            ForEach(sports) { sport in
+                                Label(sport.name, systemImage: sport.iconName.isEmpty ? "sportscourt" : sport.iconName).tag(Optional(sport.id))
+                            }
+                        }
                     }
                 }
 
                 if requiresPositionSelection {
                     Section {
-                        Picker("Position", selection: $selectedPositionID) {
+                        Picker("Starting position", selection: $selectedPositionID) {
                             Text("Choose a position")
                                 .tag(nil as String?)
                             ForEach(availablePositionAssignments) { assignment in
@@ -192,9 +173,15 @@ struct NewGameForPersonView: View {
                             }
                         }
                     } header: {
-                        Text("Position")
+                        Text("First Shift")
                     } footer: {
                         Text("Choose the starting position. You can change it for each shift.")
+                    }
+                }
+
+                if availablePositionAssignments.count == 1, let position = selectedStartingPosition {
+                    Section("First Shift") {
+                        LabeledContent("Starting position", value: position.displayName)
                     }
                 }
 
@@ -222,20 +209,19 @@ struct NewGameForPersonView: View {
                 }
             }
             .onAppear {
-                if selectedSportID == nil {
-                    selectedSportID = lastPlayedSportID ?? sports.first?.id
-                }
-                applyDefaultTeamIfNeeded()
+                guard !didApplyDefaultMembership else { return }
+                didApplyDefaultMembership = true
+                selectedMembershipID = TeamAssociationPolicy.defaultGameMembership(
+                    player: player, from: activeMemberships
+                )?.id
+                selectedSportID = selectedTeam?.sport?.id ?? lastPlayedSportID ?? sports.first?.id
             }
             .onChange(of: selectedSportID) { _, _ in
                 selectedPositionID = nil
-                if let selectedMembership, selectedMembership.team?.sport?.id != selectedSportID {
-                    selectedMembershipID = nil
-                }
-                applyDefaultTeamIfNeeded(force: selectedMembershipID == nil)
             }
             .onChange(of: selectedMembershipID) { _, _ in
                 selectedPositionID = nil
+                if let sport = selectedTeam?.sport { selectedSportID = sport.id }
             }
             .errorAlert(title: "Couldn’t Start Game", message: $saveError)
         }
@@ -249,18 +235,6 @@ struct NewGameForPersonView: View {
             }
             .max(by: { $0.0 < $1.0 })?
             .1
-    }
-
-    private func applyDefaultTeamIfNeeded(force: Bool = false) {
-        if didApplyDefaultMembership && !force { return }
-        didApplyDefaultMembership = true
-
-        guard selectedMembershipID == nil else { return }
-        selectedMembershipID = TeamAssociationPolicy.defaultMembership(
-            for: selectedSport,
-            player: player,
-            from: activeMemberships
-        )?.id
     }
 
     private func createGame() {
