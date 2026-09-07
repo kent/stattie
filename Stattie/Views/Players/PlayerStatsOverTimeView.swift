@@ -75,6 +75,28 @@ struct PersonStatsOverTimeView: View {
             }
         }
 
+        func value(from pgs: PersonGameStats) -> Int {
+            switch self {
+            case .points: return pgs.totalPoints
+            case .plusMinus: return pgs.totalPlusMinus
+            case .rebounds: return pgs.totalRebounds
+            case .assists: return pgs.totalAssists
+            case .steals: return pgs.totalSteals
+            case .fouls: return pgs.totalFouls
+            case .turnovers: return pgs.aggregatedCount(forName: "TO")
+            case .missedDrives: return pgs.aggregatedCount(forName: "MD")
+            case .badPlaysOffense: return pgs.aggregatedCount(forName: "BPO")
+            case .badPlaysDefense: return pgs.aggregatedCount(forName: "BPD")
+            case .greatPlaysOffense: return pgs.aggregatedCount(forName: "GPO")
+            case .greatPlaysDefense: return pgs.aggregatedCount(forName: "GPD")
+            case .twoPointers: return pgs.aggregatedMade(forName: "2PT")
+            case .threePointers: return pgs.aggregatedMade(forName: "3PT")
+            case .freeThrows: return pgs.aggregatedMade(forName: "FT")
+            case .offensiveRebounds: return pgs.aggregatedCount(forName: "OREB")
+            case .defensiveRebounds: return pgs.aggregatedCount(forName: "DREB")
+            }
+        }
+
         /// Whether this stat can be negative (affects chart display)
         var canBeNegative: Bool {
             self == .plusMinus
@@ -91,7 +113,7 @@ struct PersonStatsOverTimeView: View {
             let calendar = Calendar.current
             switch self {
             case .thisMonth:
-                return calendar.date(byAdding: .month, value: -1, to: Date())
+                return calendar.dateInterval(of: .month, for: Date())?.start
             case .last3Months:
                 return calendar.date(byAdding: .month, value: -3, to: Date())
             case .thisYear:
@@ -230,25 +252,7 @@ struct PersonStatsOverTimeView: View {
     }
 
     private func statValue(for stat: StatType, from pgs: PersonGameStats) -> Int {
-        switch stat {
-        case .points: return pgs.totalPoints
-        case .plusMinus: return pgs.totalPlusMinus
-        case .rebounds: return pgs.totalRebounds
-        case .assists: return pgs.totalAssists
-        case .steals: return pgs.totalSteals
-        case .fouls: return pgs.totalFouls
-        case .turnovers: return pgs.aggregatedCount(forName: "TO")
-        case .missedDrives: return pgs.aggregatedCount(forName: "MD")
-        case .badPlaysOffense: return pgs.aggregatedCount(forName: "BPO")
-        case .badPlaysDefense: return pgs.aggregatedCount(forName: "BPD")
-        case .greatPlaysOffense: return pgs.aggregatedCount(forName: "GPO")
-        case .greatPlaysDefense: return pgs.aggregatedCount(forName: "GPD")
-        case .twoPointers: return pgs.aggregatedMade(forName: "2PT")
-        case .threePointers: return pgs.aggregatedMade(forName: "3PT")
-        case .freeThrows: return pgs.aggregatedMade(forName: "FT")
-        case .offensiveRebounds: return pgs.aggregatedCount(forName: "OREB")
-        case .defensiveRebounds: return pgs.aggregatedCount(forName: "DREB")
-        }
+        stat.value(from: pgs)
     }
 
     var averageValue: Double {
@@ -525,25 +529,7 @@ struct GameStatRow: View {
     let selectedStat: PersonStatsOverTimeView.StatType
 
     private var statValue: Int {
-        switch selectedStat {
-        case .points: return playerStats.totalPoints
-        case .plusMinus: return playerStats.totalPlusMinus
-        case .rebounds: return playerStats.totalRebounds
-        case .assists: return playerStats.totalAssists
-        case .steals: return playerStats.totalSteals
-        case .fouls: return playerStats.totalFouls
-        case .turnovers: return playerStats.aggregatedCount(forName: "TO")
-        case .missedDrives: return playerStats.aggregatedCount(forName: "MD")
-        case .badPlaysOffense: return playerStats.aggregatedCount(forName: "BPO")
-        case .badPlaysDefense: return playerStats.aggregatedCount(forName: "BPD")
-        case .greatPlaysOffense: return playerStats.aggregatedCount(forName: "GPO")
-        case .greatPlaysDefense: return playerStats.aggregatedCount(forName: "GPD")
-        case .twoPointers: return playerStats.aggregatedMade(forName: "2PT")
-        case .threePointers: return playerStats.aggregatedMade(forName: "3PT")
-        case .freeThrows: return playerStats.aggregatedMade(forName: "FT")
-        case .offensiveRebounds: return playerStats.aggregatedCount(forName: "OREB")
-        case .defensiveRebounds: return playerStats.aggregatedCount(forName: "DREB")
-        }
+        selectedStat.value(from: playerStats)
     }
 
     /// Display string for stat value (handles +/- formatting)

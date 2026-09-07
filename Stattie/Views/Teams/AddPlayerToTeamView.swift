@@ -108,14 +108,7 @@ struct AddPlayerToTeamView: View {
                     selectedTeamIDs.insert(createdTeam.id)
                 }
             }
-            .alert("Couldn’t Add to Team", isPresented: Binding(
-                get: { saveError != nil },
-                set: { if !$0 { saveError = nil } }
-            )) {
-                Button("OK", role: .cancel) { saveError = nil }
-            } message: {
-                Text(saveError ?? "Please try again.")
-            }
+            .errorAlert(title: "Couldn’t Add to Team", message: $saveError)
         }
     }
 
@@ -180,6 +173,7 @@ struct AddPlayerToTeamView: View {
             onFinished?()
             dismiss()
         } catch {
+            modelContext.rollback()
             saveError = error.localizedDescription
         }
     }

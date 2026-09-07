@@ -72,6 +72,7 @@ final class TeamMembershipTests: XCTestCase {
         team.memberships = [membership]
         try context.save()
 
+        XCTAssertTrue(team.activeMembers.isEmpty)
         XCTAssertTrue(player.activeTeams.isEmpty)
         XCTAssertFalse(player.isMember(of: team))
         XCTAssertTrue(player.shouldPromptForTeamAssociation)

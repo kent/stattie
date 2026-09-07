@@ -116,6 +116,55 @@ struct CountStatButton: View {
     }
 }
 
+struct RecordingStatButton: View {
+    let title: String
+    let subtitle: String
+    let color: Color
+    let action: () -> Void
+    let undoAction: (() -> Void)?
+
+    init(
+        title: String,
+        subtitle: String,
+        color: Color,
+        action: @escaping () -> Void,
+        undoAction: (() -> Void)? = nil
+    ) {
+        self.title = title
+        self.subtitle = subtitle
+        self.color = color
+        self.action = action
+        self.undoAction = undoAction
+    }
+
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(title)
+                .font(.title3.bold())
+            Text(subtitle)
+                .font(.headline)
+                .opacity(0.85)
+        }
+        .foregroundStyle(.white)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(color)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .contentShape(RoundedRectangle(cornerRadius: 14))
+        .onTapGesture(perform: action)
+        .onLongPressGesture(minimumDuration: 0.45) {
+            undoAction?()
+        }
+        .accessibilityLabel("\(title), current: \(subtitle)")
+        .accessibilityHint(undoAction == nil ? "Double tap to record" : "Double tap to record. Long press to undo one.")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { action() }
+        .accessibilityActions {
+            if let undoAction { Button("Undo one", action: undoAction) }
+        }
+    }
+}
+
+
 #Preview {
     VStack(spacing: 20) {
         ShootingStatButton(

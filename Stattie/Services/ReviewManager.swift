@@ -3,7 +3,8 @@ import StoreKit
 import SwiftUI
 import UIKit
 
-class ReviewManager {
+@MainActor
+final class ReviewManager {
     static let shared = ReviewManager()
 
     private let defaults = UserDefaults.standard
@@ -51,7 +52,7 @@ class ReviewManager {
         if let lastRequest = lastReviewRequest {
             let daysSinceLastRequest = Calendar.current.dateComponents([.day], from: lastRequest, to: Date()).day ?? 0
             // Wait at least 60 days between requests
-            if daysSinceLastRequest < 60 && !force {
+            if daysSinceLastRequest < 60 {
                 return
             }
         }
@@ -85,10 +86,12 @@ class ReviewManager {
     }
 
     private func requestReview() {
-        // Use EnvironmentValues requestReview is the modern way
-        // But for simplicity we'll use the older scene-based approach
         if let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
-            SKStoreReviewController.requestReview(in: scene)
+            if #available(iOS 18.0, *) {
+                AppStore.requestReview(in: scene)
+            } else {
+                SKStoreReviewController.requestReview(in: scene)
+            }
             lastReviewRequest = Date()
             reviewRequestCount += 1
         }

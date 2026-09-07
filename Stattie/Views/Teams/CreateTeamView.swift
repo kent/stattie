@@ -81,14 +81,7 @@ struct CreateTeamView: View {
                     selectedSportID = sports.first?.id
                 }
             }
-            .alert("Couldn’t Create Team", isPresented: Binding(
-                get: { saveError != nil },
-                set: { if !$0 { saveError = nil } }
-            )) {
-                Button("OK", role: .cancel) { saveError = nil }
-            } message: {
-                Text(saveError ?? "Please try again.")
-            }
+            .errorAlert(title: "Couldn’t Create Team", message: $saveError)
         }
     }
 

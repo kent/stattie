@@ -6,7 +6,7 @@ struct SettingsView: View {
     private let websiteBaseURL = URL(string: "https://www.stattie.com")!
 
     @Environment(\.modelContext) private var modelContext
-    @Environment(\.requestReview) private var requestReview
+    @State private var persistence = PersistenceController()
     @Query private var users: [User]
     @Query private var players: [Person]
     @Query private var games: [Game]
@@ -148,13 +148,14 @@ struct SettingsView: View {
                     }
 
                     Button {
-                        requestReview()
+                        ReviewManager.openAppStoreForReview()
                     } label: {
                         Label("Rate Stattie", systemImage: "star.fill")
                     }
 
                 }
             }
+            .persistenceAlert(persistence)
             .navigationTitle("Settings")
             .onAppear {
                 CloudSyncedPreferences.bootstrapIfNeeded(force: true)
@@ -172,8 +173,7 @@ struct SettingsView: View {
         guard !trimmed.isEmpty else { return }
 
         user.displayName = trimmed
-        try? modelContext.save()
-        isEditingName = false
+        if persistence.save(modelContext) { isEditingName = false }
     }
 
     private var appVersion: String {

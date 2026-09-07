@@ -78,10 +78,6 @@ final class PersonGameStats {
         }
     }
 
-    var totalPoints: Int {
-        canonicalStats.reduce(0) { $0 + $1.points }
-    }
-
     var totalRebounds: Int {
         aggregatedCount(forName: "DREB") + aggregatedCount(forName: "OREB")
     }
@@ -133,7 +129,7 @@ final class PersonGameStats {
             return existing
         }
 
-        let shiftNumber = (shifts ?? []).count + 1
+        let shiftNumber = ((shifts ?? []).map(\.shiftNumber).max() ?? 0) + 1
         let shift = Shift(
             shiftNumber: shiftNumber,
             personGameStats: self,
@@ -155,14 +151,14 @@ final class PersonGameStats {
     // MARK: - Aggregated Stat Helpers
 
     func aggregatedMade(forName name: String) -> Int {
-        canonicalStats.filter { $0.statName == name }.reduce(0) { $0 + $1.made }
+        totalMade(forName: name)
     }
 
     func aggregatedMissed(forName name: String) -> Int {
-        canonicalStats.filter { $0.statName == name }.reduce(0) { $0 + $1.missed }
+        totalMissed(forName: name)
     }
 
     func aggregatedCount(forName name: String) -> Int {
-        canonicalStats.filter { $0.statName == name }.reduce(0) { $0 + $1.count }
+        totalCount(forName: name)
     }
 }

@@ -24,7 +24,11 @@ final class Team {
     }
 
     var activeMembers: [Person] {
-        members.filter { $0.isActive }
+        var seen = Set<UUID>()
+        return (memberships ?? [])
+            .filter(\.isActive)
+            .compactMap(\.person)
+            .filter { $0.isActive && seen.insert($0.id).inserted }
     }
 
     var sportDisplayText: String {

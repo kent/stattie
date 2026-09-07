@@ -75,28 +75,12 @@ final class Game {
         return result
     }
 
-    var totalPoints: Int {
-        canonicalStats.reduce(0) { $0 + $1.points }
-    }
-
     func stat(named name: String) -> Stat? {
         canonicalStats.first { $0.statName == name }
     }
 
     func stats(named name: String) -> [Stat] {
         canonicalStats.filter { $0.statName == name }
-    }
-
-    func totalMade(forName name: String) -> Int {
-        stats(named: name).reduce(0) { $0 + $1.made }
-    }
-
-    func totalMissed(forName name: String) -> Int {
-        stats(named: name).reduce(0) { $0 + $1.missed }
-    }
-
-    func totalCount(forName name: String) -> Int {
-        stats(named: name).reduce(0) { $0 + $1.count }
     }
 
     /// Compact value shown on player game lists. Uses goals for soccer and the
@@ -123,20 +107,17 @@ final class Game {
     var listSummaryLabel: String {
         if sport?.name == "Soccer" { return "goals" }
         if sport?.name == "Basketball" { return "points" }
-        if sport?.isTeamSport == false, let definition = sport?.sortedStatDefinitions.first {
-            return definition.shortName.lowercased()
-        }
         if let profile = SportCatalog.profile(named: sport?.name) {
             return profile.primaryScoreLabel.lowercased()
+        }
+        if sport?.isTeamSport == false, let definition = sport?.sortedStatDefinitions.first {
+            return definition.shortName.lowercased()
         }
         return "points"
     }
 
     var formattedDate: String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
-        return formatter.string(from: gameDate)
+        gameDate.formatted(date: .abbreviated, time: .shortened)
     }
 
     init(
@@ -257,6 +238,32 @@ final class Game {
         }
         if let shift, shift.personGameStats?.id != personGameStats?.id {
             throw StatAttributionError.shiftBelongsToDifferentPerson
+        }
+    }
+
+    /// Edits and completion are committed together, including active shifts.
+    func updateDetails(
+        opponent: String, location: String, date: Date, notes: String,
+        isCompleted: Bool, in context: ModelContext,
+        save: (() throws -> Void)? = nil
+    ) throws {
+        let previous = (self.opponent, self.location, gameDate, self.notes, self.isCompleted, completedAt)
+        self.opponent = opponent.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.location = location.trimmingCharacters(in: .whitespacesAndNewlines)
+        gameDate = date
+        self.notes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
+        do {
+            if isCompleted && !self.isCompleted {
+                try finalize(in: context, save: save)
+            } else {
+                self.isCompleted = isCompleted
+                if !isCompleted { completedAt = nil }
+                if let save { try save() } else { try context.save() }
+            }
+        } catch {
+            context.rollback()
+            (self.opponent, self.location, gameDate, self.notes, self.isCompleted, completedAt) = previous
+            throw error
         }
     }
 

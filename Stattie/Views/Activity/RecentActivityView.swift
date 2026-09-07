@@ -26,9 +26,7 @@ struct RecentActivityView: View {
             } else if calendar.isDate(game.gameDate, equalTo: Date(), toGranularity: .weekOfYear) {
                 return "This Week"
             } else {
-                let formatter = DateFormatter()
-                formatter.dateFormat = "MMMM yyyy"
-                return formatter.string(from: game.gameDate)
+                return game.gameDate.formatted(.dateTime.month(.wide).year())
             }
         }
 
@@ -254,7 +252,7 @@ struct MiniActivityRow: View {
             Text(playerName)
                 .font(.subheadline)
 
-            Text("scored \(game.totalPoints) pts")
+            Text("\(game.listSummaryValue) \(game.listSummaryLabel)")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 

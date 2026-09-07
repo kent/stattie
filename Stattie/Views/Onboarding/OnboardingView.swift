@@ -21,6 +21,7 @@ struct OnboardingView: View {
     @State private var selectedSports: Set<String> = ["Basketball"]
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var isCreating = false
+    @State private var saveError: String?
     @State private var currentPage = 0
 
     let onComplete: () -> Void
@@ -149,6 +150,7 @@ struct OnboardingView: View {
                 }
             }
         }
+        .errorAlert(title: "Couldn’t Create Profile", message: $saveError)
     }
 
     private func createUser() {
@@ -160,17 +162,14 @@ struct OnboardingView: View {
         SeedDataService.shared.seedSelectedSports(selectedSports, context: modelContext)
         SeedDataService.shared.seedAllSportsIfNeeded(context: modelContext)
 
-        // Request notification permission
-        Task {
-            await NotificationManager.shared.requestPermission()
-        }
-
         do {
             try modelContext.save()
             AppState.shared.completeOnboarding(userID: user.id)
+            Task { await NotificationManager.shared.requestPermission() }
             onComplete()
         } catch {
-            print("Failed to create user: \(error)")
+            modelContext.rollback()
+            saveError = error.localizedDescription
             isCreating = false
         }
     }

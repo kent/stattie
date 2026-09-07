@@ -32,6 +32,14 @@ final class CloudKitSyncTests: XCTestCase {
         XCTAssertNotNil(prepared.flatMap(UIImage.init(data:)))
     }
 
+    func testPreparedPhotoUsesPixelCapIndependentOfDisplayScale() throws {
+        let original = stripedJPEG(width: 1200, height: 800, quality: 1)
+        let prepared = try XCTUnwrap(PlayerPhotoStore.preparedData(from: original))
+        let image = try XCTUnwrap(UIImage(data: prepared)?.cgImage)
+        XCTAssertLessThanOrEqual(max(image.width, image.height), Int(PlayerPhotoStore.maxPixelSize))
+        XCTAssertEqual(PlayerPhotoStore.preparedData(from: prepared), prepared)
+    }
+
     func testSmallPhotosAreLeftAloneWhenAlreadyUnderTheCap() {
         let original = stripedJPEG(width: 64, height: 64, quality: 0.8)
         XCTAssertLessThanOrEqual(original.count, PlayerPhotoStore.maxByteCount)

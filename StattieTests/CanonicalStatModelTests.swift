@@ -43,6 +43,111 @@ final class CanonicalStatModelTests: XCTestCase {
         return (game, players)
     }
 
+    func testShiftNumberFollowsHighestRemainingNumber() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let (_, players) = insertGameGraph(in: context)
+        let player = players[0]
+        let previous = Shift(shiftNumber: 4, personGameStats: player)
+        previous.endShift()
+        context.insert(previous)
+        player.shifts = [previous]
+        XCTAssertEqual(player.startNewShift().shiftNumber, 5)
+    }
+
+    func testGameEditFinalizesActiveShiftsAndReopeningClearsCompletionDate() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let (game, players) = insertGameGraph(in: context)
+        let shift = players[0].startNewShift(teamScore: 12, opponentScore: 8)
+        context.insert(shift)
+        try context.save()
+
+        try game.updateDetails(opponent: " Updated ", location: " Home ", date: game.gameDate,
+                               notes: " Done ", isCompleted: true, in: context)
+        XCTAssertTrue(game.isCompleted)
+        XCTAssertNotNil(game.completedAt)
+        XCTAssertFalse(shift.isActive)
+        XCTAssertEqual(game.opponent, "Updated")
+        XCTAssertEqual(shift.endingTeamScore, 12)
+
+        try game.updateDetails(opponent: game.opponent, location: game.location, date: game.gameDate,
+                               notes: game.notes, isCompleted: false, in: context)
+        XCTAssertFalse(game.isCompleted)
+        XCTAssertNil(game.completedAt)
+        XCTAssertFalse(shift.isActive)
+    }
+
+    func testFailedGameEditRestoresMetadataCompletionAndShift() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let (game, players) = insertGameGraph(in: context)
+        let shift = players[0].startNewShift()
+        context.insert(shift)
+        try context.save()
+
+        XCTAssertThrowsError(try game.updateDetails(
+            opponent: "Changed", location: "Away", date: game.gameDate, notes: "Changed",
+            isCompleted: true, in: context, save: { throw TestFailure.injectedSaveFailure }
+        ))
+        XCTAssertEqual(game.opponent, "Test")
+        XCTAssertEqual(game.location, "")
+        XCTAssertFalse(game.isCompleted)
+        XCTAssertNil(game.completedAt)
+        XCTAssertTrue(shift.isActive)
+    }
+
+    func testPersistenceFailureRollsBackAndSuccessfulRetryClearsError() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let (game, _) = insertGameGraph(in: context)
+        try context.save()
+        let persistence = PersistenceController()
+        game.notes = "Unsaved"
+        XCTAssertFalse(persistence.save(context, operation: { throw TestFailure.injectedSaveFailure }))
+        XCTAssertNotNil(persistence.errorMessage)
+        XCTAssertEqual(game.notes, "")
+        game.notes = "Saved on retry"
+        XCTAssertTrue(persistence.save(context))
+        XCTAssertNil(persistence.errorMessage)
+        XCTAssertFalse(context.hasChanges)
+    }
+
+    func testTrackingClockAccountsForMissedTicksAndExcludesPausedTime() {
+        var clock = TrackingClock()
+        let start = Date(timeIntervalSince1970: 1_000)
+        clock.start(at: start)
+        clock.start(at: start.addingTimeInterval(5))
+        XCTAssertEqual(clock.elapsed(at: start.addingTimeInterval(125)), 125)
+        clock.pause(at: start.addingTimeInterval(125))
+        XCTAssertFalse(clock.isRunning)
+        XCTAssertEqual(clock.elapsed(at: start.addingTimeInterval(500)), 125)
+        clock.start(at: start.addingTimeInterval(500))
+        XCTAssertEqual(clock.elapsed(at: start.addingTimeInterval(530)), 155)
+    }
+
+    func testShiftDurationDoesNotGoNegativeWhenClockMovesBackwards() {
+        let shift = Shift()
+        shift.endTime = shift.startTime.addingTimeInterval(-30)
+        XCTAssertEqual(shift.duration, 0)
+        XCTAssertEqual(shift.formattedDuration, "0:00")
+    }
+
+    func testIndividualSportSummaryLabelMatchesItsPrimaryValue() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let (game, _) = insertGameGraph(in: context)
+        let golf = Sport(name: "Golf", isTeamSport: false)
+        context.insert(golf)
+        game.sport = golf
+        let firstDefinition = StatDefinition(shortName: "FWY", hasMadeAndMissed: true, sport: golf)
+        context.insert(firstDefinition)
+        golf.statDefinitions = [firstDefinition]
+        try game.recordStat(named: "PUT", pointValue: 0, mutation: .count, in: context)
+        XCTAssertEqual(game.listSummaryValue, 1)
+        XCTAssertEqual(game.listSummaryLabel, "putts")
+    }
+
     func testTotalsSumDistinctCanonicalRowsAndDeduplicateSameUUIDAcrossInverses() throws {
         let container = try makeContainer()
         let context = container.mainContext
@@ -82,6 +187,9 @@ final class CanonicalStatModelTests: XCTestCase {
         XCTAssertEqual(player.aggregatedMade(forName: "2PT"), 3)
         XCTAssertEqual(shift.totalPoints, 4)
         XCTAssertEqual(shift.totalMade(forName: "2PT"), 2)
+        XCTAssertEqual(game.madeString(forName: "2PT"), "3/6")
+        XCTAssertEqual(player.madeString(forName: "2PT"), "3/6")
+        XCTAssertEqual(shift.madeString(forName: "2PT"), "2/3")
     }
 
     func testMultiPlayerAttributionSumsRatherThanChoosingLargestMirror() throws {

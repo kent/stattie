@@ -237,14 +237,7 @@ struct NewGameForPersonView: View {
             .onChange(of: selectedMembershipID) { _, _ in
                 selectedPositionID = nil
             }
-            .alert("Couldn’t Start Game", isPresented: Binding(
-                get: { saveError != nil },
-                set: { if !$0 { saveError = nil } }
-            )) {
-                Button("OK", role: .cancel) { saveError = nil }
-            } message: {
-                Text(saveError ?? "Please try again.")
-            }
+            .errorAlert(title: "Couldn’t Start Game", message: $saveError)
         }
     }
 

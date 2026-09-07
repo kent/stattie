@@ -3,6 +3,7 @@ import SwiftData
 
 struct GameDetailView: View {
     @Environment(\.modelContext) private var modelContext
+    @State private var persistence = PersistenceController()
     @Environment(\.dismiss) private var dismiss
     @Bindable var game: Game
 
@@ -267,6 +268,7 @@ struct GameDetailView: View {
                 }
             }
         }
+        .persistenceAlert(persistence)
         .navigationTitle(game.opponent.isEmpty ? "Game Details" : "vs \(game.opponent)")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -328,20 +330,17 @@ struct GameDetailView: View {
     }
 
     private func applyDraftToGame() {
-        game.opponent = draftOpponent.trimmingCharacters(in: .whitespaces)
-        game.location = draftLocation.trimmingCharacters(in: .whitespaces)
-        game.gameDate = draftDate
-        game.notes = draftNotes.trimmingCharacters(in: .whitespacesAndNewlines)
-        game.isCompleted = draftIsCompleted
-
-        try? modelContext.save()
-        isEditing = false
+        if persistence.save(modelContext, operation: {
+            try game.updateDetails(
+                opponent: draftOpponent, location: draftLocation, date: draftDate,
+                notes: draftNotes, isCompleted: draftIsCompleted, in: modelContext
+            )
+        }) { isEditing = false }
     }
 
     private func deleteGame() {
         modelContext.delete(game)
-        try? modelContext.save()
-        dismiss()
+        if persistence.save(modelContext) { dismiss() }
     }
 }
 
