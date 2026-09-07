@@ -159,8 +159,8 @@ struct OnboardingView: View {
         let user = User(displayName: displayName.trimmingCharacters(in: .whitespaces))
         modelContext.insert(user)
 
-        SeedDataService.shared.seedSelectedSports(selectedSports, context: modelContext)
-        SeedDataService.shared.seedAllSportsIfNeeded(context: modelContext)
+        // Keep the profile and initial catalog in the same onboarding transaction.
+        SeedDataService.shared.seedAllSportsIfNeeded(context: modelContext, persist: false)
 
         do {
             try modelContext.save()

@@ -184,13 +184,13 @@ final class SeedDataService {
         fetchSport(named: "Golf", context: context)
     }
 
-    func seedAllSportsIfNeeded(context: ModelContext) {
+    func seedAllSportsIfNeeded(context: ModelContext, persist: Bool = true) {
         seedBasketballIfNeeded(context: context, persist: false)
         seedSoccerIfNeeded(context: context, persist: false)
         seedTennisIfNeeded(context: context, persist: false)
         seedGolfIfNeeded(context: context, persist: false)
         seedCatalogSportsIfNeeded(context: context, persist: false)
-        persistIfNeeded(context, persist: true, label: "all sports")
+        persistIfNeeded(context, persist: persist, label: "all sports")
     }
 
     func seedSelectedSports(_ names: Set<String>, context: ModelContext) {

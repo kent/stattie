@@ -4,6 +4,22 @@ import SwiftData
 
 @MainActor
 final class SportCatalogTests: XCTestCase {
+    func testDeferredSeedingDoesNotCommitAnUnfinishedProfile() throws {
+        let schema = SharedModelContainer.schema
+        let container = try ModelContainer(
+            for: schema,
+            configurations: ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+        context.autosaveEnabled = false
+        context.insert(User(displayName: "Pending profile"))
+        SeedDataService.shared.seedAllSportsIfNeeded(context: context, persist: false)
+        XCTAssertTrue(context.hasChanges)
+        context.rollback()
+        XCTAssertEqual(try context.fetchCount(FetchDescriptor<User>()), 0)
+        XCTAssertEqual(try context.fetchCount(FetchDescriptor<Sport>()), 0)
+    }
+
     func testCatalogCoversMajorNorthAmericanAndEuropeanSports() {
         let names = Set(SportCatalog.all.map(\.name))
         XCTAssertEqual(names.count, SportCatalog.all.count)
