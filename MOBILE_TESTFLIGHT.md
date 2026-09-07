@@ -65,5 +65,6 @@ The CI distribution certificate and profile expire on August 30, 2027. Rotate th
 - **iOS CI fails:** ask the same Cursor agent to inspect the check and push a fix to the PR.
 - **Comment is ignored:** confirm the body is exactly `/testflight`, the PR is merged into `main`, the workflow on `main` allows the commenter (`OWNER` / `MEMBER` / `COLLABORATOR` or `cursor[bot]`), and the workflow file is present on `main`.
 - **Signing fails:** verify all five GitHub environment values exist and the profile is active for `com.stattie.app`.
+- **Archive fails on Push Notifications / `aps-environment`:** the TestFlight job enables Push on the App ID and regenerates `AppStore com.stattie.app CI` before signing. If that step reports a 403, the API key needs permission to edit identifiers in the Developer portal.
 - **Duplicate build number:** start a new TestFlight workflow run; do not rerun the old attempt.
 - **Apple processing fails:** open the build in App Store Connect and use the uploaded diagnostics artifact from the GitHub run.
