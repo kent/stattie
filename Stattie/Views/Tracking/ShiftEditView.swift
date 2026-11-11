@@ -16,8 +16,40 @@ struct ShiftEditView: View {
         _draft = State(initialValue: ShiftEditDraft(shift: shift))
     }
 
+    var body: some View {
+        ShiftDraftForm(draft: $draft, playerName: playerName, sportName: shift.personGameStats?.game?.sport?.name)
+            .navigationTitle("Edit Shift \(shift.shiftNumber)")
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden()
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") { save() }
+                }
+            }
+            .errorAlert(title: "Couldn’t Save Shift", message: $persistenceError)
+    }
+
+    private func save() {
+        do {
+            try draft.save(to: shift, in: modelContext)
+            dismiss()
+        } catch {
+            persistenceError = error.localizedDescription
+        }
+    }
+}
+
+/// Precise fields for a shift draft: position, times, scores, and every stat.
+struct ShiftDraftForm: View {
+    @Binding var draft: ShiftEditDraft
+    let playerName: String
+    let sportName: String?
+
     private var positions: [SoccerPosition] {
-        SoccerPosition.positions(for: SoccerPosition.supportedSport(for: shift.personGameStats?.game?.sport?.name))
+        SoccerPosition.positions(for: SoccerPosition.supportedSport(for: sportName))
     }
 
     private var durationSeconds: Int {
@@ -41,7 +73,7 @@ struct ShiftEditView: View {
                     }
                     if !draft.details.positionRawValue.isEmpty,
                        !positions.contains(where: { $0.rawValue == draft.details.positionRawValue }) {
-                        Text(shift.recordedPosition?.displayName ?? draft.details.positionRawValue)
+                        Text(SoccerPosition(rawValue: draft.details.positionRawValue)?.displayName ?? draft.details.positionRawValue)
                             .tag(draft.details.positionRawValue)
                     }
                 }
@@ -101,18 +133,6 @@ struct ShiftEditView: View {
                 Text("Changes update this shift, the player's game totals, and position breakdowns when saved.")
             }
         }
-        .navigationTitle("Edit Shift \(shift.shiftNumber)")
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden()
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") { dismiss() }
-            }
-            ToolbarItem(placement: .confirmationAction) {
-                Button("Save") { save() }
-            }
-        }
-        .errorAlert(title: "Couldn’t Save Shift", message: $persistenceError)
     }
 
     private var endingTime: Binding<Date> {
@@ -144,15 +164,6 @@ struct ShiftEditView: View {
             get: { isTeam ? draft.details.endingTeamScore ?? 0 : draft.details.endingOpponentScore ?? 0 },
             set: { if isTeam { draft.details.endingTeamScore = $0 } else { draft.details.endingOpponentScore = $0 } }
         )
-    }
-
-    private func save() {
-        do {
-            try draft.save(to: shift, in: modelContext)
-            dismiss()
-        } catch {
-            persistenceError = error.localizedDescription
-        }
     }
 }
 

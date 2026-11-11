@@ -45,7 +45,7 @@ struct GameTrackingView: View {
     // Shift tracking flow
     @State private var showingStartShiftSheet = false
     @State private var showingEndShiftSheet = false
-    @State private var showingShiftHistorySheet = false
+    @State private var showingShiftManager = false
     @State private var showingPostShiftOverviewSheet = false
     @State private var showingShiftPositionPicker = false
     @State private var selectedShiftPersonStatsID: UUID?
@@ -67,18 +67,7 @@ struct GameTrackingView: View {
     }
 
     private var shiftTrackablePersonStats: [PersonGameStats] {
-        (game.personStats ?? [])
-            .filter { $0.person != nil }
-            .sorted { lhs, rhs in
-                let leftJersey = lhs.person?.jerseyNumber ?? Int.max
-                let rightJersey = rhs.person?.jerseyNumber ?? Int.max
-                if leftJersey != rightJersey {
-                    return leftJersey < rightJersey
-                }
-                let leftName = lhs.person?.fullName ?? ""
-                let rightName = rhs.person?.fullName ?? ""
-                return leftName.localizedCaseInsensitiveCompare(rightName) == .orderedAscending
-            }
+        game.shiftPlayers
     }
 
     private var selectedShiftPersonStats: PersonGameStats? {
@@ -132,74 +121,8 @@ struct GameTrackingView: View {
         return latest.endingOpponentScore ?? latest.startingOpponentScore
     }
 
-    private var shouldShowActiveShiftStats: Bool {
-        activeShift != nil
-    }
-
-    private var displayedBasketballPoints: Int {
-        shouldShowActiveShiftStats ? (activeShift?.totalPoints ?? 0) : totalPoints
-    }
-
-    private var displayedSoccerGoals: Int {
-        shouldShowActiveShiftStats ? (activeShift?.totalCount(forName: "GOL") ?? 0) : totalGoals
-    }
-
-    private var displayedSoccerSaves: Int {
-        shouldShowActiveShiftStats ? (activeShift?.totalCount(forName: "SAV") ?? 0) : totalSaves
-    }
-
-    private var displayedSoccerPrimaryValue: Int {
-        activeTrackingPosition?.isGoalkeeperRole == true ? displayedSoccerSaves : displayedSoccerGoals
-    }
-
-    private var displayedSoccerPrimaryLabel: String {
-        if activeTrackingPosition?.isGoalkeeperRole == true {
-            return shouldShowActiveShiftStats ? "SHIFT SAVES" : "SAVES"
-        }
-        return shouldShowActiveShiftStats ? "SHIFT GOALS" : "GOALS"
-    }
-
-    var totalPoints: Int {
-        game.totalPoints
-    }
-
-    // Basketball stats
-    var totalRebounds: Int {
-        game.totalCount(forName: "DREB") + game.totalCount(forName: "OREB")
-    }
-
-    var totalAssists: Int {
-        game.totalCount(forName: "AST")
-    }
-
-    var totalSteals: Int {
-        game.totalCount(forName: "STL")
-    }
-
-    // Soccer stats
-    var totalGoals: Int {
+    private var totalGoals: Int {
         game.totalCount(forName: "GOL")
-    }
-
-    var totalSaves: Int {
-        game.totalCount(forName: "SAV")
-    }
-
-    private var doubleDigitCategories: Int {
-        var count = 0
-        if totalPoints >= 10 { count += 1 }
-        if totalRebounds >= 10 { count += 1 }
-        if totalAssists >= 10 { count += 1 }
-        if totalSteals >= 10 { count += 1 }
-        return count
-    }
-
-    var hasDoubleDouble: Bool {
-        isBasketball && doubleDigitCategories >= 2
-    }
-
-    var hasTripleDouble: Bool {
-        isBasketball && doubleDigitCategories >= 3
     }
 
     private var formattedTime: String {
@@ -262,13 +185,16 @@ struct GameTrackingView: View {
                     shiftControls
                 }
 
-                if isSoccer {
-                    soccerTrackingView
-                } else if isBasketball {
-                    basketballTrackingView
-                } else {
-                    genericTrackingView
-                }
+                StatBoardView(
+                    sport: game.sport,
+                    position: activeTrackingPosition,
+                    visiblePositions: trackingPositions,
+                    stats: displayedStats,
+                    contextStats: game,
+                    isShiftScoped: activeShift != nil,
+                    record: { recordStat($0, points: $1, mutation: $2) },
+                    undo: { undoStat($0, mutation: $1) }
+                )
             }
             .navigationTitle(game.opponent.isEmpty ? "Track Game" : "vs \(game.opponent)")
             .navigationBarTitleDisplayMode(.inline)
@@ -281,7 +207,7 @@ struct GameTrackingView: View {
 
                 ToolbarItem(placement: .primaryAction) {
                     Button("End Game") {
-                        showingEndGameAlert = true
+                        requestEndGame()
                     }
                 }
             }
@@ -370,16 +296,10 @@ struct GameTrackingView: View {
                     )
                 }
             }
-            .sheet(isPresented: $showingShiftHistorySheet) {
-                if let selectedShiftPersonStats {
-                    ShiftHistorySheet(
-                        personGameStats: selectedShiftPersonStats,
-                        playerName: selectedShiftPlayerName,
-                        onStartNextShift: {
-                            startNewShiftFromShiftHistory()
-                        }
-                    )
-                }
+            .sheet(isPresented: $showingShiftManager, onDismiss: {
+                if game.isCompleted { showingSummary = true }
+            }) {
+                ManageShiftsView(game: game)
             }
             .overlay {
                 if showMilestoneAnimation {
@@ -524,14 +444,12 @@ struct GameTrackingView: View {
             .font(.caption)
             .foregroundStyle(.secondary)
 
-            if totalShiftCount > 0 {
-                Button {
-                    showingShiftHistorySheet = true
-                } label: {
-                    Label("View Shifts", systemImage: "list.bullet.rectangle.portrait")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.accent)
-                }
+            Button {
+                showingShiftManager = true
+            } label: {
+                Label("Manage Shifts", systemImage: "list.bullet.rectangle.portrait")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.accent)
             }
         }
         .padding(.horizontal)
@@ -571,212 +489,7 @@ struct GameTrackingView: View {
         return availableIDs.first
     }
 
-    // MARK: - Basketball View
-
-    private var basketballTrackingView: some View {
-        VStack(spacing: 10) {
-            // Score display
-            HStack {
-                Text("\(displayedBasketballPoints)")
-                    .scaledFont(size: 56, weight: .bold, relativeTo: .largeTitle)
-                    .foregroundStyle(.blue)
-                Text(shouldShowActiveShiftStats ? "SHIFT PTS" : "PTS")
-                    .font(.title2.bold())
-                    .foregroundStyle(.secondary)
-
-                Spacer()
-
-                // Achievements inline
-                if hasTripleDouble {
-                    Label("Triple Double", systemImage: "star.circle.fill")
-                        .font(.subheadline.bold())
-                        .foregroundStyle(.purple)
-                } else if hasDoubleDouble {
-                    Label("Double Double", systemImage: "star.fill")
-                        .font(.subheadline.bold())
-                        .foregroundStyle(.orange)
-                }
-            }
-            .padding(.horizontal)
-
-            // Shooting buttons - 3 across
-            HStack(spacing: 10) {
-                RecordingStatButton(
-                    title: "2 PTS",
-                    subtitle: displayMadeString("2PT"),
-                    color: .blue,
-                    action: { recordMade("2PT", points: 2) },
-                    undoAction: { undoMade("2PT") }
-                )
-                RecordingStatButton(
-                    title: "3 PTS",
-                    subtitle: displayMadeString("3PT"),
-                    color: .purple,
-                    action: { recordMade("3PT", points: 3) },
-                    undoAction: { undoMade("3PT") }
-                )
-                RecordingStatButton(
-                    title: "FT",
-                    subtitle: displayMadeString("FT"),
-                    color: .orange,
-                    action: { recordMade("FT", points: 1) },
-                    undoAction: { undoMade("FT") }
-                )
-            }
-            .padding(.horizontal)
-
-            // Miss buttons
-            HStack(spacing: 8) {
-                MissButton(
-                    title: "2PT Miss",
-                    action: { recordMiss("2PT", points: 2) },
-                    undoAction: { undoMiss("2PT") }
-                )
-                MissButton(
-                    title: "3PT Miss",
-                    action: { recordMiss("3PT", points: 3) },
-                    undoAction: { undoMiss("3PT") }
-                )
-                MissButton(
-                    title: "FT Miss",
-                    action: { recordMiss("FT", points: 1) },
-                    undoAction: { undoMiss("FT") }
-                )
-            }
-            .padding(.horizontal)
-
-            // Other stats - 3 columns
-            HStack(spacing: 10) {
-                RecordingStatButton(title: "D-REB", subtitle: displayCountString("DREB"), color: .green, action: { recordCount("DREB") }, undoAction: { undoCount("DREB") })
-                RecordingStatButton(title: "O-REB", subtitle: displayCountString("OREB"), color: .teal, action: { recordCount("OREB") }, undoAction: { undoCount("OREB") })
-                RecordingStatButton(title: "STEAL", subtitle: displayCountString("STL"), color: .indigo, action: { recordCount("STL") }, undoAction: { undoCount("STL") })
-            }
-            .padding(.horizontal)
-
-            HStack(spacing: 10) {
-                RecordingStatButton(title: "ASSIST", subtitle: displayCountString("AST"), color: .mint, action: { recordCount("AST") }, undoAction: { undoCount("AST") })
-                RecordingStatButton(title: "FOUL", subtitle: displayCountString("PF"), color: .red, action: { recordCount("PF") }, undoAction: { undoCount("PF") })
-                RecordingStatButton(title: "TURNOVER", subtitle: displayCountString("TO"), color: .brown, action: { recordCount("TO") }, undoAction: { undoCount("TO") })
-            }
-            .padding(.horizontal)
-
-            HStack(spacing: 10) {
-                RecordingStatButton(title: "MISSED DRIVE", subtitle: displayCountString("MD"), color: .orange, action: { recordCount("MD") }, undoAction: { undoCount("MD") })
-                RecordingStatButton(title: "BAD OFF", subtitle: displayCountString("BPO"), color: .red, action: { recordCount("BPO") }, undoAction: { undoCount("BPO") })
-                RecordingStatButton(title: "BAD DEF", subtitle: displayCountString("BPD"), color: .pink, action: { recordCount("BPD") }, undoAction: { undoCount("BPD") })
-            }
-            .padding(.horizontal)
-
-            HStack(spacing: 10) {
-                RecordingStatButton(title: "SUCCESS DRIVE", subtitle: displayCountString("SD"), color: .green, action: { recordCount("SD") }, undoAction: { undoCount("SD") })
-                RecordingStatButton(title: "GREAT OFF", subtitle: displayCountString("GPO"), color: .yellow, action: { recordCount("GPO") }, undoAction: { undoCount("GPO") })
-                RecordingStatButton(title: "GREAT DEF", subtitle: displayCountString("GPD"), color: .green, action: { recordCount("GPD") }, undoAction: { undoCount("GPD") })
-            }
-            .padding(.horizontal)
-            .padding(.bottom, 8)
-        }
-    }
-
-    // MARK: - Soccer View
-
-    private var soccerTrackingView: some View {
-        VStack(spacing: 10) {
-            // Goal display
-            HStack {
-                Text("\(displayedSoccerPrimaryValue)")
-                    .scaledFont(size: 56, weight: .bold, relativeTo: .largeTitle)
-                    .foregroundStyle(activeTrackingPosition?.isGoalkeeperRole == true ? .blue : .green)
-                Text(displayedSoccerPrimaryLabel)
-                    .font(.title2.bold())
-                    .foregroundStyle(.secondary)
-
-                Spacer()
-
-                if activeTrackingPosition?.isGoalkeeperRole != true, totalSaves > 0 {
-                    VStack(alignment: .trailing) {
-                        Text("\(totalSaves)")
-                            .font(.title.bold())
-                            .foregroundStyle(.blue)
-                        Text("Saves")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
-            .padding(.horizontal)
-
-            if showsSoccerStat("GOL") || showsSoccerStat("SOT") || showsSoccerStat("AST") {
-                HStack(spacing: 10) {
-                    if showsSoccerStat("GOL") {
-                        RecordingStatButton(title: "GOAL", subtitle: displayCountString("GOL"), color: .green, action: { recordCount("GOL") }, undoAction: { undoCount("GOL") })
-                    }
-                    if showsSoccerStat("SOT") {
-                        RecordingStatButton(title: "SHOT", subtitle: displayMadeString("SOT"), color: .teal, action: { recordMade("SOT", points: 0) }, undoAction: { undoMade("SOT") })
-                    }
-                    if showsSoccerStat("AST") {
-                        RecordingStatButton(title: "ASSIST", subtitle: displayCountString("AST"), color: .mint, action: { recordCount("AST") }, undoAction: { undoCount("AST") })
-                    }
-                }
-                .padding(.horizontal)
-            }
-
-            if showsSoccerStat("SOT") {
-                HStack(spacing: 8) {
-                    MissButton(
-                        title: "Shot Off Target",
-                        action: { recordMiss("SOT", points: 0) },
-                        undoAction: { undoMiss("SOT") }
-                    )
-                }
-                .padding(.horizontal)
-            }
-
-            if showsSoccerStat("SAV") || showsSoccerStat("TKL") || showsSoccerStat("INT") {
-                HStack(spacing: 10) {
-                    if showsSoccerStat("SAV") {
-                        RecordingStatButton(title: "SAVE", subtitle: displayCountString("SAV"), color: .blue, action: { recordCount("SAV") }, undoAction: { undoCount("SAV") })
-                    }
-                    if showsSoccerStat("TKL") {
-                        RecordingStatButton(title: "TACKLE", subtitle: displayCountString("TKL"), color: .indigo, action: { recordCount("TKL") }, undoAction: { undoCount("TKL") })
-                    }
-                    if showsSoccerStat("INT") {
-                        RecordingStatButton(title: "INT", subtitle: displayCountString("INT"), color: .purple, action: { recordCount("INT") }, undoAction: { undoCount("INT") })
-                    }
-                }
-                .padding(.horizontal)
-            }
-
-            if showsSoccerStat("PAS") || showsSoccerStat("CRN") || showsSoccerStat("FLS") {
-                HStack(spacing: 10) {
-                    if showsSoccerStat("PAS") {
-                        RecordingStatButton(title: "PASS", subtitle: displayCountString("PAS"), color: .cyan, action: { recordCount("PAS") }, undoAction: { undoCount("PAS") })
-                    }
-                    if showsSoccerStat("CRN") {
-                        RecordingStatButton(title: "CORNER", subtitle: displayCountString("CRN"), color: .orange, action: { recordCount("CRN") }, undoAction: { undoCount("CRN") })
-                    }
-                    if showsSoccerStat("FLS") {
-                        RecordingStatButton(title: "FOUL", subtitle: displayCountString("FLS"), color: .red, action: { recordCount("FLS") }, undoAction: { undoCount("FLS") })
-                    }
-                }
-                .padding(.horizontal)
-            }
-
-            if showsSoccerStat("YC") || showsSoccerStat("RC") {
-                HStack(spacing: 10) {
-                    if showsSoccerStat("YC") {
-                        RecordingStatButton(title: "YELLOW", subtitle: displayCountString("YC"), color: .yellow, action: { recordCount("YC") }, undoAction: { undoCount("YC") })
-                    }
-                    if showsSoccerStat("RC") {
-                        RecordingStatButton(title: "RED", subtitle: displayCountString("RC"), color: .red, action: { recordCount("RC") }, undoAction: { undoCount("RC") })
-                    }
-                }
-                .padding(.horizontal)
-            }
-        }
-        .padding(.bottom, 8)
-    }
-
-    // MARK: - Individual / Generic Sports
+    // MARK: - Stat Board
 
     private var trackingPositions: [SoccerPosition] {
         if let activeTrackingPosition {
@@ -785,95 +498,7 @@ struct GameTrackingView: View {
         return assignedShiftPositions
     }
 
-    private func showsSoccerStat(_ shortName: String) -> Bool {
-        SportCatalog.showsStat(
-            shortName,
-            sportName: game.sport?.name,
-            positions: trackingPositions
-        )
-    }
-
-    private var genericVisibleDefinitions: [StatDefinition] {
-        SportCatalog.visibleDefinitions(
-            sportName: game.sport?.name,
-            definitions: game.sport?.sortedStatDefinitions ?? [],
-            positions: trackingPositions
-        )
-    }
-
-    private var genericShootingDefinitions: [StatDefinition] {
-        genericVisibleDefinitions.filter(\.hasMadeAndMissed)
-    }
-
-    private var genericCountDefinitions: [StatDefinition] {
-        genericVisibleDefinitions.filter { !$0.hasMadeAndMissed }
-    }
-
-    private var genericPrimaryDefinition: StatDefinition? {
-        if let profile = SportCatalog.profile(named: game.sport?.name) {
-            switch profile.primaryScore {
-            case .count(let shortName), .made(let shortName):
-                return genericVisibleDefinitions.first { $0.shortName == shortName }
-                    ?? game.sport?.sortedStatDefinitions.first { $0.shortName == shortName }
-            case .points:
-                break
-            }
-        }
-        return genericVisibleDefinitions.first ?? game.sport?.sortedStatDefinitions.first
-    }
-
-    private var genericPrimaryValue: Int {
-        guard let definition = genericPrimaryDefinition else { return game.totalPoints }
-        if definition.hasMadeAndMissed {
-            return displayedStats.totalMade(forName: definition.shortName)
-        }
-        return displayedStats.totalCount(forName: definition.shortName)
-    }
-
-    private var genericTrackingView: some View {
-        ScrollView {
-            VStack(spacing: 12) {
-                if let definition = genericPrimaryDefinition {
-                    HStack(alignment: .firstTextBaseline) {
-                        Text("\(genericPrimaryValue)")
-                            .scaledFont(size: 56, weight: .bold, relativeTo: .largeTitle)
-                            .foregroundStyle(.blue)
-                        Text(definition.name.uppercased())
-                            .font(.title3.bold())
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                    }
-                    .padding(.horizontal)
-                }
-
-                ForEach(genericShootingDefinitions, id: \.id) { definition in
-                    ShootingStatButton(
-                        definition: definition,
-                        made: displayedStats.totalMade(forName: definition.shortName),
-                        missed: displayedStats.totalMissed(forName: definition.shortName),
-                        onMade: { recordMade(definition.shortName, points: definition.pointValue) },
-                        onMissed: { recordMiss(definition.shortName, points: definition.pointValue) }
-                    )
-                    .padding(.horizontal)
-                }
-
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                    ForEach(genericCountDefinitions, id: \.id) { definition in
-                        CountStatButton(
-                            definition: definition,
-                            count: displayedStats.totalCount(forName: definition.shortName),
-                            onTap: { recordCount(definition.shortName) }
-                        )
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.bottom, 8)
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    private var displayedStats: any StatProviding {
+    private var displayedStats: any StatTotals {
         if let activeShift { return activeShift }
         return game
     }
@@ -1009,16 +634,6 @@ struct GameTrackingView: View {
         }
     }
 
-    private func startNewShiftFromShiftHistory() {
-        showingShiftHistorySheet = false
-        shiftTeamScore = lastKnownShiftTeamScore
-        shiftOpponentScore = lastKnownShiftOpponentScore
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            showingStartShiftSheet = true
-        }
-    }
-
     private func startNewShiftFromPostShiftOverview() {
         shiftTeamScore = lastKnownShiftTeamScore
         shiftOpponentScore = lastKnownShiftOpponentScore
@@ -1030,6 +645,15 @@ struct GameTrackingView: View {
 
     private func endGameFromPostShiftOverview() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            requestEndGame()
+        }
+    }
+
+    /// Shift sports review shifts before finalizing; others confirm directly.
+    private func requestEndGame() {
+        if hasShiftTracking {
+            showingShiftManager = true
+        } else {
             showingEndGameAlert = true
         }
     }
@@ -1038,20 +662,8 @@ struct GameTrackingView: View {
         selectedShiftPersonStats
     }
 
-    private func recordMade(_ name: String, points: Int) {
-        recordStat(name, points: points, mutation: .made)
-    }
-
-    private func recordMiss(_ name: String, points: Int) {
-        recordStat(name, points: points, mutation: .missed)
-    }
-
-    private func recordCount(_ name: String) {
-        recordStat(name, points: 0, mutation: .count)
-    }
-
     private func recordStat(_ name: String, points: Int, mutation: StatMutation) {
-        let oldDoubleDigits = doubleDigitCategories
+        let oldDoubleDigits = game.doubleDigitCategories
         let oldGoals = totalGoals
         let person = currentStatPersonAttribution
         let shift = activeShift
@@ -1076,18 +688,6 @@ struct GameTrackingView: View {
             modelContext.rollback()
             persistenceError = error.localizedDescription
         }
-    }
-
-    private func undoMade(_ name: String) {
-        undoStat(name, mutation: .made)
-    }
-
-    private func undoMiss(_ name: String) {
-        undoStat(name, mutation: .missed)
-    }
-
-    private func undoCount(_ name: String) {
-        undoStat(name, mutation: .count)
     }
 
     private func undoStat(_ name: String, mutation: StatMutation) {
@@ -1122,7 +722,7 @@ struct GameTrackingView: View {
 
     private func checkMilestones(oldDoubleDigits: Int) {
         guard isBasketball else { return }
-        let newDoubleDigits = doubleDigitCategories
+        let newDoubleDigits = game.doubleDigitCategories
 
         // Check for new double-double or triple-double (basketball)
         if newDoubleDigits >= 2 && oldDoubleDigits < 2 {
@@ -1157,33 +757,6 @@ struct GameTrackingView: View {
                 showMilestoneAnimation = false
             }
         }
-    }
-
-    // MARK: - Display Helpers
-
-    private func madeString(_ name: String) -> String {
-        let made = game.totalMade(forName: name)
-        return "\(made)/\(made + game.totalMissed(forName: name))"
-    }
-
-    private func countString(_ name: String) -> String {
-        "\(game.totalCount(forName: name))"
-    }
-
-    private func activeShiftMadeString(_ name: String) -> String {
-        activeShift?.madeString(forName: name) ?? "0/0"
-    }
-
-    private func activeShiftCountString(_ name: String) -> String {
-        "\(activeShift?.totalCount(forName: name) ?? 0)"
-    }
-
-    private func displayMadeString(_ name: String) -> String {
-        shouldShowActiveShiftStats ? activeShiftMadeString(name) : madeString(name)
-    }
-
-    private func displayCountString(_ name: String) -> String {
-        shouldShowActiveShiftStats ? activeShiftCountString(name) : countString(name)
     }
 }
 

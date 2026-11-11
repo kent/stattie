@@ -17,6 +17,7 @@ struct GameDetailView: View {
     @State private var selectedPlayerStats: PersonGameStats?
     @State private var showingSummary = false
     @State private var showingTracking = false
+    @State private var showingShiftManager = false
     @State private var showingDeleteConfirmation = false
 
     var sortedPersonStats: [PersonGameStats] {
@@ -277,6 +278,13 @@ struct GameDetailView: View {
                             Label("Continue Tracking", systemImage: "play.fill")
                         }
                     }
+                    if (game.sport?.usesShiftTracking ?? true) && !game.shiftPlayers.isEmpty {
+                        Button {
+                            showingShiftManager = true
+                        } label: {
+                            Label("Manage Shifts", systemImage: "list.bullet.rectangle.portrait")
+                        }
+                    }
                 }
             }
         }
@@ -319,6 +327,9 @@ struct GameDetailView: View {
         }
         .fullScreenCover(isPresented: $showingTracking) {
             GameTrackingView(game: game)
+        }
+        .sheet(isPresented: $showingShiftManager) {
+            ManageShiftsView(game: game)
         }
         .alert("Delete Game?", isPresented: $showingDeleteConfirmation) {
             Button("Delete", role: .destructive) {
