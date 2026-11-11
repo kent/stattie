@@ -403,30 +403,7 @@ struct PlayerGameOverviewView: View {
     private func deletePendingShift() {
         guard let shift = pendingShiftDeletion else { return }
         pendingShiftDeletion = nil
-
-        let previousShifts = personGameStats.shifts
-        let previousNumbers = (previousShifts ?? []).map { ($0, $0.shiftNumber) }
-        personGameStats.shifts?.removeAll { $0.id == shift.id }
-        modelContext.delete(shift)
-        normalizeShiftNumbers()
-        persistence.save(modelContext, restoring: {
-            personGameStats.shifts = previousShifts
-            for (shift, number) in previousNumbers { shift.shiftNumber = number }
-        })
-    }
-
-    private func normalizeShiftNumbers() {
-        let orderedShifts = (personGameStats.shifts ?? [])
-            .sorted { lhs, rhs in
-                if lhs.startTime != rhs.startTime {
-                    return lhs.startTime < rhs.startTime
-                }
-                return lhs.createdAt < rhs.createdAt
-            }
-
-        for (index, shift) in orderedShifts.enumerated() {
-            shift.shiftNumber = index + 1
-        }
+        persistence.save(modelContext, operation: { try personGameStats.deleteShift(shift, in: modelContext) })
     }
 }
 
