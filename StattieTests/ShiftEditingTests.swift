@@ -16,11 +16,18 @@ final class ShiftEditingTests: XCTestCase {
         context.insert(sport)
         context.insert(game)
         context.insert(player)
+        link(player, to: game)
         let shift = player.startNewShift(position: .defender)
         context.insert(shift)
         shift.endShift(teamScore: 1, opponentScore: 0, at: shift.startTime.addingTimeInterval(120))
         try context.save()
         return (container, game, player, shift)
+    }
+
+    private func link(_ player: PersonGameStats, to game: Game) {
+        if !(game.personStats ?? []).contains(where: { $0.id == player.id }) {
+            game.personStats = (game.personStats ?? []) + [player]
+        }
     }
 
     private func addStat(_ name: String, count: Int, shift: Shift, context: ModelContext) -> Stat {
@@ -150,5 +157,128 @@ final class ShiftEditingTests: XCTestCase {
         XCTAssertThrowsError(try draft.save(to: shift, in: context))
         XCTAssertEqual(record.count, 4)
         XCTAssertEqual(shift.endingTeamScore, 1)
+    }
+
+    func testBoardTapsChangeOnlyTheDraftUntilSaved() throws {
+        let (container, game, player, shift) = try fixture()
+        var draft = ShiftEditDraft(shift: shift)
+        XCTAssertFalse(draft.hasChanges)
+        XCTAssertTrue(draft.apply(.count, named: "GOL", pointValue: 0))
+        XCTAssertTrue(draft.apply(.count, named: "GOL", pointValue: 0))
+        XCTAssertTrue(draft.apply(.count, named: "GOL", pointValue: 0, delta: -1))
+        XCTAssertFalse(draft.apply(.missed, named: "SOT", pointValue: 0, delta: -1))
+        XCTAssertFalse(draft.apply(.count, named: "UNKNOWN", pointValue: 0, delta: -1))
+        XCTAssertTrue(draft.apply(.made, named: "BONUS", pointValue: 2))
+        XCTAssertEqual(draft.totalCount(forName: "GOL"), 1)
+        XCTAssertEqual(draft.madeString(forName: "BONUS"), "1/1")
+        XCTAssertEqual(draft.totalPoints, 2)
+        XCTAssertTrue(draft.hasChanges)
+        XCTAssertEqual(game.totalCount(forName: "GOL"), 0)
+        XCTAssertFalse(container.mainContext.hasChanges)
+
+        try draft.save(to: shift, in: container.mainContext)
+        XCTAssertEqual(shift.totalCount(forName: "GOL"), 1)
+        XCTAssertEqual(player.totalCount(forName: "GOL"), 1)
+        XCTAssertEqual(game.totalCount(forName: "GOL"), 1)
+        XCTAssertEqual(game.totalPoints, 2)
+    }
+
+    func testCreatingShiftContinuesFromLatestShiftAndRenumbersChronologically() throws {
+        let (container, game, player, shift) = try fixture()
+        let context = container.mainContext
+        var draft = ShiftEditDraft(newShiftFor: player)
+        XCTAssertFalse(draft.hasChanges)
+        XCTAssertEqual(draft.details.startTime, shift.endTime)
+        XCTAssertEqual(draft.details.startingTeamScore, 1)
+        XCTAssertEqual(draft.details.endingTeamScore, 1)
+        XCTAssertEqual(draft.details.positionRawValue, SoccerPosition.defender.rawValue)
+
+        // A forgotten shift that happened before the recorded one.
+        draft.details.startTime = shift.startTime.addingTimeInterval(-300)
+        draft.details.endTime = shift.startTime.addingTimeInterval(-60)
+        draft.details.startingTeamScore = 0
+        draft.details.endingTeamScore = 0
+        draft.details.endingOpponentScore = 1
+        draft.apply(.count, named: "TKL", pointValue: 0)
+        let created = try draft.create(for: player, in: context)
+
+        XCTAssertEqual(player.orderedShifts.map(\.id), [created.id, shift.id])
+        XCTAssertEqual(created.shiftNumber, 1)
+        XCTAssertEqual(shift.shiftNumber, 2)
+        XCTAssertEqual(created.duration, 240)
+        XCTAssertEqual(created.plusMinus, -1)
+        XCTAssertEqual(player.totalPlusMinus, 0)
+        XCTAssertEqual(created.totalCount(forName: "TKL"), 1)
+        XCTAssertEqual(game.totalCount(forName: "TKL"), 1)
+        XCTAssertFalse(context.hasChanges)
+    }
+
+    func testFailedCreateLeavesNoShiftOrStats() throws {
+        let (container, game, player, shift) = try fixture()
+        var draft = ShiftEditDraft(newShiftFor: player)
+        draft.details.startTime = shift.startTime.addingTimeInterval(-300)
+        draft.details.endTime = shift.startTime
+        draft.apply(.count, named: "TKL", pointValue: 0)
+        XCTAssertThrowsError(try draft.create(for: player, in: container.mainContext, save: { throw CocoaError(.fileWriteUnknown) }))
+        XCTAssertEqual(player.shifts?.map(\.id), [shift.id])
+        XCTAssertEqual(shift.shiftNumber, 1)
+        XCTAssertEqual(game.totalCount(forName: "TKL"), 0)
+
+        try draft.create(for: player, in: container.mainContext)
+        XCTAssertEqual(player.orderedShifts.count, 2)
+        XCTAssertEqual(game.totalCount(forName: "TKL"), 1)
+    }
+
+    func testDeletingShiftRemovesItsStatsAndRenumbers() throws {
+        let (container, game, player, first) = try fixture()
+        let context = container.mainContext
+        _ = addStat("SAV", count: 2, shift: first, context: context)
+        var draft = ShiftEditDraft(newShiftFor: player)
+        draft.details.endTime = draft.details.startTime.addingTimeInterval(90)
+        draft.apply(.count, named: "SAV", pointValue: 0)
+        let second = try draft.create(for: player, in: context)
+        XCTAssertEqual(second.shiftNumber, 2)
+        XCTAssertEqual(game.totalCount(forName: "SAV"), 3)
+
+        try player.deleteShift(first, in: context)
+        XCTAssertEqual(player.shifts?.map(\.id), [second.id])
+        XCTAssertEqual(second.shiftNumber, 1)
+        XCTAssertEqual(player.totalCount(forName: "SAV"), 1)
+        XCTAssertEqual(game.totalCount(forName: "SAV"), 1)
+        XCTAssertEqual(try context.fetchCount(FetchDescriptor<Stat>()), 1)
+    }
+
+    func testFailedDeleteRestoresShiftAndStats() throws {
+        let (container, game, player, shift) = try fixture()
+        let context = container.mainContext
+        let stat = addStat("SAV", count: 2, shift: shift, context: context)
+        try context.save()
+        XCTAssertThrowsError(try player.deleteShift(shift, in: context, save: { throw CocoaError(.fileWriteUnknown) }))
+        XCTAssertEqual(player.shifts?.map(\.id), [shift.id])
+        XCTAssertEqual(shift.canonicalStats.map(\.id), [stat.id])
+        XCTAssertEqual(game.totalCount(forName: "SAV"), 2)
+
+        try player.deleteShift(shift, in: context)
+        XCTAssertTrue(player.shifts?.isEmpty ?? true)
+        XCTAssertEqual(game.totalCount(forName: "SAV"), 0)
+    }
+
+    func testLatestShiftScoreUsesMostRecentBoundaryAcrossPlayers() throws {
+        let (container, game, _, shift) = try fixture()
+        let context = container.mainContext
+        XCTAssertFalse(game.hasActiveShifts)
+        XCTAssertEqual(game.latestShiftScore, GameScore(team: 1, opponent: 0))
+
+        let other = PersonGameStats(person: Person(firstName: "Ava"), game: game)
+        context.insert(other)
+        link(other, to: game)
+        let live = other.startNewShift(teamScore: 2, opponentScore: 3)
+        context.insert(live)
+        live.startTime = try XCTUnwrap(shift.endTime).addingTimeInterval(60)
+        try context.save()
+
+        XCTAssertTrue(game.hasActiveShifts)
+        XCTAssertEqual(game.latestShiftScore, GameScore(team: 2, opponent: 3))
+        XCTAssertEqual(game.shiftPlayers.count, 2)
     }
 }

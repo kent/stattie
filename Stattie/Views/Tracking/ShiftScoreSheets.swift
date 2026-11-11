@@ -286,6 +286,204 @@ struct EndShiftScoreSheet: View {
     }
 }
 
+/// Confirms the score at either boundary of an edited shift before it is saved.
+struct ShiftScoreConfirmationSheet: View {
+    enum Boundary: Hashable { case start, end }
+
+    @Environment(\.dismiss) private var dismiss
+    @Binding var details: ShiftDetails
+    let onConfirm: () throws -> Void
+
+    @State private var boundary: Boundary
+    @State private var errorMessage: String?
+
+    init(details: Binding<ShiftDetails>, onConfirm: @escaping () throws -> Void) {
+        _details = details
+        self.onConfirm = onConfirm
+        _boundary = State(initialValue: details.wrappedValue.endTime == nil ? .start : .end)
+    }
+
+    private var hasEnded: Bool { details.endTime != nil }
+    private var endingTeam: Int { details.endingTeamScore ?? details.startingTeamScore }
+    private var endingOpponent: Int { details.endingOpponentScore ?? details.startingOpponentScore }
+
+    private var plusMinus: Int {
+        endingTeam - details.startingTeamScore - endingOpponent + details.startingOpponentScore
+    }
+
+    private var plusMinusColor: Color {
+        plusMinus > 0 ? .green : plusMinus < 0 ? .red : .secondary
+    }
+
+    private var teamScore: Binding<Int> {
+        boundary == .start
+            ? $details.startingTeamScore
+            : Binding(get: { endingTeam }, set: { details.endingTeamScore = $0 })
+    }
+
+    private var opponentScore: Binding<Int> {
+        boundary == .start
+            ? $details.startingOpponentScore
+            : Binding(get: { endingOpponent }, set: { details.endingOpponentScore = $0 })
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 20) {
+                    if hasEnded {
+                        Picker("Score", selection: $boundary) {
+                            Text("Start of Shift").tag(Boundary.start)
+                            Text("End of Shift").tag(Boundary.end)
+                        }
+                        .pickerStyle(.segmented)
+                        .padding(.horizontal)
+                    }
+
+                    Text(boundary == .start ? "What was the score when the shift started?" : "What was the score when the shift ended?")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+
+                    ScoreInputPairView(teamScore: teamScore, opponentScore: opponentScore)
+                        .padding(.horizontal)
+
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Start").font(.caption).foregroundStyle(.secondary)
+                            Text("\(details.startingTeamScore) - \(details.startingOpponentScore)").font(.headline)
+                        }
+                        if hasEnded {
+                            Spacer()
+                            VStack(spacing: 4) {
+                                Text("End").font(.caption).foregroundStyle(.secondary)
+                                Text("\(endingTeam) - \(endingOpponent)").font(.headline)
+                            }
+                            Spacer()
+                            VStack(alignment: .trailing, spacing: 4) {
+                                Text("Plus/Minus").font(.caption).foregroundStyle(.secondary)
+                                Text(plusMinus > 0 ? "+\(plusMinus)" : "\(plusMinus)")
+                                    .font(.headline)
+                                    .foregroundStyle(plusMinusColor)
+                            }
+                        } else {
+                            Spacer()
+                            Text("In progress").font(.subheadline).foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding()
+                    .background(Color(.secondarySystemBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .padding(.horizontal)
+                }
+                .padding(.vertical)
+            }
+            .safeAreaInset(edge: .bottom) {
+                Button(action: confirm) {
+                    Text("Save Shift")
+                        .font(.headline)
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.green)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .padding()
+            }
+            .navigationTitle("Confirm Score")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Back") { dismiss() }
+                }
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    }
+                }
+            }
+            .errorAlert(title: "Couldn’t Save Shift", message: $errorMessage)
+        }
+    }
+
+    private func confirm() {
+        if hasEnded {
+            details.endingTeamScore = endingTeam
+            details.endingOpponentScore = endingOpponent
+        }
+        do {
+            try onConfirm()
+            dismiss()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+}
+
+/// Final score used to close shifts still in progress when a game is finalized.
+struct FinalScoreSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Binding var score: GameScore
+    let onFinalize: () throws -> Void
+
+    @State private var errorMessage: String?
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 24) {
+                Text("What was the final score?")
+                    .font(.headline)
+                    .padding(.top)
+
+                Text("Players still on the field end their shifts at this score.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+
+                ScoreInputPairView(teamScore: $score.team, opponentScore: $score.opponent)
+                    .padding(.horizontal)
+
+                Spacer()
+
+                Button {
+                    do {
+                        try onFinalize()
+                        dismiss()
+                    } catch {
+                        errorMessage = error.localizedDescription
+                    }
+                } label: {
+                    Text("Finalize Game")
+                        .font(.headline)
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.red)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .padding(.horizontal)
+                .padding(.bottom)
+            }
+            .navigationTitle("Final Score")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    }
+                }
+            }
+            .errorAlert(title: "Couldn’t Finalize Game", message: $errorMessage)
+        }
+    }
+}
+
 struct ScoreInputPairView: View {
     @Binding var teamScore: Int
     @Binding var opponentScore: Int
